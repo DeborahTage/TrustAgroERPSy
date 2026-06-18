@@ -88,21 +88,21 @@ const FinancePage = () => {
   ].filter(a => a.show);
 
   const cols = [
-    { key: 'transactionDate', label: t('finance.date'), render: (row) => formatDate(row.transactionDate) },
+    { accessorKey: 'transactionDate', header: t('finance.date'), cell: ({ row }) => formatDate(row.original.transactionDate) },
     {
-      key: 'transactionType',
-      label: t('finance.type'),
-      render: (row) => (
-        <Badge variant={row.transactionType === 'INCOME' ? 'success' : 'destructive'}>
-          {t(`status.${row.transactionType}`)}
+      accessorKey: 'transactionType',
+      header: t('finance.type'),
+      cell: ({ row }) => (
+        <Badge variant={row.original.transactionType === 'INCOME' ? 'success' : 'destructive'}>
+          {t(`status.${row.original.transactionType}`)}
         </Badge>
       )
     },
-    { key: 'category', label: t('finance.category') },
-    { key: 'amount', label: t('finance.amount'), render: (row) => formatCurrency(row.amount) },
-    { key: 'paymentMethod', label: t('finance.payment') },
-    { key: 'description', label: t('finance.description') },
-    { key: 'recordedBy', label: t('finance.recordedBy') },
+    { accessorKey: 'category', header: t('finance.category') },
+    { accessorKey: 'amount', header: t('finance.amount'), cell: ({ row }) => formatCurrency(row.original.amount) },
+    { accessorKey: 'paymentMethod', header: t('finance.payment') },
+    { accessorKey: 'description', header: t('finance.description') },
+    { accessorKey: 'recordedBy', header: t('finance.recordedBy') },
   ];
 
   return (

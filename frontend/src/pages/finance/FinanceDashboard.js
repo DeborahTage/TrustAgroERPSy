@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { financeApi } from '../../api';
+import { useNavigate } from 'react-router-dom';
+
+
 import StatsCard from '../../components/shared/StatsCard';
 import PageHeader from '../../components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
@@ -16,35 +19,47 @@ import {
   BarChart, Bar, Cell, Legend
 } from 'recharts';
 import { Badge } from '../../components/ui/badge';
+import ReconciliationDialog from './components/ReconciliationDialog';
+import POSInvoiceDialog from './components/POSInvoiceDialog';
 
 const FinanceDashboard = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
   const [data, setData] = useState({
     totalRevenue: 0,
     totalExpenses: 0,
     netProfit: 0,
     unitRevenue: {},
-    transactions: []
+    transactions: [],
+    accountsReceivable: 0,
+    cashInHand: 0,
+    accountsPayable: 0
   });
+
   const [loading, setLoading] = useState(true);
+  const [reconcileOpen, setReconcileOpen] = useState(false);
+  const [posOpen, setPosOpen] = useState(false);
+
+  const fetchDashboard = async () => {
+    setLoading(true);
+    try {
+      const [dashRes, txRes] = await Promise.all([
+        financeApi.getDashboard(),
+        financeApi.getTransactions()
+      ]);
+      setData({
+        ...dashRes.data.data,
+        transactions: txRes.data.data || []
+      });
+    } catch (e) {
+      console.error('Failed to fetch finance dashboard', e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const [dashRes, txRes] = await Promise.all([
-          financeApi.getDashboard(),
-          financeApi.getTransactions()
-        ]);
-        setData({
-          ...dashRes.data.data,
-          transactions: txRes.data.data || []
-        });
-      } catch (e) {
-        console.error('Failed to fetch finance dashboard', e);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDashboard();
   }, []);
 
@@ -75,7 +90,7 @@ const FinanceDashboard = () => {
     },
     {
       title: 'Accounts Receivable',
-      value: formatCurrency(450000), // Placeholder for now
+      value: formatCurrency(data.accountsReceivable || 0),
       icon: Clock,
       iconColor: 'text-amber-600',
       bgColor: 'bg-amber-50',
@@ -83,21 +98,23 @@ const FinanceDashboard = () => {
     },
     {
       title: 'Cash Position',
-      value: formatCurrency(1250000), // Placeholder
+      value: formatCurrency(data.cashInHand || 0),
       icon: Wallet,
       iconColor: 'text-blue-600',
       bgColor: 'bg-blue-50',
       description: 'Liquid assets'
     },
     {
-      title: 'Wallet Balances',
-      value: formatCurrency(320000), // Placeholder
+      title: 'Accounts Payable',
+      value: formatCurrency(data.accountsPayable || 0),
       icon: ShieldCheck,
       iconColor: 'text-purple-600',
       bgColor: 'bg-purple-50',
-      description: 'Customer deposits'
+      description: 'Pending obligations'
     }
   ];
+
+
 
   // Process unit revenue for chart
   const unitChartData = Object.entries(data.unitRevenue || {}).map(([unit, val]) => ({
@@ -118,9 +135,10 @@ const FinanceDashboard = () => {
           <Button variant="outline" size="sm" className="bg-white">
             <RefreshCw className="mr-2 h-4 w-4" /> Hard Close
           </Button>
-          <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+          <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => setReconcileOpen(true)}>
             <Calculator className="mr-2 h-4 w-4" /> Reconciliation
           </Button>
+
         </div>
       </div>
 
@@ -209,18 +227,20 @@ const FinanceDashboard = () => {
                 <Receipt className="h-5 w-5 text-indigo-300" />
                 <span className="text-[11px] font-bold">GENERATE PO</span>
               </Button>
-              <Button variant="outline" className="h-20 flex flex-col gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-white border-0 shadow-none">
+              <Button variant="outline" className="h-20 flex flex-col gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-white border-0 shadow-none" onClick={() => setPosOpen(true)}>
                 <FileText className="h-5 w-5 text-indigo-300" />
                 <span className="text-[11px] font-bold">POS INVOICE</span>
               </Button>
+
               <Button variant="outline" className="h-20 flex flex-col gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-white border-0 shadow-none">
                 <Wallet className="h-5 w-5 text-indigo-300" />
                 <span className="text-[11px] font-bold">DEPOSIT</span>
               </Button>
-              <Button variant="outline" className="h-20 flex flex-col gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-white border-0 shadow-none">
+              <Button variant="outline" className="h-20 flex flex-col gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-white border-0 shadow-none" onClick={() => navigate('/finance/reports')}>
                 <Download className="h-5 w-5 text-indigo-300" />
                 <span className="text-[11px] font-bold">REPORTS</span>
               </Button>
+
             </CardContent>
           </Card>
 
@@ -253,8 +273,21 @@ const FinanceDashboard = () => {
           </Card>
         </div>
       </div>
+      <ReconciliationDialog
+        open={reconcileOpen}
+        onOpenChange={setReconcileOpen}
+        systemAmount={data.cashInHand || 0}
+        onSuccess={fetchDashboard}
+      />
+
+      <POSInvoiceDialog
+        open={posOpen}
+        onOpenChange={setPosOpen}
+        onSuccess={fetchDashboard}
+      />
     </div>
   );
 };
 
 export default FinanceDashboard;
+

@@ -4,17 +4,18 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { PERMISSIONS } from '../lib/permissions';
 import { formatDate } from '../utils';
-import { Bell, X, Check } from 'lucide-react';
+import { Bell, Search, Globe, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Skeleton } from '../components/ui/skeleton';
+import { cn } from '../lib/utils';
 
 const NOTIFICATION_POLL_MS = 60000;
 
-const TopBar = ({ onMenuToggle }) => {
-  const { t } = useLanguage();
-  const { hasPermission } = useAuth();
+const TopBar = () => {
+  const { t, language } = useLanguage();
+  const { user, hasPermission } = useAuth();
   const canViewNotifications = hasPermission(PERMISSIONS.VIEW_NOTIFICATIONS);
   const [unread, setUnread] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -44,92 +45,95 @@ const TopBar = ({ onMenuToggle }) => {
     return () => clearInterval(interval);
   }, [loadNotifications, canViewNotifications]);
 
-  const handleOpenNotifications = async () => {
-    setShowNotifications(true);
-    await loadNotifications();
-  };
-
-  const handleMarkRead = async (id) => {
-    try {
-      await notificationApi.markRead(id);
-      setNotifications((current) =>
-        current.map((notification) =>
-          notification.id === id ? { ...notification, read: true } : notification
-        )
-      );
-      setUnread((current) => Math.max(0, current - 1));
-    } catch {}
-  };
-
   return (
-    <>
+    <div className="flex flex-1 items-center justify-between">
       <div className="flex items-center gap-4">
-        <h1 className="text-lg font-semibold text-gray-900">{t('topbar.title')}</h1>
-        
+        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+          <Globe className="h-3 w-3" />
+          <span>{language === 'am' ? 'Amharic' : 'English'}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {/* Search Placeholder */}
+        <div className="hidden sm:flex items-center gap-2 h-9 px-3 bg-gray-100/50 rounded-lg text-gray-400 group cursor-pointer hover:bg-gray-100 transition-all">
+          <Search className="h-4 w-4" />
+          <span className="text-xs font-medium pr-8">Search anything...</span>
+          <span className="text-[10px] font-bold border border-gray-200 px-1 rounded bg-white">⌘K</span>
+        </div>
+
         {canViewNotifications && (
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
-            onClick={handleOpenNotifications}
+            className="relative h-10 w-10 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+            onClick={() => setShowNotifications(true)}
           >
             <Bell className="h-5 w-5" />
             {unread > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-              >
-                {unread}
-              </Badge>
+              <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-rose-500 border-2 border-white rounded-full animate-pulse" />
             )}
           </Button>
         )}
+
+        {/* User Context */}
+        <div className="flex items-center gap-2 pl-2 border-l border-gray-100 ml-2">
+          <div className="flex flex-col items-end hidden sm:flex">
+            <span className="text-[11px] font-black text-gray-900 leading-tight uppercase">{user?.fullName || 'User'}</span>
+            <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">{user?.role?.replace('_', ' ')}</span>
+          </div>
+          <div className="h-9 w-9 rounded-xl bg-gray-100 flex items-center justify-center font-black text-xs text-gray-500">
+            {user?.fullName?.charAt(0).toUpperCase()}
+          </div>
+        </div>
       </div>
 
       <Dialog open={showNotifications} onOpenChange={setShowNotifications}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('topbar.notifications')}</DialogTitle>
+        <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-md rounded-2xl border-none shadow-2xl">
+          <DialogHeader className="pb-4 border-b border-gray-100">
+            <DialogTitle className="flex items-center gap-2 text-gray-900 font-black uppercase tracking-tight text-lg">
+              <Bell className="h-5 w-5 text-indigo-600" />
+              Notifications
+              {unread > 0 && <Badge variant="destructive" className="ml-2 bg-indigo-100 text-indigo-600 hover:bg-indigo-100 border-none font-black">{unread} New</Badge>}
+            </DialogTitle>
           </DialogHeader>
-          <div className="max-h-[400px] overflow-y-auto">
+
+          <div className="max-h-[450px] overflow-y-auto pr-1 py-4">
             {loadingNotifications ? (
               <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-20 w-full rounded-xl" />
                 ))}
               </div>
             ) : notifications.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-8">{t('topbar.noNotifications')}</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center opacity-40">
+                <Bell className="h-12 w-12 mb-3" />
+                <p className="text-sm font-bold uppercase tracking-widest">Inbox is empty</p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-3 rounded-lg border ${
-                      notification.read ? 'bg-gray-50' : 'bg-white border-emerald-200'
-                    }`}
+                    className={cn(
+                      "p-4 rounded-2xl border transition-all cursor-pointer group",
+                      notification.read ? 'bg-gray-50/50 border-gray-100' : 'bg-white border-indigo-100 shadow-sm'
+                    )}
                   >
-                    <div className="flex justify-between items-start gap-3">
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm">{notification.title}</div>
-                        <div className="text-sm text-gray-600 mt-1">{notification.message}</div>
-                        <div className="text-xs text-gray-400 mt-2">
-                          {notification.relatedModule || t('topbar.general')} - {formatDate(notification.createdAt)}
+                    <div className="flex items-start gap-4">
+                      <div className={cn(
+                        "h-10 w-10 rounded-xl flex items-center justify-center shrink-0",
+                        notification.read ? "bg-gray-100" : "bg-indigo-50"
+                      )}>
+                        <Bell className={cn("h-5 w-5", notification.read ? "text-gray-400" : "text-indigo-600")} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">{notification.title}</div>
+                        <div className="text-xs text-gray-500 font-medium line-clamp-2 leading-relaxed">{notification.message}</div>
+                        <div className="flex items-center gap-2 mt-3">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{formatDate(notification.createdAt)}</span>
                         </div>
                       </div>
-                      {!notification.read && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleMarkRead(notification.id)}
-                        >
-                          <Check className="mr-2 h-4 w-4" />
-                          {t('topbar.markRead')}
-                        </Button>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -138,7 +142,7 @@ const TopBar = ({ onMenuToggle }) => {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 

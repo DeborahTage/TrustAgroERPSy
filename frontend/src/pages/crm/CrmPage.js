@@ -99,22 +99,21 @@ const CrmPage = () => {
   ].filter(a => a.show);
 
   const clientCols = [
-    { key: 'clientName', label: t('crm.name') },
-    { key: 'phone', label: t('crm.phone') },
-    { key: 'location', label: t('crm.location') },
-    { key: 'farmType', label: t('crm.farmType') },
-    { key: 'numberOfBirds', label: t('crm.birds'), render: (row) => Number(row.numberOfBirds).toLocaleString() },
-    { key: 'status', label: t('crm.status'), render: (row) => <StatusBadge status={row.status} /> },
-    { key: 'assignedExtensionWorkerName', label: t('crm.extensionWorker') },
+    { accessorKey: 'clientName', header: t('crm.name') },
+    { accessorKey: 'phone', header: t('crm.phone') },
+    { accessorKey: 'location', header: t('crm.location') },
+    { accessorKey: 'farmType', header: t('crm.farmType') },
+    { accessorKey: 'numberOfBirds', header: t('crm.birds'), cell: ({ row }) => Number(row.original.numberOfBirds).toLocaleString() },
+    { accessorKey: 'status', header: t('crm.status'), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+    { accessorKey: 'assignedExtensionWorkerName', header: t('crm.extensionWorker') },
     {
-      key: 'actions',
-      label: '',
-      render: (row) => (
+      id: 'actions',
+      cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => navigate(`/crm/clients/${row.id}/edit`)}>
+          <Button size="sm" variant="outline" onClick={() => navigate(`/crm/clients/${row.original.id}/edit`)}>
             Edit
           </Button>
-          <Button size="sm" variant="outline" onClick={() => navigate('/crm/visits/new', { state: { clientId: row.id } })}>
+          <Button size="sm" variant="outline" onClick={() => navigate('/crm/visits/new', { state: { clientId: row.original.id } })}>
             Visit
           </Button>
         </div>
@@ -123,11 +122,11 @@ const CrmPage = () => {
   ];
 
   const visitCols = [
-    { key: 'clientName', label: t('crm.client') },
-    { key: 'visitDate', label: t('crm.visitDate'), render: (row) => formatDate(row.visitDate) },
-    { key: 'visitedBy', label: t('crm.visitedBy') },
-    { key: 'purpose', label: t('crm.purpose') },
-    { key: 'nextFollowUpDate', label: t('crm.nextFollowUp'), render: (row) => formatDate(row.nextFollowUpDate) },
+    { accessorKey: 'clientName', header: t('crm.client') },
+    { accessorKey: 'visitDate', header: t('crm.visitDate'), cell: ({ row }) => formatDate(row.original.visitDate) },
+    { accessorKey: 'visitedBy', header: t('crm.visitedBy') },
+    { accessorKey: 'purpose', header: t('crm.purpose') },
+    { accessorKey: 'nextFollowUpDate', header: t('crm.nextFollowUp'), cell: ({ row }) => formatDate(row.original.nextFollowUpDate) },
   ];
 
   return (

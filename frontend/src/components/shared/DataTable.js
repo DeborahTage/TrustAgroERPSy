@@ -1,8 +1,24 @@
 import React, { useState } from 'react';
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+} from '@tanstack/react-table';
 import { Card, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { Search, ChevronLeft, ChevronRight, FileX2, Inbox } from 'lucide-react';
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  FileX2,
+  Inbox,
+  ArrowUpDown,
+  Filter
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const DataTable = ({
@@ -12,51 +28,46 @@ const DataTable = ({
   searchable = true,
   pagination = true,
   pageSize = 10,
-  emptyMessage = "No data found",
-  emptySubtitle = "Try adjusting your search or filters to find what you're looking for.",
+  emptyMessage = "No records found",
+  emptySubtitle = "Adjust your search or filters to find what you're looking for.",
   className,
   headerActions
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [sorting, setSorting] = useState([]);
+  const [globalFilter, setGlobalFilter] = useState('');
 
-  // Filter data based on search
-  const filteredData = React.useMemo(() => {
-    if (!searchTerm) return data;
-    return data.filter(row =>
-      columns.some(col => {
-        const value = col.key ? row[col.key] : '';
-        return String(value).toLowerCase().includes(searchTerm.toLowerCase());
-      })
-    );
-  }, [data, searchTerm, columns]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredData.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedData = filteredData.slice(startIndex, startIndex + pageSize);
-
-  const handleSearch = (value) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+      globalFilter,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: pageSize,
+      },
+    },
+  });
 
   if (loading) {
     return (
       <div className={cn("space-y-4", className)}>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center">
           <div className="h-10 w-64 bg-gray-100 animate-pulse rounded-lg" />
           <div className="h-10 w-32 bg-gray-100 animate-pulse rounded-lg" />
         </div>
-        <Card className="border-none shadow-sm overflow-hidden">
+        <Card className="border-none shadow-sm bg-white overflow-hidden">
           <CardContent className="p-0">
-            <div className="space-y-0">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center space-x-4 p-4 border-b border-gray-50 last:border-0 grow">
-                  <div className="h-4 w-full bg-gray-50 rounded animate-pulse" />
-                </div>
-              ))}
-            </div>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-16 w-full border-b border-gray-50 bg-gray-50/20 animate-pulse" />
+            ))}
           </CardContent>
         </Card>
       </div>
@@ -68,75 +79,75 @@ const DataTable = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {searchable && (
           <div className="relative w-full sm:w-80 group">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
             <Input
-              placeholder="Search data..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 bg-white border-gray-200 focus-visible:ring-emerald-500 focus-visible:ring-offset-0 focus-visible:border-emerald-500 rounded-xl"
+              placeholder="Quick search..."
+              value={globalFilter ?? ''}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="pl-10 h-10 bg-white border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
         )}
-        {headerActions && (
-          <div className="flex items-center gap-2">
-            {headerActions}
-          </div>
-        )}
+        {headerActions && <div className="flex items-center gap-2 ml-auto">{headerActions}</div>}
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-50/50 border-b border-gray-100">
-                  {columns.map((col, index) => (
-                    <th
-                      key={index}
-                      className="text-left py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-tight"
-                    >
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className="bg-gray-50/50 border-b border-gray-100">
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="py-4 px-6 text-[11px] font-bold text-gray-500 uppercase tracking-wider"
+                      >
+                        {header.isPlaceholder ? null : (
+                          <div
+                            className={cn(
+                              "flex items-center gap-2",
+                              header.column.getCanSort() && "cursor-pointer select-none hover:text-indigo-600 transition-colors"
+                            )}
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {header.column.getCanSort() && (
+                              <ArrowUpDown className={cn(
+                                "h-3 w-3",
+                                header.column.getIsSorted() ? "text-indigo-600" : "text-gray-300"
+                              )} />
+                            )}
+                          </div>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {paginatedData.length === 0 ? (
-                  <tr>
-                    <td colSpan={columns.length} className="py-20">
-                      <div className="flex flex-col items-center justify-center text-center px-6">
-                        <div className="bg-gray-50 p-4 rounded-full mb-4">
-                          {searchTerm ? <FileX2 className="h-8 w-8 text-gray-400" /> : <Inbox className="h-8 w-8 text-gray-400" />}
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900">{searchTerm ? 'No results found' : emptyMessage}</h3>
-                        <p className="text-sm text-gray-500 max-w-sm mt-1">
-                          {searchTerm ? `We couldn't find anything matching "${searchTerm}". Try another term.` : emptySubtitle}
-                        </p>
-                        {searchTerm && (
-                          <Button
-                            variant="link"
-                            className="mt-2 text-emerald-600 font-bold"
-                            onClick={() => handleSearch('')}
-                          >
-                            Clear search
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedData.map((row, rowIndex) => (
-                    <tr key={rowIndex} className="hover:bg-gray-50/30 transition-colors group">
-                      {columns.map((col, colIndex) => (
-                        <td
-                          key={colIndex}
-                          className="py-4 px-6 text-sm text-gray-700 leading-tight"
-                        >
-                          {col.render ? col.render(row, rowIndex) : row[col.key]}
+                {table.getRowModel().rows.length > 0 ? (
+                  table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50/40 transition-all group">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="py-4 px-6 text-sm text-gray-600 font-medium">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}
                     </tr>
                   ))
+                ) : (
+                  <tr>
+                    <td colSpan={columns.length} className="py-24">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <div className="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                          <Inbox className="h-8 w-8 text-gray-300" />
+                        </div>
+                        <h3 className="text-base font-bold text-gray-900">{emptyMessage}</h3>
+                        <p className="text-sm text-gray-500 max-w-xs mt-1">{emptySubtitle}</p>
+                      </div>
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -144,34 +155,47 @@ const DataTable = ({
         </CardContent>
       </Card>
 
-      {pagination && totalPages > 1 && (
+      {pagination && table.getPageCount() > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
-          <p className="text-xs font-medium text-gray-500 order-2 sm:order-1">
-            Showing <span className="text-gray-900 font-bold">{startIndex + 1}</span> to <span className="text-gray-900 font-bold">{Math.min(startIndex + pageSize, filteredData.length)}</span> of <span className="text-gray-900 font-bold">{filteredData.length}</span> entries
+          <p className="text-xs font-bold text-gray-400 order-2 sm:order-1 capitalize">
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
           </p>
-          <div className="flex items-center gap-1 order-1 sm:order-2">
+          <div className="flex items-center gap-1.5 order-1 sm:order-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="h-8 w-8 p-0 rounded-lg border-gray-200"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="h-8 w-8 p-0 rounded-lg border-gray-100"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-
-            <div className="flex items-center px-3 h-8 bg-gray-50 rounded-lg border border-gray-100 mx-1">
-              <span className="text-xs font-bold text-gray-700">
-                {currentPage} <span className="text-gray-400 font-medium">/</span> {totalPages}
-              </span>
+            <div className="flex gap-1">
+              {[...Array(table.getPageCount())].map((_, i) => {
+                // Simple page numbers
+                if (table.getPageCount() > 5 && (i > 0 && i < table.getPageCount() - 1 && Math.abs(i - table.getState().pagination.pageIndex) > 1)) {
+                  if (Math.abs(i - table.getState().pagination.pageIndex) === 2) return <span key={i} className="text-gray-300">...</span>;
+                  return null;
+                }
+                return (
+                  <Button
+                    key={i}
+                    variant={table.getState().pagination.pageIndex === i ? "default" : "ghost"}
+                    size="sm"
+                    className={cn("h-8 w-8 p-0 rounded-lg text-xs font-bold", table.getState().pagination.pageIndex === i && "bg-indigo-600")}
+                    onClick={() => table.setPageIndex(i)}
+                  >
+                    {i + 1}
+                  </Button>
+                )
+              })}
             </div>
-
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0 rounded-lg border-gray-200"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="h-8 w-8 p-0 rounded-lg border-gray-100"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

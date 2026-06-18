@@ -12,6 +12,7 @@ public class PosSaleRequest {
     private String customerPhone;
     private String paymentMethod;
     private Long prescriptionId;
+    private String prescriptionNumber;
 
     public List<SaleItemDto> getItems() { return items; }
     public void setItems(List<SaleItemDto> items) { this.items = items; }
@@ -25,4 +26,6 @@ public class PosSaleRequest {
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
     public Long getPrescriptionId() { return prescriptionId; }
     public void setPrescriptionId(Long prescriptionId) { this.prescriptionId = prescriptionId; }
+    public String getPrescriptionNumber() { return prescriptionNumber; }
+    public void setPrescriptionNumber(String prescriptionNumber) { this.prescriptionNumber = prescriptionNumber; }
 }

@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { masterDataApi } from '../api';
+import { useAuth } from './AuthContext';
 
 const MasterDataContext = createContext();
 
 export const MasterDataProvider = ({ children }) => {
+    const { user, loading: authLoading } = useAuth();
     const [data, setData] = useState({});
     const [loading, setLoading] = useState(true);
 
@@ -34,8 +36,12 @@ export const MasterDataProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        loadAll();
-    }, []);
+        if (!authLoading && user) {
+            loadAll();
+        } else if (!authLoading && !user) {
+            setLoading(false);
+        }
+    }, [user, authLoading]);
 
     const refreshCategory = (category) => fetchCategory(category);
 

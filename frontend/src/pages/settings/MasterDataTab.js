@@ -85,23 +85,25 @@ const MasterDataTab = () => {
     };
 
     const columns = [
-        { label: 'Label', render: (row) => <span className="font-medium text-gray-900">{row.label}</span> },
-        { label: 'System Value', render: (row) => <code className="text-xs bg-gray-100 px-2 py-1 rounded">{row.value}</code> },
-        { label: 'Description', render: (row) => <span className="text-gray-500 text-sm">{row.description || '-'}</span> },
+        { accessorKey: 'label', header: 'Label', cell: ({ row }) => <span className="font-medium text-gray-900">{row.original.label}</span> },
+        { accessorKey: 'value', header: 'System Value', cell: ({ row }) => <code className="text-xs bg-gray-100 px-2 py-1 rounded">{row.original.value}</code> },
+        { accessorKey: 'description', header: 'Description', cell: ({ row }) => <span className="text-gray-500 text-sm">{row.original.description || '-'}</span> },
         {
-            label: 'Status',
-            render: (row) => (
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${row.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {row.active ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                    {row.active ? 'Active' : 'Inactive'}
+            accessorKey: 'active',
+            header: 'Status',
+            cell: ({ row }) => (
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${row.original.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {row.original.active ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                    {row.original.active ? 'Active' : 'Inactive'}
                 </span>
             ),
         },
         {
-            label: 'Actions',
-            render: (row) => (
-                <Button variant="ghost" size="sm" onClick={() => handleToggleStatus(row.id)}>
-                    {row.active ? 'Deactivate' : 'Activate'}
+            id: 'actions',
+            header: 'Actions',
+            cell: ({ row }) => (
+                <Button variant="ghost" size="sm" onClick={() => handleToggleStatus(row.original.id)}>
+                    {row.original.active ? 'Deactivate' : 'Activate'}
                 </Button>
             ),
         },

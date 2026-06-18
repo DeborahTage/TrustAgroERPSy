@@ -61,21 +61,21 @@ const FlockList = () => {
   ];
 
   const columns = [
-    { key: 'batchCode', label: t('flocks.batchCode') },
-    { key: 'farmName', label: t('flocks.farm') },
-    { key: 'birdType', label: t('flocks.birdType') },
-    { key: 'initialBirdCount', label: t('flocks.initialCount'), render: r => Number(r.initialBirdCount).toLocaleString() },
-    { key: 'currentBirdCount', label: t('flocks.currentCount'), render: r => Number(r.currentBirdCount).toLocaleString() },
-    { key: 'startDate', label: t('flocks.startDate'), render: r => formatDate(r.startDate) },
-    { key: 'status', label: t('flocks.status'), render: r => <StatusBadge status={r.status} /> },
+    { accessorKey: 'batchCode', header: t('flocks.batchCode') },
+    { accessorKey: 'farmName', header: t('flocks.farm') },
+    { accessorKey: 'birdType', header: t('flocks.birdType') },
+    { accessorKey: 'initialBirdCount', header: t('flocks.initialCount'), cell: ({ row }) => Number(row.original.initialBirdCount).toLocaleString() },
+    { accessorKey: 'currentBirdCount', header: t('flocks.currentCount'), cell: ({ row }) => Number(row.original.currentBirdCount).toLocaleString() },
+    { accessorKey: 'startDate', header: t('flocks.startDate'), cell: ({ row }) => formatDate(row.original.startDate) },
+    { accessorKey: 'status', header: t('flocks.status'), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
     {
-      key: 'actions', label: t('flocks.actions'),
-      render: r => (
+      id: 'actions',
+      cell: ({ row }) => (
         <div className="flex gap-2">
           <Button
             size="sm"
             variant="outline"
-            onClick={() => navigate(`/flocks/${r.id}`)}
+            onClick={() => navigate(`/flocks/${row.original.id}`)}
           >
             View
           </Button>
@@ -83,16 +83,16 @@ const FlockList = () => {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => navigate(`/flocks/${r.id}/edit`)}
+              onClick={() => navigate(`/flocks/${row.original.id}/edit`)}
             >
               Edit
             </Button>
           )}
-          {r.status === 'ACTIVE' && canPerformAction('edit', 'flocks') && (
+          {row.original.status === 'ACTIVE' && canPerformAction('edit', 'flocks') && (
             <Button
               size="sm"
               variant="outline"
-              onClick={() => flockApi.close(r.id).then(() => setFlocks(f => f.map(x => x.id === r.id ? { ...x, status: 'CLOSED' } : x)))}
+              onClick={() => flockApi.close(row.original.id).then(() => setFlocks(f => f.map(x => x.id === row.original.id ? { ...x, status: 'CLOSED' } : x)))}
             >
               Close
             </Button>

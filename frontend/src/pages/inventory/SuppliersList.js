@@ -47,50 +47,49 @@ const SuppliersList = () => {
 
     const columns = [
         {
-            key: 'name',
-            label: 'Supplier',
-            render: (row) => (
+            accessorKey: 'name',
+            header: 'Supplier',
+            cell: ({ row }) => (
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100">
                         <Truck className="h-5 w-5 text-indigo-600" />
                     </div>
                     <div className="flex flex-col">
-                        <span className="font-bold text-gray-900">{row.name}</span>
-                        <span className="text-xs text-gray-500">{row.category}</span>
+                        <span className="font-bold text-gray-900">{row.original.name}</span>
+                        <span className="text-xs text-gray-500">{row.original.category}</span>
                     </div>
                 </div>
             )
         },
         {
-            key: 'contact',
-            label: 'Contact Info',
-            render: (row) => (
+            accessorKey: 'contact',
+            header: 'Contact Info',
+            cell: ({ row }) => (
                 <div className="space-y-1">
                     <div className="flex items-center text-xs text-gray-600 gap-1.5">
-                        <Phone className="h-3 w-3" /> {row.phone}
+                        <Phone className="h-3 w-3" /> {row.original.phone}
                     </div>
                     <div className="flex items-center text-xs text-gray-600 gap-1.5">
-                        <Mail className="h-3 w-3" /> {row.email}
+                        <Mail className="h-3 w-3" /> {row.original.email}
                     </div>
                 </div>
             )
         },
         {
-            key: 'performance',
-            label: 'Performance',
-            render: (row) => (
+            accessorKey: 'performance',
+            header: 'Performance',
+            cell: ({ row }) => (
                 <div className="flex items-center gap-1 text-amber-500">
                     <Star className="h-3.5 w-3.5 fill-current" />
-                    <span className="text-xs font-bold">{row.rating}</span>
+                    <span className="text-xs font-bold">{row.original.rating}</span>
                 </div>
             )
         },
-        { key: 'lastOrder', label: 'Last Order', render: (row) => row.lastOrder },
-        { key: 'status', label: 'Status', render: (row) => <StatusBadge status="active" /> },
+        { accessorKey: 'lastOrder', header: 'Last Order', cell: ({ row }) => row.original.lastOrder },
+        { accessorKey: 'status', header: 'Status', cell: () => <StatusBadge status="active" /> },
         {
-            key: 'actions',
-            label: '',
-            render: (row) => (
+            id: 'actions',
+            cell: () => (
                 <Button variant="ghost" size="sm">
                     <ExternalLink className="h-4 w-4" />
                 </Button>

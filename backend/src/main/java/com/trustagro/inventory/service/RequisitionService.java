@@ -9,6 +9,7 @@ import com.trustagro.inventory.entity.RequisitionStatus;
 import com.trustagro.inventory.repository.InternalRequisitionRepository;
 import com.trustagro.inventory.repository.InventoryItemRepository;
 import com.trustagro.user.entity.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class RequisitionService {
 
@@ -109,7 +111,37 @@ public class RequisitionService {
         for (RequisitionItem ri : req.getItems()) {
             ri.setQuantityIssued(ri.getQuantityApproved());
             // Call InventoryService to physically deduct stock
-            inventoryService.stockOut(ri.getItem().getId(), ri.getQuantityIssued(), "ISSUE", req.getId(), user);
+            // This already creates a movement record
+            inventoryService.stockOut(ri.getItem().getId(), ri.getQuantityIssued(), "REQUISITION", req.getId(), user);
+            
+            // Automated Finance Logging for internal consumption
+            if (ri.getUnitCost() != null && ri.getUnitCost().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                try {
+                    com.trustagro.finance.entity.FinanceTransaction expense = new com.trustagro.finance.entity.FinanceTransaction();
+                    expense.setTransactionType(com.trustagro.finance.entity.TransactionType.EXPENSE);
+                    expense.setCategory("Internal Consumption");
+                    expense.setAmount(ri.getUnitCost().multiply(java.math.BigDecimal.valueOf(ri.getQuantityIssued())));
+                    expense.setTransactionDate(java.time.LocalDate.now());
+                    expense.setReferenceType("REQUISITION");
+                    expense.setReferenceId(req.getId());
+                    
+                    String desc = "Requisition fulfillment: " + ri.getItem().getItemName() + " x" + ri.getQuantityIssued();
+                    if (req.getFlock() != null) desc += " for Flock " + req.getFlock().getBatchCode();
+                    else if (req.getFarm() != null) desc += " for Farm " + req.getFarm().getFarmName();
+                    
+                    expense.setDescription(desc);
+                    expense.setDepartment("Operations");
+                    expense.setRecordedBy(user);
+                    
+                    // Link to farm/flock context for COGS/expense tracking
+                    if (req.getFarm() != null) expense.setFarmId(req.getFarm().getId());
+                    if (req.getFlock() != null) expense.setFlockId(req.getFlock().getId());
+                    
+                    inventoryService.saveFinanceTransaction(expense);
+                } catch (Exception ex) {
+                    log.warn("Finance logging for requisition {} failed: {}", req.getRequisitionNumber(), ex.getMessage());
+                }
+            }
         }
 
         return requisitionRepository.save(req);

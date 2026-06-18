@@ -3,7 +3,7 @@ package com.trustagro.pharmacy.service;
 import com.trustagro.farm.entity.Flock;
 import com.trustagro.finance.entity.FinanceTransaction;
 import com.trustagro.finance.entity.TransactionType;
-import com.trustagro.finance.repository.FinanceTransactionRepository;
+import com.trustagro.finance.service.FinanceService;
 import com.trustagro.inventory.entity.InventoryItem;
 import com.trustagro.inventory.entity.MovementType;
 import com.trustagro.inventory.entity.StockBatch;
@@ -47,7 +47,7 @@ public class PharmacyService {
     private final InventoryItemRepository inventoryItemRepository;
     private final StockBatchRepository stockBatchRepository;
     private final StockMovementRepository stockMovementRepository;
-    private final FinanceTransactionRepository financeTransactionRepository;
+    private final FinanceService financeService;
     private final InventoryService inventoryService;
 
     public PharmacyService(PharmacyPatientRepository patientRepository,
@@ -62,7 +62,7 @@ public class PharmacyService {
                            InventoryItemRepository inventoryItemRepository,
                            StockBatchRepository stockBatchRepository,
                            StockMovementRepository stockMovementRepository,
-                           FinanceTransactionRepository financeTransactionRepository,
+                           FinanceService financeService,
                            InventoryService inventoryService) {
         this.patientRepository = patientRepository;
         this.rxRepository = rxRepository;
@@ -76,7 +76,7 @@ public class PharmacyService {
         this.inventoryItemRepository = inventoryItemRepository;
         this.stockBatchRepository = stockBatchRepository;
         this.stockMovementRepository = stockMovementRepository;
-        this.financeTransactionRepository = financeTransactionRepository;
+        this.financeService = financeService;
         this.inventoryService = inventoryService;
     }
 
@@ -145,6 +145,71 @@ public class PharmacyService {
     }
 
     @Transactional
+    public void approvePrescription(Long rxId, User user) {
+        PharmacyPrescription rx = rxRepository.findById(rxId)
+                .orElseThrow(() -> new IllegalArgumentException("Prescription not found"));
+        rx.setStatus("Approved");
+        rx.setProcessedBy(user);
+        rxRepository.save(rx);
+        log.info("Prescription {} approved by pharmacist {}", rx.getPrescriptionCode(), user.getEmail());
+    }
+
+    @Transactional
+    public void dispensePrescription(Long rxId, User user) {
+        PharmacyPrescription rx = rxRepository.findById(rxId)
+                .orElseThrow(() -> new IllegalArgumentException("Prescription not found"));
+
+        if (!"Approved".equalsIgnoreCase(rx.getStatus())) {
+            throw new IllegalStateException("Prescription must be Approved before dispensing");
+        }
+
+        List<PrescriptionItem> items = rxItemRepository.findByPrescriptionId(rxId);
+        BigDecimal totalCost = BigDecimal.ZERO;
+
+        for (PrescriptionItem item : items) {
+            InventoryItem drug = item.getInventoryItem();
+            double qtyToDeduct = item.getQuantityPrescribed().doubleValue();
+
+            // Deduct from Inventory
+            inventoryService.stockOut(
+                    drug.getId(),
+                    qtyToDeduct,
+                    "PHARMACY_DISPENSE: " + rx.getPrescriptionCode(),
+                    null,
+                    user
+            );
+
+            // Calculate cost (internal cost or retail depending on type)
+            BigDecimal unitPrice = drug.getRetailPrice() != null ? drug.getRetailPrice() : BigDecimal.ZERO;
+            totalCost = totalCost.add(unitPrice.multiply(item.getQuantityPrescribed()));
+        }
+
+        rx.setStatus("Dispensed");
+        rx.setProcessedBy(user);
+        rx.setTotalCost(totalCost);
+        rxRepository.save(rx);
+
+        // Update original Vet Prescription
+        if (rx.getVetPrescription() != null) {
+            Prescription vetRx = rx.getVetPrescription();
+            vetRx.setStatus(com.trustagro.veterinary.entity.PrescriptionStatus.COMPLETED);
+            vetRxRepository.save(vetRx);
+
+            // Finance Logging
+            if (vetRx.getPrescriptionType() == com.trustagro.veterinary.entity.PrescriptionType.INTERNAL_FARM) {
+                financeService.postExpense(totalCost, null, "5120", 
+                        "Internal Dispense: " + rx.getPrescriptionCode(), "PHARMACY", "PHARMACY_DISPENSE", rx.getId());
+            } else {
+                financeService.postRevenue(totalCost, null, "4200", 
+                        "Client Sale: " + rx.getPrescriptionCode(), "PHARMACY", "PHARMACY_DISPENSE", rx.getId());
+            }
+
+        }
+
+        log.info("Prescription {} dispensed and finance/stock updated", rx.getPrescriptionCode());
+    }
+
+    @Transactional
     public PharmacySale processSale(PosSaleRequest request, User user) {
         PharmacySale sale = new PharmacySale();
         sale.setSaleCode("SAL-" + System.currentTimeMillis());
@@ -152,6 +217,9 @@ public class PharmacyService {
         sale.setPaymentMethod(request.getPaymentMethod());
         sale.setCustomerName(request.getCustomerName());
         sale.setCustomerPhone(request.getCustomerPhone());
+        if (request.getPrescriptionNumber() != null && !request.getPrescriptionNumber().isBlank()) {
+            sale.setNotes("Rx: " + request.getPrescriptionNumber());
+        }
 
         PharmacyCustomer customer = null;
         if (request.getCustomerId() != null) {
@@ -249,14 +317,9 @@ public class PharmacyService {
         PharmacySale savedSale = saleRepository.save(sale);
 
         // Revenue Log
-        FinanceTransaction ft = new FinanceTransaction();
-        ft.setTransactionType(TransactionType.INCOME);
-        ft.setAmount(total);
-        ft.setCategory("Pharmacy Revenue");
-        ft.setDescription("Sale: " + savedSale.getSaleCode());
-        ft.setRecordedBy(user);
-        ft.setTransactionDate(LocalDate.now());
-        financeTransactionRepository.save(ft);
+        financeService.postRevenue(total, request.getBusinessUnit(), "4200", 
+                "Sale: " + savedSale.getSaleCode(), "PHARMACY", "PHARMACY_SALE", savedSale.getId());
+
 
         return savedSale;
     }
@@ -264,30 +327,82 @@ public class PharmacyService {
     public Map<String, Object> getDashboardStats() {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDateTime.now();
-        
+        LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+
         List<PharmacySale> todaySales = saleRepository.findSalesBetweenDates(startOfDay, endOfDay);
+        List<PharmacySale> monthSales = saleRepository.findSalesBetweenDates(startOfMonth, endOfDay);
+
         BigDecimal revenueToday = todaySales.stream()
-                .map(PharmacySale::getTotalAmount)
+                .map(s -> s.getTotalAmount() != null ? s.getTotalAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
+
+        BigDecimal revenueMonth = monthSales.stream()
+                .map(s -> s.getTotalAmount() != null ? s.getTotalAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         long pendingRx = rxRepository.countByStatus("Pending");
-        
-        // Mocking trend data for frontend charts
-        List<Map<String, Object>> trend = List.of(
-            Map.of("day", "Mon", "sales", 1200),
-            Map.of("day", "Tue", "sales", 1500),
-            Map.of("day", "Wed", "sales", 1100),
-            Map.of("day", "Thu", "sales", 1800),
-            Map.of("day", "Fri", "sales", revenueToday)
-        );
+
+        // Revenue by category from actual sale items
+        Map<String, BigDecimal> revenueByCategory = new HashMap<>();
+        // Top sellers by quantity
+        Map<String, Long> topSellerQty = new HashMap<>();
+        Map<String, BigDecimal> topSellerRevenue = new HashMap<>();
+
+        for (PharmacySale sale : monthSales) {
+            if (sale.getSaleItems() != null) {
+                for (var si : sale.getSaleItems()) {
+                    String cat = si.getInventoryItem() != null && si.getInventoryItem().getCategory() != null
+                            ? si.getInventoryItem().getCategory().name() : "OTHER";
+                    BigDecimal lineTotal = si.getLineTotal() != null ? si.getLineTotal() : BigDecimal.ZERO;
+                    revenueByCategory.merge(cat, lineTotal, BigDecimal::add);
+
+                    String itemName = si.getItemName() != null ? si.getItemName() : "Unknown";
+                    topSellerQty.merge(itemName, si.getQuantity() != null ? si.getQuantity().longValue() : 0L, Long::sum);
+                    topSellerRevenue.merge(itemName, lineTotal, BigDecimal::add);
+                }
+            }
+        }
+
+        // Build top 5 sellers list
+        List<Map<String, Object>> topSellers = topSellerQty.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(5)
+                .map(e -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("name", e.getKey());
+                    item.put("quantity", e.getValue());
+                    item.put("revenue", topSellerRevenue.getOrDefault(e.getKey(), BigDecimal.ZERO));
+                    return item;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        // Build category revenue list
+        List<Map<String, Object>> categoryRevenue = revenueByCategory.entrySet().stream()
+                .map(e -> {
+                    Map<String, Object> cat = new HashMap<>();
+                    cat.put("category", e.getKey());
+                    cat.put("revenue", e.getValue());
+                    return cat;
+                })
+                .sorted((a, b) -> ((BigDecimal) b.get("revenue")).compareTo((BigDecimal) a.get("revenue")))
+                .collect(java.util.stream.Collectors.toList());
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("revenue_today", revenueToday);
+        stats.put("revenue_month", revenueMonth);
         stats.put("sales_count_today", todaySales.size());
+        stats.put("sales_count_month", monthSales.size());
         stats.put("pending_prescriptions", pendingRx);
-        stats.put("revenue_trend", trend);
-        
+        stats.put("top_sellers", topSellers);
+        stats.put("revenue_by_category", categoryRevenue);
+
         return stats;
+    }
+
+    public List<PharmacySale> getRecentSales() {
+        LocalDateTime start = LocalDate.now().minusDays(30).atStartOfDay();
+        LocalDateTime end = LocalDateTime.now();
+        return saleRepository.findSalesBetweenDates(start, end);
     }
 
     @Transactional

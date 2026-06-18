@@ -61,33 +61,33 @@ const DailyFarmRecordList = () => {
   ];
 
   const columns = [
-    { key: 'date', label: t('dailyRecordList.date'), render: r => formatDate(r.date) },
-    { key: 'farmName', label: t('dailyRecordList.farm') },
-    { key: 'batchCode', label: t('dailyRecordList.batch') },
-    { key: 'openingBirdCount', label: t('dailyRecordList.opening'), render: r => Number(r.openingBirdCount).toLocaleString() },
-    { key: 'mortality', label: t('dailyRecordList.mortality'), render: r => r.mortality || 0 },
-    { key: 'feedConsumed', label: t('dailyRecordList.feed'), render: r => `${r.feedConsumed || 0} kg` },
-    { key: 'eggProduction', label: t('dailyRecordList.eggs'), render: r => r.eggProduction || 0 },
-    { key: 'mortalityRate', label: t('dailyRecordList.mortalityRate'), render: r => r.mortalityRate ? `${r.mortalityRate.toFixed(2)}%` : '-' },
-    { key: 'recordedBy', label: t('dailyRecordList.recordedBy') },
+    { accessorKey: 'date', header: t('dailyRecordList.date'), cell: ({ row }) => formatDate(row.original.date) },
+    { accessorKey: 'farmName', header: t('dailyRecordList.farm') },
+    { accessorKey: 'batchCode', header: t('dailyRecordList.batch') },
+    { accessorKey: 'openingBirdCount', header: t('dailyRecordList.opening'), cell: ({ row }) => Number(row.original.openingBirdCount).toLocaleString() },
+    { accessorKey: 'mortality', header: t('dailyRecordList.mortality'), cell: ({ row }) => row.original.mortality || 0 },
+    { accessorKey: 'feedConsumed', header: t('dailyRecordList.feed'), cell: ({ row }) => `${row.original.feedConsumed || 0} kg` },
+    { accessorKey: 'eggProduction', header: t('dailyRecordList.eggs'), cell: ({ row }) => row.original.eggProduction || 0 },
+    { accessorKey: 'mortalityRate', header: t('dailyRecordList.mortalityRate'), cell: ({ row }) => row.original.mortalityRate ? `${row.original.mortalityRate.toFixed(2)}%` : '-' },
+    { accessorKey: 'recordedBy', header: t('dailyRecordList.recordedBy') },
     {
-      key: 'actions', label: t('dailyRecordList.actions'),
-      render: r => (
+      id: 'actions',
+      cell: ({ row }) => (
         <div className="flex gap-2">
           {canPerformAction('edit', 'dailyRecords') && (
           <Button
             size="sm"
             variant="outline"
-            onClick={() => navigate(`/daily-records/${r.id}/edit`)}
+            onClick={() => navigate(`/daily-records/${row.original.id}/edit`)}
           >
             Edit
           </Button>
           )}
-          {(r.mortality > 0 || r.symptomsOrRemarks) && (
+          {(row.original.mortality > 0 || row.original.symptomsOrRemarks) && (
             <Button
               size="sm"
               variant="outline"
-              onClick={() => navigate('/veterinary/health-reports/new', { state: { dailyRecord: r } })}
+              onClick={() => navigate('/veterinary/health-reports/new', { state: { dailyRecord: row.original } })}
             >
               Health Report
             </Button>

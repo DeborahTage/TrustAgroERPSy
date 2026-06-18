@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { pharmacyApi } from '../../api';
 import PageHeader from '../../components/shared/PageHeader';
+import PageContainer from '../../components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Label } from '../../components/ui/label';
 import { Input } from '../../components/ui/input';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import {
     Pill,
     ArrowLeft,
@@ -18,7 +19,11 @@ import {
     Navigation,
     Calendar,
     Hash,
-    Activity
+    Activity,
+    ShieldCheck,
+    Truck,
+    Receipt,
+    FlaskConical
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { format } from 'date-fns';
@@ -32,6 +37,7 @@ export default function ProcessPrescription() {
     const [rx, setRx] = useState(null);
     const [loading, setLoading] = useState(false);
     const [processing, setProcessing] = useState(false);
+    const [step, setStep] = useState(1); // 1: Review, 2: Approve, 3: Dispense
 
     useEffect(() => {
         if (initialRxId) {
@@ -48,6 +54,8 @@ export default function ProcessPrescription() {
             const found = (res.data.data || []).find(r => String(r.id) === String(id));
             if (found) {
                 setRx(found);
+                if (found.status === 'Approved') setStep(2);
+                if (found.status === 'Dispensed') setStep(3);
             } else {
                 toast.error("Prescription not found or already processed");
             }
@@ -58,14 +66,30 @@ export default function ProcessPrescription() {
         }
     };
 
-    const handleProcess = async () => {
+    const handleApprove = async () => {
         if (!rx) return;
         setProcessing(true);
         try {
             await pharmacyApi.approvePrescription(rx.id);
+            toast.success("Prescription instructions verified and approved.");
+            setStep(2);
+            setRx({ ...rx, status: 'Approved' });
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Approval failure");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleDispense = async () => {
+        if (!rx) return;
+        setProcessing(true);
+        try {
             await pharmacyApi.dispensePrescription(rx.id);
-            toast.success("Prescription dispensed! Stock levels and finance ledger updated.");
-            navigate('/pharmacy/overview');
+            toast.success("Medical stock successfully issued and ledgered.");
+            setStep(3);
+            setRx({ ...rx, status: 'Dispensed' });
+            setTimeout(() => navigate('/pharmacy/overview'), 2000);
         } catch (error) {
             toast.error(error.response?.data?.message || "Dispensing failure");
         } finally {
@@ -75,185 +99,233 @@ export default function ProcessPrescription() {
 
     if (loading) {
         return (
-            <div className="p-12 flex flex-col items-center justify-center animate-pulse">
-                <Pill className="h-12 w-12 text-gray-200 mb-4 animate-bounce" />
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading Order Details...</p>
-            </div>
+            <PageContainer>
+                <div className="h-96 bg-gray-100 rounded-[2.5rem] animate-pulse flex flex-col items-center justify-center">
+                    <Activity className="h-12 w-12 text-gray-300 animate-spin mb-4" />
+                    <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Synchronizing Medical Ledger...</p>
+                </div>
+            </PageContainer>
         );
     }
 
     return (
-        <div className="space-y-8 pb-12 max-w-5xl mx-auto">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 hover:bg-white" onClick={() => navigate(-1)}>
-                    <ArrowLeft className="h-5 w-5" />
+        <PageContainer>
+            <PageHeader
+                title="Dispensing Command"
+                subtitle="Verify clinical directives and execute pharmaceutical issuance."
+                breadcrumbs={['Pharmacy', 'Fulfillment', rx?.prescriptionCode || 'Order']}
+            >
+                <Button variant="ghost" className="rounded-2xl font-bold" onClick={() => navigate(-1)}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Queue
                 </Button>
-                <PageHeader
-                    title="Process Medical Order"
-                    subtitle="Verify instructions and execute issuance to farm"
-                />
-            </div>
+            </PageHeader>
 
             {!rx ? (
-                <Card className="border-dashed border-2 bg-gray-50/50">
-                    <CardContent className="h-64 flex flex-col items-center justify-center space-y-4">
-                        <AlertCircle className="h-12 w-12 text-gray-300" />
-                        <div className="text-center">
-                            <p className="text-gray-500 font-bold">No Active Selection</p>
-                            <p className="text-xs text-gray-400">Select a prescription from the command center to begin processing.</p>
-                        </div>
-                        <Button onClick={() => navigate('/pharmacy/overview')} variant="outline" className="rounded-xl">
-                            Go to Queue
-                        </Button>
-                    </CardContent>
+                <Card className="border-none shadow-2xl shadow-gray-200/50 rounded-[2.5rem] bg-white h-[400px] flex flex-col items-center justify-center gap-6">
+                    <div className="h-20 w-20 bg-gray-50 rounded-3xl flex items-center justify-center">
+                        <AlertCircle className="h-10 w-10 text-gray-300" />
+                    </div>
+                    <div className="text-center space-y-2">
+                        <h3 className="text-xl font-black text-gray-900">No Active Order</h3>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Select a prescription from the dashboard to begin processing.</p>
+                    </div>
+                    <Button onClick={() => navigate('/pharmacy/overview')} className="rounded-2xl bg-[#0f172a] h-12 px-8 font-black uppercase tracking-tighter text-[11px]">
+                        Return to Command Center
+                    </Button>
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left: Summary Card */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <Card className="border-none shadow-xl bg-white rounded-3xl overflow-hidden">
-                            <CardHeader className="bg-slate-900 text-white p-8">
-                                <div className="flex justify-between items-start">
-                                    <div className="space-y-2">
-                                        <Badge className="bg-emerald-500 hover:bg-emerald-600 border-none font-bold">READY FOR DISPENSING</Badge>
-                                        <CardTitle className="text-3xl font-black tracking-tight">{rx.prescriptionNumber || `RX-${rx.id}`}</CardTitle>
-                                        <CardDescription className="text-slate-400 font-medium italic">Ordered on {format(new Date(rx.createdAt || Date.now()), 'PPP')}</CardDescription>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md inline-block">
-                                            <Pill className="h-8 w-8 text-emerald-400" />
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Fulfillment Progress */}
+                        <div className="bg-white p-2 rounded-[2rem] shadow-sm border border-gray-100 flex items-center justify-between px-6 h-20">
+                            {[
+                                { s: 1, label: 'Review', icon: ClipboardCheck },
+                                { s: 2, label: 'Approval', icon: ShieldCheck },
+                                { s: 3, label: 'Dispense', icon: Truck }
+                            ].map((item, i) => (
+                                <React.Fragment key={item.s}>
+                                    <div className={cn(
+                                        "flex items-center gap-3 transition-all duration-500",
+                                        step >= item.s ? "text-[#0f172a]" : "text-gray-300"
+                                    )}>
+                                        <div className={cn(
+                                            "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
+                                            step >= item.s ? "bg-indigo-900 text-white shadow-lg shadow-indigo-100" : "bg-gray-100"
+                                        )}>
+                                            <item.icon className="h-5 w-5" />
                                         </div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                                    </div>
+                                    {i < 2 && <div className={cn("h-px flex-1 mx-4 max-w-[60px]", step > item.s ? "bg-indigo-900" : "bg-gray-100")} />}
+                                </React.Fragment>
+                            ))}
+                        </div>
+
+                        <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] overflow-hidden bg-white">
+                            <CardHeader className="bg-[#0f172a] text-white p-10 relative">
+                                <div className="absolute top-0 right-0 p-10 opacity-10">
+                                    <FlaskConical className="h-32 w-32" />
+                                </div>
+                                <div className="flex justify-between items-start gap-4 relative z-10">
+                                    <div className="space-y-3">
+                                        <div className="flex gap-2">
+                                            <Badge className={cn(
+                                                "border-none font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full",
+                                                step === 3 ? "bg-emerald-500" : "bg-indigo-500"
+                                            )}>
+                                                {rx.status.toUpperCase()}
+                                            </Badge>
+                                            {rx.vetPrescription?.priority === 'EMERGENCY' && (
+                                                <Badge className="bg-rose-500 border-none font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full animate-pulse">EMERGENCY</Badge>
+                                            )}
+                                        </div>
+                                        <CardTitle className="text-4xl font-black tracking-tighter">{rx.prescriptionCode}</CardTitle>
+                                        <CardDescription className="text-indigo-300 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                            <Calendar className="h-3 w-3" />
+                                            Authorized {format(new Date(rx.createdAt || Date.now()), 'PPP')}
+                                        </CardDescription>
+                                    </div>
+                                    <div className="h-16 w-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                                        <Pill className="h-8 w-8 text-indigo-300" />
                                     </div>
                                 </div>
                             </CardHeader>
-                            <CardContent className="p-8 space-y-8">
-                                <div className="grid grid-cols-2 gap-8">
-                                    <div className="space-y-1">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Medication Name</Label>
-                                        <p className="text-xl font-bold text-gray-900">{rx.drugName}</p>
+                            <CardContent className="p-10 space-y-10">
+                                <div className="grid grid-cols-2 gap-10">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Biological Agent</Label>
+                                        <p className="text-2xl font-black text-gray-900 tracking-tight">{rx.drugName || rx.vetPrescription?.drugName}</p>
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Quantity to Issue</Label>
-                                        <p className="text-xl font-bold text-indigo-600">{rx.quantity} <span className="text-sm font-normal text-gray-500 uppercase tracking-tighter">Units</span></p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-8">
-                                    <div className="space-y-1 flex items-center gap-3">
-                                        <div className="p-2 bg-blue-50 rounded-lg"><Navigation className="h-4 w-4 text-blue-600" /></div>
-                                        <div>
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Route of Admin</Label>
-                                            <p className="font-bold text-gray-700">{rx.administrationRoute}</p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1 flex items-center gap-3">
-                                        <div className="p-2 bg-amber-50 rounded-lg"><Stethoscope className="h-4 w-4 text-amber-600" /></div>
-                                        <div>
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Frequency</Label>
-                                            <p className="font-bold text-gray-700">{rx.frequency}</p>
-                                        </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Dose Quantity</Label>
+                                        <p className="text-2xl font-black text-indigo-600 tracking-tight">
+                                            {rx.quantity || rx.vetPrescription?.quantity}
+                                            <span className="text-sm font-bold text-gray-400 uppercase tracking-tighter ml-2">Units</span>
+                                        </p>
                                     </div>
                                 </div>
 
-                                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 italic text-slate-600">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 not-italic">Doctor's Clinical Notes</Label>
-                                    "{rx.notes || 'No specific clinical instructions provided.'}"
+                                <div className="grid grid-cols-2 gap-10">
+                                    <div className="flex items-center gap-4 group">
+                                        <div className="h-12 w-12 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <Navigation className="h-5 w-5 text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-300">Route</Label>
+                                            <p className="font-black text-gray-700 text-sm">{rx.administrationRoute || rx.vetPrescription?.administrationRoute}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4 group">
+                                        <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <Stethoscope className="h-5 w-5 text-amber-600" />
+                                        </div>
+                                        <div>
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-300">Frequency</Label>
+                                            <p className="font-black text-gray-700 text-sm">{rx.frequency || rx.vetPrescription?.frequency}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 relative group overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform">
+                                        <ClipboardCheck className="h-20 w-20" />
+                                    </div>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-4">Clinical Peer Directives</Label>
+                                    <p className="text-gray-700 font-medium leading-relaxed italic relative z-10">
+                                        "{rx.diagnosis || rx.vetPrescription?.dosageInstruction || 'Standard pharmacological protocol requested.'}"
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Card className="border-none shadow-lg bg-white rounded-3xl">
-                                <CardHeader>
-                                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                        <ClipboardCheck className="h-4 w-4 text-emerald-500" /> Verification Checklist
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
-                                        <div className="h-4 w-4 rounded border-2 border-emerald-500 bg-emerald-50 flex items-center justify-center">
-                                            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                                        </div>
-                                        Stock Availability Confirmed
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
-                                        <div className="h-4 w-4 rounded border-2 border-emerald-500 bg-emerald-50 flex items-center justify-center">
-                                            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                                        </div>
-                                        Batch Traceability Active
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
-                                        <div className="h-4 w-4 rounded border-2 border-gray-200" />
-                                        Labeled for Farm Delivery
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="border-none shadow-lg bg-gradient-to-br from-indigo-600 to-blue-700 text-white rounded-3xl p-2 relative overflow-hidden">
-                                <div className="absolute right-[-20px] top-[-20px] opacity-10">
-                                    <CheckCircle2 size={120} />
+                        {step === 3 && (
+                            <Card className="border-none shadow-2xl shadow-emerald-100 rounded-[2.5rem] bg-emerald-600 text-white p-10 overflow-hidden relative">
+                                <div className="absolute top-0 right-0 p-8 opacity-20">
+                                    <Receipt className="h-32 w-32 rotate-12" />
                                 </div>
-                                <CardHeader>
-                                    <CardTitle className="text-sm font-bold">Automated Effects</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-2 text-xs opacity-90 font-medium">
-                                    <p>• Deduct <strong>{rx.quantity} units</strong> from FEFO drug batch</p>
-                                    <p>• Log <strong>Internal Consumption</strong> expense</p>
-                                    <p>• Link usage to <strong>{rx.flockName || 'Target Flock'}</strong> COGS</p>
-                                </CardContent>
+                                <div className="space-y-4 relative z-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                            <CheckCircle2 className="h-6 w-6 text-white" />
+                                        </div>
+                                        <h3 className="text-xl font-black uppercase tracking-tighter">Fulfillment Complete</h3>
+                                    </div>
+                                    <p className="text-sm font-bold text-emerald-100 leading-relaxed max-w-md">
+                                        Clinical instructions have been ledgered. Stock levels updated and COGS expense mapped to target flock.
+                                    </p>
+                                </div>
                             </Card>
-                        </div>
+                        )}
                     </div>
 
-                    {/* Right: Target Information & Action */}
-                    <div className="space-y-6">
-                        <Card className="border-none shadow-lg rounded-3xl overflow-hidden bg-white">
-                            <CardHeader className="pb-2 border-b border-gray-50">
-                                <CardTitle className="text-xs font-black uppercase tracking-widest text-gray-400">Fulfillment Target</CardTitle>
+                    <div className="space-y-8">
+                        <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] overflow-hidden bg-white">
+                            <CardHeader className="pb-4 border-b border-gray-50">
+                                <CardTitle className="text-xs font-black uppercase tracking-widest text-gray-400">Target Entity</CardTitle>
                             </CardHeader>
-                            <CardContent className="p-6 space-y-6">
+                            <CardContent className="p-8 space-y-8">
                                 <div className="flex items-start gap-4">
-                                    <div className="h-12 w-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400">
-                                        <Hash className="h-6 w-6" />
+                                    <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                        <Hash className="h-7 w-7" />
                                     </div>
                                     <div>
-                                        <p className="font-black text-gray-900 leading-tight">{rx.flockName || 'General Stock'}</p>
-                                        <p className="text-xs text-indigo-600 font-bold">{rx.farmName || 'Trust Agro Farm'}</p>
+                                        <p className="font-black text-gray-900 text-lg leading-tight">{rx.vetPrescription?.flockBatchCode || 'Internal Flock'}</p>
+                                        <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest mt-1">Farm Hub ID: {rx.vetPrescription?.farmId}</p>
                                     </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ordering Provider</Label>
-                                    <p className="text-sm font-bold text-gray-700">Dr. {rx.veterinarianName || 'System Vet'}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Target Start Date</Label>
-                                    <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
-                                        <Calendar className="h-4 w-4 text-gray-400" />
-                                        {format(new Date(rx.startDate || Date.now()), 'dd MMM yyyy')}
+                                <div className="space-y-6 pt-4">
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Clinical Provider</Label>
+                                        <p className="text-sm font-black text-gray-700">Medical Authority {rx.vetPrescription?.createdByVetId || 'System'}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Protocol Period</Label>
+                                        <div className="flex items-center gap-2 text-sm font-black text-gray-700">
+                                            <Calendar className="h-4 w-4 text-indigo-500" />
+                                            {format(new Date(rx.createdAt || Date.now()), 'dd MMM yyyy')}
+                                        </div>
                                     </div>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <Button
-                            className="w-full h-16 rounded-3xl bg-indigo-600 hover:bg-indigo-700 text-lg font-black shadow-lg shadow-indigo-200 transition-all active:scale-95 group"
-                            onClick={handleProcess}
-                            disabled={processing}
-                        >
-                            {processing ? (
-                                <Activity className="animate-spin mr-2 h-5 w-5" />
-                            ) : (
-                                <CheckCircle2 className="mr-2 h-6 w-6 group-hover:scale-110 transition-transform" />
-                            )}
-                            {processing ? 'Processing...' : 'Verify & Dispense'}
-                        </Button>
+                        {step === 1 ? (
+                            <Button
+                                className="w-full h-20 rounded-[2rem] bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-lg shadow-2xl shadow-gray-200 transition-all active:scale-95 group"
+                                onClick={handleApprove}
+                                disabled={processing}
+                            >
+                                {processing ? <Activity className="animate-spin h-6 w-6" /> : <ShieldCheck className="mr-3 h-7 w-7 group-hover:scale-110 transition-transform" />}
+                                {processing ? 'Verifying...' : 'Verify Order'}
+                            </Button>
+                        ) : step === 2 ? (
+                            <Button
+                                className="w-full h-20 rounded-[2rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg shadow-2xl shadow-indigo-100 transition-all active:scale-95 group"
+                                onClick={handleDispense}
+                                disabled={processing}
+                            >
+                                {processing ? <Activity className="animate-spin h-6 w-6" /> : <CheckCircle2 className="mr-3 h-7 w-7 group-hover:scale-110 transition-transform" />}
+                                {processing ? 'Executing...' : 'Dispatch Product'}
+                            </Button>
+                        ) : (
+                            <Button
+                                className="w-full h-20 rounded-[2rem] bg-emerald-50 text-emerald-600 font-black text-lg border-2 border-emerald-100 cursor-default"
+                                disabled
+                            >
+                                <CheckCircle2 className="mr-3 h-6 w-6" />
+                                Order Ledgered
+                            </Button>
+                        )}
 
-                        <p className="text-[10px] text-center text-gray-400 font-medium px-4 leading-relaxed">
-                            By clicking dispense, you confirm that physical stock has been issued and that this transaction will be recorded in the financial cost ledger immediately.
-                        </p>
+                        <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100/50">
+                            <p className="text-[9px] text-center text-indigo-600/60 font-black uppercase tracking-widest leading-relaxed">
+                                PHARMACEUTICAL CONTROL SYSTEM ACTIVE. DISPENSING TRIGGERS AUTOMATIC STOCK DEDUCTION AND FINANCIAL RECOGNITION.
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 }

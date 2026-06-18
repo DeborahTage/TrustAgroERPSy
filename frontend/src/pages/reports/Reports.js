@@ -103,36 +103,36 @@ const Reports = () => {
   ];
 
   const dailyCols = [
-    { key: 'date', label: t('reportsPage.date'), render: r => formatDate(r.date) },
-    { key: 'farmName', label: t('reportsPage.farm') }, { key: 'batchCode', label: t('reportsPage.batch') },
-    { key: 'openingBirdCount', label: t('reportsPage.opening') }, { key: 'mortality', label: t('reportsPage.mortalityCol') },
-    { key: 'mortalityRate', label: t('reportsPage.rate'), render: r => r.mortalityRate ? `${r.mortalityRate.toFixed(2)}%` : '-' },
-    { key: 'feedConsumed', label: t('reportsPage.feed') }, { key: 'eggProduction', label: t('reportsPage.eggs') },
+    { accessorKey: 'date', header: t('reportsPage.date'), cell: ({ row }) => formatDate(row.original.date) },
+    { accessorKey: 'farmName', header: t('reportsPage.farm') }, { accessorKey: 'batchCode', header: t('reportsPage.batch') },
+    { accessorKey: 'openingBirdCount', header: t('reportsPage.opening') }, { accessorKey: 'mortality', header: t('reportsPage.mortalityCol') },
+    { accessorKey: 'mortalityRate', header: t('reportsPage.rate'), cell: ({ row }) => row.original.mortalityRate ? `${row.original.mortalityRate.toFixed(2)}%` : '-' },
+    { accessorKey: 'feedConsumed', header: t('reportsPage.feed') }, { accessorKey: 'eggProduction', header: t('reportsPage.eggs') },
   ];
 
   const stockCols = [
-    { key: 'itemName', label: t('reportsPage.item') }, { key: 'category', label: t('reportsPage.category') },
-    { key: 'unit', label: t('reportsPage.unit') }, { key: 'currentStock', label: t('reportsPage.currentStock') },
-    { key: 'minimumStockLevel', label: t('reportsPage.minLevel') },
+    { accessorKey: 'itemName', header: t('reportsPage.item') }, { accessorKey: 'category', header: t('reportsPage.category') },
+    { accessorKey: 'unit', header: t('reportsPage.unit') }, { accessorKey: 'currentStock', header: t('reportsPage.currentStock') },
+    { accessorKey: 'minimumStockLevel', header: t('reportsPage.minLevel') },
   ];
 
   const expiryCols = [
-    { key: 'item', label: t('reportsPage.item'), render: r => r.item?.itemName },
-    { key: 'batchNumber', label: t('reportsPage.batch') }, { key: 'quantityRemaining', label: t('reportsPage.qty') },
-    { key: 'expiryDate', label: t('reportsPage.expiryCol'), render: r => formatDate(r.expiryDate) },
+    { accessorKey: 'item', header: t('reportsPage.item'), cell: ({ row }) => row.original.item?.itemName },
+    { accessorKey: 'batchNumber', header: t('reportsPage.batch') }, { accessorKey: 'quantityRemaining', header: t('reportsPage.qty') },
+    { accessorKey: 'expiryDate', header: t('reportsPage.expiryCol'), cell: ({ row }) => formatDate(row.original.expiryDate) },
   ];
 
   const salesCols = [
-    { key: 'receiptNumber', label: t('reportsPage.receipt') }, { key: 'customerName', label: t('reportsPage.customer') },
-    { key: 'saleDate', label: t('reportsPage.date'), render: r => formatDate(r.saleDate) },
-    { key: 'totalAmount', label: t('reportsPage.amount'), render: r => formatCurrency(r.totalAmount) },
-    { key: 'paymentMethod', label: t('reportsPage.payment') },
+    { accessorKey: 'receiptNumber', header: t('reportsPage.receipt') }, { accessorKey: 'customerName', header: t('reportsPage.customer') },
+    { accessorKey: 'saleDate', header: t('reportsPage.date'), cell: ({ row }) => formatDate(row.original.saleDate) },
+    { accessorKey: 'totalAmount', header: t('reportsPage.amount'), cell: ({ row }) => formatCurrency(row.original.totalAmount) },
+    { accessorKey: 'paymentMethod', header: t('reportsPage.payment') },
   ];
 
   const financeCols = [
-    { key: 'transactionDate', label: t('reportsPage.date'), render: r => formatDate(r.transactionDate) },
-    { key: 'category', label: t('reportsPage.category') }, { key: 'amount', label: t('reportsPage.amount'), render: r => formatCurrency(r.amount) },
-    { key: 'description', label: t('reportsPage.description') },
+    { accessorKey: 'transactionDate', header: t('reportsPage.date'), cell: ({ row }) => formatDate(row.original.transactionDate) },
+    { accessorKey: 'category', header: t('reportsPage.category') }, { accessorKey: 'amount', header: t('reportsPage.amount'), cell: ({ row }) => formatCurrency(row.original.amount) },
+    { accessorKey: 'description', header: t('reportsPage.description') },
   ];
 
   const getColumns = () => {

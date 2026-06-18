@@ -32,7 +32,7 @@ const PrescriptionQueue = ({ prescriptions, loading }) => {
             </TableHeader>
             <TableBody>
                 {prescriptions.map((rx) => (
-                    <TableRow key={rx.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => navigate(`/pharmacy/process?rxId=${rx.id}`)}>
+                    <TableRow key={rx.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => navigate(`/pharmacy/process-rx?rxId=${rx.id}`)}>
                         <TableCell className="font-mono text-[11px] font-bold text-gray-500">{rx.prescriptionNumber || `RX-${rx.id}`}</TableCell>
                         <TableCell>
                             <div className="flex flex-col">

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { inventoryApi } from '../../api';
 import DataTable from '../../components/shared/DataTable';
 import StatusBadge from '../../components/shared/StatusBadge';
 import PageHeader from '../../components/shared/PageHeader';
 import StatsCard from '../../components/shared/StatsCard';
+import PageContainer from '../../components/layout/PageContainer';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatDate, formatCurrency } from '../../utils';
@@ -16,20 +17,16 @@ import {
   Package,
   AlertTriangle,
   Clock,
-  ArrowUpDown,
-  Edit,
   ArrowUp,
   ArrowDown,
   Plus,
-  Download,
   FileText,
   DollarSign,
-  Search,
-  Filter,
-  MoreVertical
+  MoreVertical,
+  Edit,
+  History
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { PERMISSIONS } from '../../lib/permissions';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,262 +36,181 @@ import {
 
 const InventoryItemList = () => {
   const { t } = useLanguage();
-  const { hasPermission, canPerformAction } = useAuth();
+  const { canPerformAction, user } = useAuth();
   const [items, setItems] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [expiry, setExpiry] = useState([]);
-  const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoading(true);
     Promise.all([
       inventoryApi.getItems(),
       inventoryApi.getLowStock(),
       inventoryApi.getExpiryAlerts(),
-      inventoryApi.getMovements(),
-    ]).then(([itemsRes, lowStockRes, expiryRes, movementsRes]) => {
+    ]).then(([itemsRes, lowStockRes, expiryRes]) => {
       setItems(itemsRes.data.data || []);
       setLowStock(lowStockRes.data.data || []);
       setExpiry(expiryRes.data.data || []);
-      setMovements(movementsRes.data.data || []);
     }).finally(() => setLoading(false));
   }, []);
 
-  // Calculate analytics
-  const totalItems = items.length;
   const totalValue = items.reduce((sum, i) => sum + (Number(i.currentStock || 0) * Number(i.unitCost || 0)), 0);
-  const lowStockCount = lowStock.length;
-  const expiringCount = expiry.length;
 
   const kpiCards = [
-    {
-      title: 'Active SKUs',
-      value: totalItems,
-      description: 'Unique items in catalog',
-      icon: Package,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      title: 'Low Stock',
-      value: lowStockCount,
-      description: 'Require immediate reorder',
-      icon: AlertTriangle,
-      iconColor: 'text-rose-600',
-      bgColor: 'bg-rose-50'
-    },
-    {
-      title: 'Expiry Alerts',
-      value: expiringCount,
-      description: 'Batches expiring soon',
-      icon: Clock,
-      iconColor: 'text-amber-600',
-      bgColor: 'bg-amber-50'
-    },
-    {
-      title: 'Stock Valuation',
-      value: formatCurrency(totalValue),
-      description: 'Total wholesale value',
-      icon: DollarSign,
-      iconColor: 'text-emerald-600',
-      bgColor: 'bg-emerald-50'
-    }
+    { title: 'Active SKUs', value: items.length, icon: Package },
+    { title: 'Low Stock', value: lowStock.length, icon: AlertTriangle, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
+    { title: 'Expiry Alerts', value: expiry.length, icon: Clock, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { title: 'Inventory Value', value: formatCurrency(totalValue), icon: DollarSign, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' }
   ];
 
-  const headerActions = (
-    <div className="flex gap-2">
-      <Button variant="outline" size="sm" className="rounded-xl border-gray-200">
-        <Download className="mr-2 h-4 w-4" />
-        Export
-      </Button>
-      {canPerformAction('create', 'inventoryItems') && (
-        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 rounded-xl" onClick={() => navigate('/inventory/items/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Item
-        </Button>
-      )}
-    </div>
-  );
-
-  const itemColumns = [
+  const columns = useMemo(() => [
     {
-      key: 'itemName',
-      label: 'Item Name',
-      render: (row) => (
+      accessorKey: 'itemName',
+      header: 'Product Details',
+      cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-bold text-gray-900 leading-tight">{row.itemName}</span>
-          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{row.category}</span>
-        </div>
-      )
-    },
-    { key: 'unit', label: 'UoM' },
-    {
-      key: 'currentStock',
-      label: 'On Hand',
-      render: (row) => (
-        <div className="flex flex-col">
-          <span className={cn("font-black", row.currentStock <= row.minimumStockLevel ? "text-rose-600" : "text-gray-900")}>
-            {row.currentStock}
-          </span>
-          <span className="text-[10px] text-gray-400 font-medium">Min: {row.minimumStockLevel}</span>
+          <span className="font-black text-gray-900 truncate max-w-[200px]">{row.original.itemName}</span>
+          <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{row.original.category}</span>
         </div>
       )
     },
     {
-      key: 'unitCost',
-      label: 'Unit Cost',
-      render: (row) => <span className="font-medium text-gray-600">{formatCurrency(row.unitCost)}</span>
+      accessorKey: 'currentStock',
+      header: 'Availability',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col">
+            <span className={cn(
+              "text-sm font-black",
+              row.original.currentStock <= row.original.minimumStockLevel ? "text-rose-600" : "text-gray-900"
+            )}>
+              {row.original.currentStock} {row.original.unit}
+            </span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase">Min: {row.original.minimumStockLevel}</span>
+          </div>
+        </div>
+      )
     },
     {
-      key: 'status',
-      label: 'Status',
-      render: (row) => {
+      accessorKey: 'unitCost',
+      header: 'Wholesale Price',
+      cell: ({ row }) => <span className="font-bold text-gray-600">{formatCurrency(row.original.unitCost)}</span>
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
         let status = 'in_stock';
-        if (row.currentStock <= 0) status = 'out_of_stock';
-        else if (row.currentStock <= row.minimumStockLevel) status = 'low_stock';
+        if (row.original.currentStock <= 0) status = 'out_of_stock';
+        else if (row.original.currentStock <= row.original.minimumStockLevel) status = 'low_stock';
         return <StatusBadge status={status} />
       }
     },
     {
-      key: 'actions',
-      label: '',
-      render: (row) => (
+      id: 'actions',
+      cell: ({ row }) => (
         <div className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl hover:bg-gray-100 transition-all">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-xl border-gray-100 shadow-xl">
+            <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-none shadow-2xl bg-white/95 backdrop-blur-md">
               {canPerformAction('edit', 'inventoryItems') && (
-                <DropdownMenuItem onClick={() => navigate(`/inventory/items/${row.id}/edit`)} className="rounded-lg">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Details
+                <DropdownMenuItem onClick={() => navigate(`/inventory/items/${row.original.id}/edit`)} className="rounded-xl p-3 cursor-pointer hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                  <Edit className="mr-3 h-4 w-4" />
+                  <span className="font-bold text-sm">Edit Details</span>
                 </DropdownMenuItem>
               )}
-              {canPerformAction('stockIn', 'inventoryItems') && (
-                <DropdownMenuItem onClick={() => navigate('/inventory/stock-in', { state: { itemId: row.id } })} className="rounded-lg">
-                  <ArrowUp className="mr-2 h-4 w-4 text-emerald-500" />
-                  Receive Stock
-                </DropdownMenuItem>
-              )}
-              {canPerformAction('stockOut', 'inventoryItems') && (
-                <DropdownMenuItem onClick={() => navigate('/inventory/stock-out', { state: { itemId: row.id } })} className="rounded-lg">
-                  <ArrowDown className="mr-2 h-4 w-4 text-rose-500" />
-                  Issue Stock
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem onClick={() => navigate('/inventory/stock-in', { state: { itemId: row.original.id } })} className="rounded-xl p-3 cursor-pointer hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+                <ArrowUp className="mr-3 h-4 w-4" />
+                <span className="font-bold text-sm">Receive Stock</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/inventory/stock-out', { state: { itemId: row.original.id } })} className="rounded-xl p-3 cursor-pointer hover:bg-rose-50 hover:text-rose-600 transition-all">
+                <ArrowDown className="mr-3 h-4 w-4" />
+                <span className="font-bold text-sm">Issue Usage</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       )
-    },
-  ];
+    }
+  ], [navigate, canPerformAction]);
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Page Header */}
+    <PageContainer>
       <PageHeader
-        title="Warehouse Stock"
-        subtitle="End-to-end inventory control and movement tracking."
+        title="Inventory Registry"
+        subtitle="Manage and monitor all pharmaceutical and farm supplies."
+        breadcrumbs={['Inventory', 'Master Registry']}
       >
         <div className="flex gap-2">
-          <Button variant="outline" className="rounded-xl" onClick={() => navigate('/inventory/reports')}>
-            <FileText className="mr-2 h-4 w-4 text-indigo-500" />
+          <Button variant="outline" className="rounded-xl h-11 px-5 font-bold border-gray-200 hover:bg-gray-50" onClick={() => navigate('/inventory/reports')}>
+            <History className="mr-2 h-4 w-4 text-indigo-500" />
             Audit Log
           </Button>
-          <Button className="bg-slate-900 hover:bg-slate-800 rounded-xl" onClick={() => navigate('/inventory/stock-in')}>
+          <Button className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11 px-5 font-bold shadow-lg shadow-slate-200 transition-all active:scale-95" onClick={() => navigate('/inventory/items/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            New Transaction
+            Add New Item
           </Button>
         </div>
       </PageHeader>
 
-      {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpiCards.map((card, index) => (
           <StatsCard key={index} {...card} />
         ))}
       </div>
 
-      {/* Alert Banner */}
-      {(lowStockCount > 0 || expiringCount > 0) && (
-        <Card className="border-none bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg rounded-2xl">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md">
-                  <AlertTriangle className="h-6 w-6 stroke-[3px]" />
-                </div>
-                <div>
-                  <p className="font-black text-lg tracking-tight">Active Stock Alerts</p>
-                  <p className="text-sm text-white/80 font-medium italic">
-                    {lowStockCount > 0 && `${lowStockCount} items low stock. `}
-                    {expiringCount > 0 && `${expiringCount} items expiring soon.`}
-                  </p>
-                </div>
-              </div>
-              <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 border-none text-white font-bold rounded-xl" onClick={() => navigate('/inventory/expiry')}>
-                Review All
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Main Content */}
-      <div className="space-y-6 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
-        <Tabs defaultValue="all" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList className="bg-white p-1 border border-gray-100 rounded-xl shadow-sm h-11">
-              <TabsTrigger value="all" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg transition-all px-6 font-bold text-xs">
-                All Items
+      <div className="mt-8 space-y-6">
+        <Tabs defaultValue="all" className="w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <TabsList className="bg-gray-100/50 p-1.5 rounded-2xl h-auto border border-gray-100">
+              <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm rounded-xl px-6 py-2 font-black text-[11px] uppercase tracking-wider transition-all">
+                All Products
               </TabsTrigger>
-              <TabsTrigger value="low" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white rounded-lg transition-all px-6 font-bold text-xs">
+              <TabsTrigger value="low" className="data-[state=active]:bg-white data-[state=active]:text-rose-600 data-[state=active]:shadow-sm rounded-xl px-6 py-2 font-black text-[11px] uppercase tracking-wider transition-all">
                 Low Stock
-                {lowStock.length > 0 && (
-                  <span className="ml-2 bg-white/20 px-1.5 rounded-md text-[10px]">{lowStock.length}</span>
-                )}
+                {lowStock.length > 0 && <Badge className="ml-2 bg-rose-100 text-rose-600 border-none font-black">{lowStock.length}</Badge>}
               </TabsTrigger>
-              <TabsTrigger value="expiry" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white rounded-lg transition-all px-6 font-bold text-xs">
-                Expirations
-                {expiry.length > 0 && (
-                  <span className="ml-2 bg-white/20 px-1.5 rounded-md text-[10px]">{expiry.length}</span>
-                )}
+              <TabsTrigger value="expiry" className="data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm rounded-xl px-6 py-2 font-black text-[11px] uppercase tracking-wider transition-all">
+                Expiring
+                {expiry.length > 0 && <Badge className="ml-2 bg-amber-100 text-amber-600 border-none font-black">{expiry.length}</Badge>}
               </TabsTrigger>
             </TabsList>
-            {headerActions}
+
+            <div className="flex gap-2">
+              {/* Search/Filter actions could go here */}
+            </div>
           </div>
 
-          <TabsContent value="all" className="mt-0 focus-visible:outline-none outline-none">
-            <DataTable columns={itemColumns} data={items} loading={loading} searchable pagination emptyMessage="No inventory items found." />
+          <TabsContent value="all" className="focus-visible:outline-none focus-visible:ring-0">
+            <DataTable columns={columns} data={items} loading={loading} />
           </TabsContent>
 
-          <TabsContent value="low" className="mt-0 focus-visible:outline-none outline-none">
-            <DataTable columns={itemColumns} data={lowStock} loading={loading} searchable pagination emptyMessage="No low stock alerts today." />
+          <TabsContent value="low" className="focus-visible:outline-none focus-visible:ring-0">
+            <DataTable columns={columns} data={lowStock} loading={loading} />
           </TabsContent>
 
-          <TabsContent value="expiry" className="mt-0 focus-visible:outline-none outline-none">
+          <TabsContent value="expiry" className="focus-visible:outline-none focus-visible:ring-0">
             <DataTable
               columns={[
-                { key: 'itemName', label: 'Item', render: (row) => row.item?.itemName },
-                { key: 'batchNumber', label: 'Batch/Lot' },
-                { key: 'quantityRemaining', label: 'Rem. Qty' },
-                { key: 'expiryDate', label: 'Expiry', render: (row) => <span className="font-bold text-rose-600">{formatDate(row.expiryDate)}</span> },
-                { key: 'status', label: 'Severity', render: () => <StatusBadge status="expiring_soon" /> }
+                { accessorKey: 'item.itemName', header: 'Product', cell: ({ row }) => <span className="font-black">{row.original.item?.itemName}</span> },
+                { accessorKey: 'batchNumber', header: 'Batch' },
+                { accessorKey: 'quantityRemaining', header: 'Rem. Qty', cell: ({ row }) => <span className="font-bold">{row.original.quantityRemaining}</span> },
+                { accessorKey: 'expiryDate', header: 'Expiry', cell: ({ row }) => <span className="font-black text-rose-600">{formatDate(row.original.expiryDate)}</span> },
+                { id: 'status', header: 'Status', cell: () => <StatusBadge status="expiring_soon" /> }
               ]}
               data={expiry}
               loading={loading}
-              searchable
-              pagination
-              emptyMessage="All batches are safe."
             />
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

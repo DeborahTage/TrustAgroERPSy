@@ -40,30 +40,30 @@ const ExpiryTracking = () => {
     };
 
     const columns = [
-        { key: 'itemName', label: 'Item Name', render: (row) => row.item?.itemName },
-        { key: 'batchNumber', label: 'Batch/Lot #' },
-        { key: 'quantityRemaining', label: 'Qty on Hand' },
+        { accessorKey: 'itemName', header: 'Item Name', cell: ({ row }) => row.original.item?.itemName },
+        { accessorKey: 'batchNumber', header: 'Batch/Lot #' },
+        { accessorKey: 'quantityRemaining', header: 'Qty on Hand' },
         {
-            key: 'expiryDate',
-            label: 'Expiry Date',
-            render: (row) => (
+            accessorKey: 'expiryDate',
+            header: 'Expiry Date',
+            cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span className="font-semibold">{formatDate(row.expiryDate)}</span>
+                    <span className="font-semibold">{formatDate(row.original.expiryDate)}</span>
                     <span className="text-[10px] text-gray-500">
-                        {Math.floor((new Date(row.expiryDate) - new Date()) / (1000 * 60 * 60 * 24))} days left
+                        {Math.floor((new Date(row.original.expiryDate) - new Date()) / (1000 * 60 * 60 * 24))} days left
                     </span>
                 </div>
             )
         },
         {
-            key: 'status',
-            label: 'Status',
-            render: (row) => {
-                const status = getStatus(row.expiryDate);
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ row }) => {
+                const status = getStatus(row.original.expiryDate);
                 return <StatusBadge status={status.variant} />;
             }
         },
-        { key: 'supplier', label: 'Supplier' },
+        { accessorKey: 'supplier', header: 'Supplier' },
     ];
 
     const criticalCount = data.filter(i => {

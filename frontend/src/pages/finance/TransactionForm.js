@@ -1,60 +1,213 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { financeApi } from '../../api';
-import { Card, Form, Button, Row, Col, Alert } from 'react-bootstrap';
-import { useLanguage } from '../../context/LanguageContext';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import PageHeader from '../../components/shared/PageHeader';
 import { toast } from 'react-toastify';
-
-const INCOME_CATS = ['PHARMACY_SALES','EGG_SALES','CHICKEN_SALES','CONSULTING_SERVICE','TRAINING_FEE','OTHER_INCOME'];
-const EXPENSE_CATS = ['FEED_PURCHASE','DRUG_PURCHASE','VACCINE_PURCHASE','LABOR','TRANSPORT','UTILITIES','EQUIPMENT','MAINTENANCE','MARKETING','OTHER_EXPENSE'];
+import { ArrowLeft, BookOpen } from 'lucide-react';
 
 const TransactionForm = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ transactionType: 'INCOME', category: 'OTHER_INCOME', amount: '', paymentMethod: 'CASH', description: '', transactionDate: new Date().toISOString().split('T')[0] });
-  const [error, setError] = useState('');
+  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [form, setForm] = useState({
+    transactionType: 'INCOME',
+    debitAccountCode: '',
+    creditAccountCode: '',
+    amount: '',
+    description: '',
+    transactionDate: new Date().toISOString().split('T')[0],
+    referenceType: 'MANUAL',
+  });
 
-  const categories = form.transactionType === 'INCOME' ? INCOME_CATS : EXPENSE_CATS;
-
-  const handleTypeChange = (type) => {
-    setForm(f => ({ ...f, transactionType: type, category: type === 'INCOME' ? 'OTHER_INCOME' : 'OTHER_EXPENSE' }));
-  };
+  useEffect(() => {
+    financeApi.getAccounts?.()
+      .then(res => setAccounts(Array.isArray(res.data.data) ? res.data.data : []))
+      .catch(() => setAccounts([]));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.debitAccountCode || !form.creditAccountCode) {
+      setError('Both debit and credit accounts are required.');
+      return;
+    }
+    if (form.debitAccountCode === form.creditAccountCode) {
+      setError('Debit and credit accounts must be different.');
+      return;
+    }
     setLoading(true);
+    setError('');
     try {
-      await financeApi.create({ ...form, amount: Number(form.amount) });
-      toast.success(t('transactionForm.success'));
+      await financeApi.postTransaction({ ...form, amount: parseFloat(form.amount) });
+      toast.success('Transaction posted to the ledger successfully.');
       navigate('/finance');
     } catch (err) {
-      setError(err.response?.data?.message || t('transactionForm.error'));
-    } finally { setLoading(false); }
+      setError(err.response?.data?.message || 'Failed to post transaction.');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
+
+  const assetAccounts = accounts.filter(a => a.accountType === 'ASSET');
+  const liabilityAccounts = accounts.filter(a => a.accountType === 'LIABILITY');
+  const revenueAccounts = accounts.filter(a => a.accountType === 'REVENUE');
+  const expenseAccounts = accounts.filter(a => a.accountType === 'EXPENSE');
+  const equityAccounts = accounts.filter(a => a.accountType === 'EQUITY');
+
+  const AccountGroup = ({ label, list }) => list.length === 0 ? null : (
+    <>
+      <SelectItem value="__group__" disabled className="text-[10px] font-bold uppercase text-slate-400 mt-2">{label}</SelectItem>
+      {list.map(a => (
+        <SelectItem key={a.id} value={a.accountCode}>
+          {a.accountCode} – {a.accountName}
+        </SelectItem>
+      ))}
+    </>
+  );
+
   return (
-    <div>
-      <h5 className="fw-bold mb-3">{t('transactionForm.title')}</h5>
-      <Card className="border-0 shadow-sm" style={{ maxWidth: 500 }}>
-        <Card.Body className="p-4">
-          {error && <Alert variant="danger" className="py-2 small">{error}</Alert>}
-          <Form onSubmit={handleSubmit}>
-            <Row className="g-3">
-              <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('transactionForm.type')}</Form.Label><Form.Select value={form.transactionType} onChange={e => handleTypeChange(e.target.value)}><option value="INCOME">{t('status.INCOME')}</option><option value="EXPENSE">{t('status.EXPENSE')}</option></Form.Select></Form.Group></Col>
-              <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('transactionForm.category')}</Form.Label><Form.Select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>{categories.map(c => <option key={c}>{t(`options.${c}`)}</option>)}</Form.Select></Form.Group></Col>
-              <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('transactionForm.amount')}</Form.Label><Form.Control type="number" min="0.01" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required /></Form.Group></Col>
-              <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('transactionForm.paymentMethod')}</Form.Label><Form.Select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}>{['CASH','BANK_TRANSFER','MOBILE_MONEY','CREDIT'].map(m => <option key={m}>{t(`options.${m}`)}</option>)}</Form.Select></Form.Group></Col>
-              <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('transactionForm.date')}</Form.Label><Form.Control type="date" value={form.transactionDate} onChange={e => setForm({ ...form, transactionDate: e.target.value })} /></Form.Group></Col>
-              <Col xs={12}><Form.Group><Form.Label className="small fw-semibold">{t('transactionForm.description')}</Form.Label><Form.Control as="textarea" rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></Form.Group></Col>
-            </Row>
-            <div className="d-flex gap-2 mt-4">
-              <Button type="submit" variant="success" disabled={loading}>{loading ? t('forms.saving') : t('forms.save')}</Button>
-              <Button variant="outline-secondary" onClick={() => navigate('/finance')}>{t('forms.cancel')}</Button>
-            </div>
-          </Form>
-        </Card.Body>
-      </Card>
+    <div className="flex flex-col gap-6 p-4 md:p-8 bg-slate-50 min-h-screen">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/finance')}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <PageHeader
+          title="Post Manual Journal Entry"
+          subtitle="Record a double-entry transaction directly in the ledger"
+        />
+      </div>
+
+      <div className="max-w-2xl mx-auto w-full">
+        <Card className="border-none shadow-sm">
+          <CardHeader className="border-b">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BookOpen className="h-4 w-4 text-indigo-600" />
+              Journal Entry
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+
+              {/* Transaction Type */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Transaction Type</Label>
+                  <Select value={form.transactionType} onValueChange={set('transactionType')}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INCOME">Income / Revenue</SelectItem>
+                      <SelectItem value="EXPENSE">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Transaction Date</Label>
+                  <Input type="date" value={form.transactionDate}
+                    onChange={e => set('transactionDate')(e.target.value)} required />
+                </div>
+              </div>
+
+              {/* Double-Entry Accounts */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-dashed">
+                <div className="space-y-2">
+                  <Label className="text-emerald-700 font-bold">⬆ Debit Account</Label>
+                  <Select value={form.debitAccountCode} onValueChange={set('debitAccountCode')}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select account to debit…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <AccountGroup label="Assets" list={assetAccounts} />
+                      <AccountGroup label="Expenses" list={expenseAccounts} />
+                      <AccountGroup label="Revenue" list={revenueAccounts} />
+                      <AccountGroup label="Liabilities" list={liabilityAccounts} />
+                      <AccountGroup label="Equity" list={equityAccounts} />
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-rose-700 font-bold">⬇ Credit Account</Label>
+                  <Select value={form.creditAccountCode} onValueChange={set('creditAccountCode')}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select account to credit…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <AccountGroup label="Assets" list={assetAccounts} />
+                      <AccountGroup label="Expenses" list={expenseAccounts} />
+                      <AccountGroup label="Revenue" list={revenueAccounts} />
+                      <AccountGroup label="Liabilities" list={liabilityAccounts} />
+                      <AccountGroup label="Equity" list={equityAccounts} />
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Amount */}
+              <div className="space-y-2">
+                <Label>Amount (ETB)</Label>
+                <Input type="number" min="0.01" step="0.01" placeholder="0.00"
+                  value={form.amount} onChange={e => set('amount')(e.target.value)}
+                  required className="text-lg font-bold" />
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <Label>Description / Narration</Label>
+                <Textarea
+                  placeholder="Brief narration of this journal entry…"
+                  value={form.description}
+                  onChange={e => set('description')(e.target.value)}
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+
+              {/* Reference */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Reference Type</Label>
+                  <Select value={form.referenceType} onValueChange={set('referenceType')}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MANUAL">Manual Entry</SelectItem>
+                      <SelectItem value="ADJUSTMENT">Adjustment</SelectItem>
+                      <SelectItem value="OPENING">Opening Balance</SelectItem>
+                      <SelectItem value="TRANSFER">Account Transfer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {error && (
+                <div className="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg p-3">
+                  {error}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <Button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 flex-1">
+                  {loading ? 'Posting…' : 'Post to Ledger'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => navigate('/finance')}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

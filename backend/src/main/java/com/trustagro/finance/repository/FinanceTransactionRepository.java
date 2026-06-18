@@ -11,7 +11,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface FinanceTransactionRepository extends JpaRepository<FinanceTransaction, Long> {
+
     List<FinanceTransaction> findByTransactionType(TransactionType type);
+
     List<FinanceTransaction> findByTransactionDateBetween(LocalDate from, LocalDate to);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM FinanceTransaction t WHERE t.transactionType = :type")
@@ -20,15 +22,13 @@ public interface FinanceTransactionRepository extends JpaRepository<FinanceTrans
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM FinanceTransaction t WHERE t.transactionType = :type AND t.transactionDate BETWEEN :from AND :to")
     BigDecimal sumByTypeAndDateRange(@Param("type") TransactionType type, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    List<FinanceTransaction> findByBusinessUnit(com.trustagro.finance.entity.BusinessUnit businessUnit);
-    List<FinanceTransaction> findByAccountCode(com.trustagro.finance.entity.AccountCode accountCode);
-    
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM FinanceTransaction t WHERE t.businessUnit = :unit AND t.transactionType = :type")
     BigDecimal sumByBusinessUnitAndType(@Param("unit") com.trustagro.finance.entity.BusinessUnit unit, @Param("type") TransactionType type);
 
-    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM FinanceTransaction t WHERE t.businessUnit = :unit AND t.transactionType = :type AND t.transactionDate BETWEEN :from AND :to")
-    BigDecimal sumByBusinessUnitAndTypeAndDateRange(@Param("unit") com.trustagro.finance.entity.BusinessUnit unit, @Param("type") TransactionType type, @Param("from") LocalDate from, @Param("to") LocalDate to);
-
-    List<FinanceTransaction> findByInvoiceRef(String invoiceRef);
-    List<FinanceTransaction> findByFlockId(Long flockId);
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.debitAccount.accountCode = :code THEN t.amount ELSE 0 END), 0) - " +
+           "COALESCE(SUM(CASE WHEN t.creditAccount.accountCode = :code THEN t.amount ELSE 0 END), 0) " +
+           "FROM FinanceTransaction t WHERE (t.debitAccount.accountCode = :code OR t.creditAccount.accountCode = :code) " +
+           "AND t.transactionDate BETWEEN :from AND :to")
+    BigDecimal sumByAccountInRange(@Param("code") String code, @Param("from") LocalDate from, @Param("to") LocalDate to);
 }
+

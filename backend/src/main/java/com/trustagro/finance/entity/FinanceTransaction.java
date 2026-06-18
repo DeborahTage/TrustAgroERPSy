@@ -30,18 +30,18 @@ public class FinanceTransaction {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
-    private String department;
-    private Long farmId;
-    private Long clientId;
-    private Long flockId;
-    private String referenceType;
-    private Long referenceId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "debit_account_id")
+    private ChartOfAccount debitAccount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "credit_account_id")
+    private ChartOfAccount creditAccount;
+
+    private String sourceModule; // PHARMACY, INVENTORY, FARM, etc.
 
     @Enumerated(EnumType.STRING)
     private BusinessUnit businessUnit = BusinessUnit.GENERAL;
-
-    @Enumerated(EnumType.STRING)
-    private AccountCode accountCode;
 
     private BigDecimal vatAmount = BigDecimal.ZERO;
 
@@ -61,6 +61,7 @@ public class FinanceTransaction {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+
     // Manually added getters/setters to ensure Lombok issues don't block us
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -72,22 +73,16 @@ public class FinanceTransaction {
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public PaymentMethod getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
-    public String getDepartment() { return department; }
-    public void setDepartment(String department) { this.department = department; }
-    public Long getFarmId() { return farmId; }
-    public void setFarmId(Long farmId) { this.farmId = farmId; }
-    public Long getClientId() { return clientId; }
-    public void setClientId(Long clientId) { this.clientId = clientId; }
-    public Long getFlockId() { return flockId; }
-    public void setFlockId(Long flockId) { this.flockId = flockId; }
-    public String getReferenceType() { return referenceType; }
-    public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
-    public Long getReferenceId() { return referenceId; }
-    public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
+    
+    public ChartOfAccount getDebitAccount() { return debitAccount; }
+    public void setDebitAccount(ChartOfAccount debitAccount) { this.debitAccount = debitAccount; }
+    public ChartOfAccount getCreditAccount() { return creditAccount; }
+    public void setCreditAccount(ChartOfAccount creditAccount) { this.creditAccount = creditAccount; }
+    public String getSourceModule() { return sourceModule; }
+    public void setSourceModule(String sourceModule) { this.sourceModule = sourceModule; }
+
     public BusinessUnit getBusinessUnit() { return businessUnit; }
     public void setBusinessUnit(BusinessUnit businessUnit) { this.businessUnit = businessUnit; }
-    public AccountCode getAccountCode() { return accountCode; }
-    public void setAccountCode(AccountCode accountCode) { this.accountCode = accountCode; }
     public BigDecimal getVatAmount() { return vatAmount; }
     public void setVatAmount(BigDecimal vatAmount) { this.vatAmount = vatAmount; }
     public String getInvoiceRef() { return invoiceRef; }
@@ -102,4 +97,5 @@ public class FinanceTransaction {
     public void setRecordedBy(User recordedBy) { this.recordedBy = recordedBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
 }

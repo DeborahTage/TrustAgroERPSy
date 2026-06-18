@@ -121,17 +121,18 @@ export const pharmacyApi = {
 export const financeApi = {
   getDashboard: () => api.get('/api/finance/dashboard'),
   getTransactions: () => api.get('/api/finance/transactions'),
-  getInvoices: () => api.get('/api/finance/invoices'),
-  createPOSInvoice: (data) => api.post('/api/finance/invoices/pos', data),
-  createServiceInvoice: (data) => api.post('/api/finance/invoices/service', data),
-  getOverdueInvoices: () => api.get('/api/finance/invoices/overdue'),
-  getWallets: () => api.get('/api/finance/wallets'),
-  depositWallet: (data) => api.post('/api/finance/wallets/deposit'),
-  getProfitLoss: (params) => api.get('/api/finance/reports/profit-loss', { params }),
-  getARAging: () => api.get('/api/finance/reports/ar-aging'),
-  getFlockCOGS: (id) => api.get(`/api/finance/reports/flock/${id}/cogs`),
+  getReports: (from, to) => api.get(`/api/finance/reports/profit-loss?from=${from}&to=${to}`),
+  getBalanceSheet: () => api.get('/api/finance/reports/balance-sheet'),
+  getReconciliations: () => api.get('/api/finance/reconciliations'),
   reconcileCash: (data) => api.post('/api/finance/reconciliation', data),
+  createPOSInvoice: (data) => api.post('/api/finance/invoices/pos', data),
+  postTransaction: (data) => api.post('/api/finance/transactions', data),
+  getAccounts: () => api.get('/api/finance/accounts'),
+  getAuditTrail: () => api.get('/api/finance/audit-trail'),
 };
+
+
+
 
 export const crmApi = {
   getClients: () => api.get('/api/crm/clients'),

@@ -52,6 +52,11 @@ On first successful backend startup, a default admin user is seeded:
 - Email: `admin@trustagro.com`
 - Password: `Admin@1234`
 
+farmmanager@trustagro.com
+
+
+
+
 ---
 
 ## Advanced Manual Startup

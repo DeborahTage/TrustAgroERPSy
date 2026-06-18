@@ -60,20 +60,20 @@ const FarmList = () => {
   ];
 
   const columns = [
-    { key: 'farmName', label: t('farms.farmName') },
-    { key: 'location', label: t('farms.location') },
-    { key: 'farmType', label: t('farms.type') },
-    { key: 'capacity', label: t('farms.capacity'), render: r => `${Number(r.capacity).toLocaleString()} birds` },
-    { key: 'assignedFarmManagerName', label: t('farms.manager') },
-    { key: 'status', label: t('farms.status'), render: r => <StatusBadge status={r.status} /> },
+    { accessorKey: 'farmName', header: t('farms.farmName') },
+    { accessorKey: 'location', header: t('farms.location') },
+    { accessorKey: 'farmType', header: t('farms.type') },
+    { accessorKey: 'capacity', header: t('farms.capacity'), cell: ({ row }) => `${Number(row.original.capacity).toLocaleString()} birds` },
+    { accessorKey: 'assignedFarmManagerName', header: t('farms.manager') },
+    { accessorKey: 'status', header: t('farms.status'), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
     {
-      key: 'actions', label: t('farms.actions'),
-      render: r => (
+      id: 'actions',
+      cell: ({ row }) => (
         <div className="flex gap-2">
           <Button
             size="sm"
             variant="outline"
-            onClick={() => navigate(`/farms/${r.id}`)}
+            onClick={() => navigate(`/farms/${row.original.id}`)}
           >
             View
           </Button>
@@ -81,7 +81,7 @@ const FarmList = () => {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => navigate(`/farms/${r.id}/edit`)}
+              onClick={() => navigate(`/farms/${row.original.id}/edit`)}
             >
               Edit
             </Button>

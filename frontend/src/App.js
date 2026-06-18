@@ -71,6 +71,7 @@ import CrmClientForm from './pages/crm/CrmClientForm';
 import FarmVisitForm from './pages/crm/FarmVisitForm';
 import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
+import TrainingPage from './pages/training/TrainingPage';
 
 const ModuleRoute = ({ module, children }) => (
   <ProtectedRoute module={module}>{children}</ProtectedRoute>
@@ -172,6 +173,7 @@ function App() {
                 <Route path="crm/clients/:id/edit" element={<PermissionRoute permission={PERMISSIONS.MANAGE_CLIENTS}><CrmClientForm /></PermissionRoute>} />
                 <Route path="crm/visits/new" element={<ActionRoute action="create" resource="farmVisits"><FarmVisitForm /></ActionRoute>} />
 
+                <Route path="training" element={<ModuleRoute module="users"><TrainingPage /></ModuleRoute>} />
                 <Route path="reports" element={<ModuleRoute module="reports"><Reports /></ModuleRoute>} />
                 <Route path="settings" element={<Settings />} />
               </Route>

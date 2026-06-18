@@ -57,13 +57,32 @@ public class PharmacyController {
     }
 
     @PostMapping("/prescriptions/{id}/process")
-    public ResponseEntity<?> processPrescription(@PathVariable Long id, @RequestBody ProcessPrescriptionRequest req, Authentication auth) {
+    public ResponseEntity<?> processPrescription(@PathVariable Long id, Authentication auth) {
         User user = getAuthenticatedUser(auth);
         PharmacyPrescription rx = pharmacyService.receivePrescription(id, user);
         return ResponseEntity.ok(Map.of(
             "prescription", rx,
             "durWarnings", rx.getDurWarnings() != null ? rx.getDurWarnings() : List.of()
         ));
+    }
+
+    @PostMapping("/prescriptions/{id}/approve")
+    public ResponseEntity<?> approvePrescription(@PathVariable Long id, Authentication auth) {
+        User user = getAuthenticatedUser(auth);
+        pharmacyService.approvePrescription(id, user);
+        return ResponseEntity.ok(Map.of("message", "Prescription approved"));
+    }
+
+    @PostMapping("/prescriptions/{id}/dispense")
+    public ResponseEntity<?> dispensePrescription(@PathVariable Long id, Authentication auth) {
+        User user = getAuthenticatedUser(auth);
+        pharmacyService.dispensePrescription(id, user);
+        return ResponseEntity.ok(Map.of("message", "Prescription dispensed successfully"));
+    }
+
+    @GetMapping("/sales")
+    public ResponseEntity<List<PharmacySale>> getSales() {
+        return ResponseEntity.ok(pharmacyService.getRecentSales());
     }
 
     @PostMapping("/sales")

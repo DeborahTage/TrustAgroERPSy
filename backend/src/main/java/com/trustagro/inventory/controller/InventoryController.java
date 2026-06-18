@@ -348,4 +348,14 @@ public class InventoryController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Deduction failed: " + e.getMessage()));
         }
     }
+
+    @PostMapping("/transfer")
+    @PreAuthorize("hasRole('STORE_KEEPER')")
+    public ResponseEntity<Map<String, Object>> transferStock(@RequestBody Map<String, Object> data, Authentication auth) {
+        Long itemId = Long.valueOf(data.get("itemId").toString());
+        String fromZone = data.get("fromZone").toString();
+        String toZone = data.get("toZone").toString();
+        Double quantity = Double.valueOf(data.get("quantity").toString());
+        return ResponseEntity.ok(inventoryService.transferStock(itemId, fromZone, toZone, quantity, getUser(auth)));
+    }
 }

@@ -11,43 +11,47 @@ const StatsCard = ({
   trend,
   trendValue,
   className,
-  iconColor = "text-blue-600",
-  bgColor = "bg-blue-50"
+  iconColor = "text-indigo-600",
+  bgColor = "bg-indigo-50"
 }) => {
   return (
-    <Card className={cn("group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-none shadow-sm", className)}>
+    <Card className={cn("group relative overflow-hidden boarder-none transition-all duration-300 hover:shadow-md hover:-translate-y-1 bg-white", className)}>
       <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{title}</p>
-            <div className="flex items-baseline gap-2 mt-2">
-              <p className="text-3xl font-extrabold text-gray-900 tracking-tight">{value}</p>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1.5 flex-1">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em]">{title}</p>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-3xl font-black text-gray-900 tracking-tight">{value}</h3>
+              {trend && (
+                <span className={cn(
+                  "text-[10px] font-black px-1.5 py-0.5 rounded-sm flex items-center gap-0.5",
+                  trend === 'up' ? 'text-emerald-700 bg-emerald-50' :
+                    trend === 'down' ? 'text-rose-700 bg-rose-50' :
+                      'text-gray-500 bg-gray-50'
+                )}>
+                  {trend === 'up' ? <TrendingUp className="h-2.5 w-2.5" /> : trend === 'down' ? <TrendingDown className="h-2.5 w-2.5" /> : <Minus className="h-2.5 w-2.5" />}
+                  {trendValue}%
+                </span>
+              )}
             </div>
             {description && (
-              <p className="text-xs text-gray-400 mt-1">{description}</p>
-            )}
-            {trend && (
-              <div className={cn(
-                "text-xs mt-3 flex items-center gap-1.5 font-bold px-2 py-1 rounded-full w-fit",
-                trend === 'up' ? 'text-emerald-700 bg-emerald-50' :
-                  trend === 'down' ? 'text-red-700 bg-red-50' :
-                    'text-blue-700 bg-blue-50'
-              )}>
-                {trend === 'up' ? <TrendingUp className="h-3 w-3" /> :
-                  trend === 'down' ? <TrendingDown className="h-3 w-3" /> :
-                    <Minus className="h-3 w-3" />}
-                {trendValue}
-              </div>
+              <p className="text-[11px] text-gray-500 font-medium leading-relaxed">{description}</p>
             )}
           </div>
+
           {Icon && (
             <div className={cn(
-              "p-4 rounded-2xl transition-transform duration-300 group-hover:scale-110",
+              "h-12 w-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shrink-0",
               bgColor
             )}>
-              <Icon className={cn("h-7 w-7", iconColor)} />
+              <Icon className={cn("h-6 w-6", iconColor)} />
             </div>
           )}
+        </div>
+
+        {/* Subtle decorative element */}
+        <div className="absolute -bottom-1 -right-1 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+          {Icon && <Icon className="h-16 w-16 rotate-12" />}
         </div>
       </CardContent>
     </Card>

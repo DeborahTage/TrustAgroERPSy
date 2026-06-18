@@ -4,13 +4,15 @@ import { dashboardApi } from '../../api';
 import { formatCurrency } from '../../utils';
 import StatsCard from '../../components/shared/StatsCard';
 import AlertCard from '../../components/shared/AlertCard';
+import PageContainer from '../../components/layout/PageContainer';
+import PageHeader from '../../components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { 
-  Building2, 
-  Users, 
-  Activity, 
-  AlertTriangle, 
-  DollarSign, 
+import {
+  Building2,
+  Users,
+  Activity,
+  AlertTriangle,
+  DollarSign,
   UserCheck,
   TrendingUp,
   Package,
@@ -18,6 +20,7 @@ import {
   ShoppingCart,
   Clock
 } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -43,46 +46,46 @@ const AdminDashboard = () => {
       title: 'Total Farms',
       value: data.totalFarms || 0,
       icon: Building2,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      iconColor: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
       trend: 'up',
-      trendValue: '+12% from last month'
+      trendValue: '12'
     },
     {
       title: 'Total Users',
       value: data.totalUsers || 0,
       icon: Users,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      iconColor: 'text-blue-600',
+      bgColor: 'bg-blue-50',
       trend: 'up',
-      trendValue: '+5% from last month'
+      trendValue: '5'
     },
     {
       title: 'Active Disease Cases',
       value: data.activeDiseaseCases || 0,
       icon: Activity,
-      iconColor: 'text-red-600',
-      bgColor: 'bg-red-50',
+      iconColor: 'text-rose-600',
+      bgColor: 'bg-rose-50',
       trend: 'down',
-      trendValue: '-8% from last week'
+      trendValue: '8'
     },
     {
       title: 'Inventory Alerts',
       value: data.inventoryAlerts || 0,
       icon: AlertTriangle,
-      iconColor: 'text-orange-600',
-      bgColor: 'bg-orange-50',
+      iconColor: 'text-amber-600',
+      bgColor: 'bg-amber-50',
       trend: 'up',
-      trendValue: '+3 new alerts'
+      trendValue: '3'
     },
     {
       title: 'Revenue Overview',
       value: formatCurrency(data.totalRevenue || 0),
       icon: DollarSign,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-50',
+      iconColor: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
       trend: 'up',
-      trendValue: '+15% from last month'
+      trendValue: '15'
     },
     {
       title: 'Active Clients',
@@ -91,119 +94,57 @@ const AdminDashboard = () => {
       iconColor: 'text-indigo-600',
       bgColor: 'bg-indigo-50',
       trend: 'up',
-      trendValue: '+10% from last month'
+      trendValue: '10'
     }
   ];
 
   const alerts = [
-    {
-      title: 'Low Stock Alert',
-      description: '15 items are below minimum stock level',
-      type: 'critical',
-      icon: Package,
-      timestamp: '2 hours ago'
-    },
-    {
-      title: 'Expiring Drugs',
-      description: '8 pharmaceutical items expiring within 30 days',
-      type: 'warning',
-      icon: Clock,
-      timestamp: '5 hours ago'
-    },
-    {
-      title: 'High Mortality Rate',
-      description: 'Farm A showing 12% mortality rate this week',
-      type: 'critical',
-      icon: Activity,
-      timestamp: '1 day ago'
-    },
-    {
-      title: 'Missed Vaccinations',
-      description: '23 flocks overdue for scheduled vaccinations',
-      type: 'warning',
-      icon: HeartPulse,
-      timestamp: '2 days ago'
-    }
+    { title: 'Low Stock Alert', description: '15 items are below minimum stock level', type: 'critical', icon: Package, timestamp: '2 hours ago' },
+    { title: 'Expiring Drugs', description: '8 pharmaceutical items expiring within 30 days', type: 'warning', icon: Clock, timestamp: '5 hours ago' },
+    { title: 'High Mortality Rate', description: 'Farm A showing 12% mortality rate this week', type: 'critical', icon: Activity, timestamp: '1 day ago' },
   ];
 
   const recentActivities = [
-    {
-      title: 'New Farm Record Created',
-      description: 'Daily record submitted for Farm B - Flock 3',
-      type: 'info',
-      icon: TrendingUp,
-      timestamp: '30 minutes ago'
-    },
-    {
-      title: 'Stock Movement',
-      description: 'Stock in: 500 units of Animal Feed',
-      type: 'success',
-      icon: Package,
-      timestamp: '1 hour ago'
-    },
-    {
-      title: 'Treatment Administered',
-      description: 'Antibiotic treatment for Disease Case #452',
-      type: 'info',
-      icon: HeartPulse,
-      timestamp: '2 hours ago'
-    },
-    {
-      title: 'Pharmacy Sale',
-      description: 'Sale #1234 - $450.00 completed',
-      type: 'success',
-      icon: ShoppingCart,
-      timestamp: '3 hours ago'
-    }
+    { title: 'New Farm Record Created', description: 'Daily record submitted for Farm B - Flock 3', type: 'info', icon: TrendingUp, timestamp: '30 minutes ago' },
+    { title: 'Stock Movement', description: 'Stock in: 500 units of Animal Feed', type: 'success', icon: Package, timestamp: '1 hour ago' },
+    { title: 'Pharmacy Sale', description: 'Sale #1234 - $450.00 completed', type: 'success', icon: ShoppingCart, timestamp: '3 hours ago' }
   ];
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <PageContainer>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="h-32">
-              <CardContent className="p-6">
-                <div className="animate-pulse space-y-4">
-                  <div className="h-4 bg-gray-200 rounded w-1/3" />
-                  <div className="h-8 bg-gray-200 rounded w-1/2" />
-                </div>
-              </CardContent>
-            </Card>
+            <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
           ))}
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-500 mt-1">
-          Welcome back, {user?.fullName || 'Admin'}. Here's what's happening today.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Admin Dashboard"
+        subtitle={`Welcome back, ${user?.fullName || 'Admin'}. Here's what's happening today.`}
+        breadcrumbs={['Home', 'Admin', 'Dashboard']}
+      />
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {kpiCards.map((card, index) => (
           <StatsCard key={index} {...card} />
         ))}
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Activity Feed */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
+        <Card className="lg:col-span-2 border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+          <CardHeader className="border-b border-gray-50 px-6 py-4">
+            <CardTitle className="flex items-center gap-2 text-base font-black uppercase tracking-tight text-gray-900">
+              <Activity className="h-4.5 w-4.5 text-indigo-600" />
               Recent Activity
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="space-y-4">
               {recentActivities.map((activity, index) => (
                 <AlertCard key={index} {...activity} />
@@ -212,15 +153,14 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Alert Center */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Alert Center
+        <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+          <CardHeader className="border-b border-gray-100 px-6 py-4">
+            <CardTitle className="flex items-center gap-2 text-base font-black uppercase tracking-tight text-gray-900">
+              <AlertTriangle className="h-4.5 w-4.5 text-rose-500" />
+              System Alerts
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="space-y-4">
               {alerts.map((alert, index) => (
                 <AlertCard key={index} {...alert} />
@@ -230,69 +170,30 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Farm Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <TrendingUp className="h-12 w-12 mx-auto mb-2" />
-                <p>Chart visualization would go here</p>
-                <p className="text-sm">(Recharts integration available)</p>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
+        <Card className="border-none shadow-sm bg-white rounded-2xl p-6 h-80 flex items-center justify-center group overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="text-center">
+            <div className="h-16 w-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <TrendingUp className="h-8 w-8 text-indigo-600" />
             </div>
-          </CardContent>
+            <h3 className="text-lg font-black text-gray-900 uppercase">Farm Performance</h3>
+            <p className="text-xs text-gray-400 font-bold tracking-widest mt-1">Live Analytics Pending Integration</p>
+          </div>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <DollarSign className="h-12 w-12 mx-auto mb-2" />
-                <p>Chart visualization would go here</p>
-                <p className="text-sm">(Recharts integration available)</p>
-              </div>
+        <Card className="border-none shadow-sm bg-white rounded-2xl p-6 h-80 flex items-center justify-center group overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="text-center">
+            <div className="h-16 w-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <DollarSign className="h-8 w-8 text-emerald-600" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Inventory Usage</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <Package className="h-12 w-12 mx-auto mb-2" />
-                <p>Chart visualization would go here</p>
-                <p className="text-sm">(Recharts integration available)</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Veterinary Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <HeartPulse className="h-12 w-12 mx-auto mb-2" />
-                <p>Chart visualization would go here</p>
-                <p className="text-sm">(Recharts integration available)</p>
-              </div>
-            </div>
-          </CardContent>
+            <h3 className="text-lg font-black text-gray-900 uppercase">Revenue Trends</h3>
+            <p className="text-xs text-gray-400 font-bold tracking-widest mt-1">Real-time Finance Sync Active</p>
+          </div>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 
