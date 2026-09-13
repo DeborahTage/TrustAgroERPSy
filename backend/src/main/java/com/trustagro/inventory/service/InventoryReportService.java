@@ -123,6 +123,13 @@ public class InventoryReportService {
     }
 
     public Map<String, Object> getInventorySummary() {
-        return inventoryService.getDashboardStats();
+        Map<String, Object> stats = inventoryService.getDashboardStats();
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("totalValue", stats.getOrDefault("total_value", 0));
+        summary.put("totalSkus", stats.getOrDefault("total_skus", 0));
+        summary.put("lowStockCount", stats.getOrDefault("low_stock_count", 0));
+        summary.put("expiringCount", stats.getOrDefault("expiring_count", 0));
+        summary.put("inventoryTurnover", stats.getOrDefault("inventory_turnover", 0));
+        return summary;
     }
 }

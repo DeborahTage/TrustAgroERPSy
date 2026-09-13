@@ -27,26 +27,26 @@ public class FinanceController {
 
 
     @GetMapping("/audit-trail")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','FINANCE')")
     public ResponseEntity<ApiResponse<List<com.trustagro.finance.entity.FinanceAuditLog>>> getAuditTrail() {
         return ResponseEntity.ok(ApiResponse.success(auditLogRepository.findTop100ByOrderByPostedAtDesc()));
     }
 
 
     @GetMapping("/dashboard")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','FINANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','FINANCE')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboard() {
         return ResponseEntity.ok(ApiResponse.success(financeService.getDashboardSummary()));
     }
 
     @GetMapping("/transactions")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','FINANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','FINANCE')")
     public ResponseEntity<ApiResponse<List<FinanceTransaction>>> getAll() {
         return ResponseEntity.ok(ApiResponse.success(financeService.getAllTransactions()));
     }
 
     @PostMapping("/transactions")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','FINANCE')")
     public ResponseEntity<ApiResponse<FinanceTransaction>> postTransaction(@RequestBody Map<String, Object> req) {
         TransactionType type = TransactionType.valueOf(req.getOrDefault("transactionType", "INCOME").toString());
         BigDecimal amount = new BigDecimal(req.get("amount").toString());
@@ -60,13 +60,13 @@ public class FinanceController {
     }
 
     @GetMapping("/accounts")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','FINANCE')")
     public ResponseEntity<ApiResponse<List<com.trustagro.finance.entity.ChartOfAccount>>> getAccounts() {
         return ResponseEntity.ok(ApiResponse.success(financeService.getAllAccounts()));
     }
 
     @PostMapping("/reconciliation")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','FINANCE')")
     public ResponseEntity<ApiResponse<Object>> reconcile(@RequestBody Map<String, Object> req) {
         BigDecimal system = new BigDecimal(req.get("systemAmount").toString());
         BigDecimal actual = new BigDecimal(req.get("actualAmount").toString());
@@ -75,19 +75,9 @@ public class FinanceController {
     }
 
     @GetMapping("/reconciliations")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','FINANCE')")
     public ResponseEntity<ApiResponse<List<com.trustagro.finance.entity.CashReconciliation>>> getReconciliations() {
         return ResponseEntity.ok(ApiResponse.success(reconciliationService.getAllReconciliations()));
-    }
-
-    @PostMapping("/invoices/pos")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE_OFFICER','PHARMACIST')")
-    public ResponseEntity<ApiResponse<Object>> createPosInvoice(@RequestBody Map<String, Object> req) {
-        BigDecimal amount = new BigDecimal(req.get("amount").toString());
-        String customer = (String) req.get("customerName");
-        financeService.postRevenue(amount, null, "4100", 
-                "POS Invoice: " + customer, "POS", "POS_INVOICE", null);
-        return ResponseEntity.ok(ApiResponse.success("POS Invoice created and logged"));
     }
 }
 

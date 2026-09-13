@@ -123,7 +123,7 @@ const MasterDataTab = () => {
                             <button
                                 key={cat.id}
                                 onClick={() => setActiveCategory(cat.id)}
-                                className={`w-full text-left px-3 py-2 rounded-lg transition-colors duration-200 text-sm font-medium ${activeCategory === cat.id ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
+                                className={`w-full text-left px-3 py-2 rounded-lg transition-colors duration-200 text-sm font-medium ${activeCategory === cat.id ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 {cat.name}

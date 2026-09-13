@@ -9,8 +9,11 @@ import com.trustagro.farm.entity.Flock;
 import com.trustagro.farm.repository.DailyFarmRecordRepository;
 import com.trustagro.farm.repository.FarmRepository;
 import com.trustagro.farm.repository.FlockRepository;
+import com.trustagro.finance.service.FinanceService;
 import com.trustagro.inventory.dto.StockOutRequest;
 import com.trustagro.inventory.entity.IssuedToType;
+import com.trustagro.inventory.entity.InventoryItem;
+import com.trustagro.inventory.repository.InventoryItemRepository;
 import com.trustagro.inventory.service.InventoryService;
 import com.trustagro.notification.service.NotificationService;
 import com.trustagro.veterinary.dto.*;
@@ -23,6 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,6 +51,8 @@ public class VeterinaryService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final InventoryService inventoryService;
+    private final InventoryItemRepository inventoryItemRepository;
+    private final FinanceService financeService;
     private final AuditService auditService;
 
     // EMR Aggregation
@@ -136,7 +142,7 @@ public class VeterinaryService {
         notificationService.createRoleNotification(
             "FLOCK WITHDRAWAL LOCK",
             "Flock " + flock.getBatchCode() + " is now under withdrawal lock until " + flock.getWithdrawalHoldUntil(),
-            com.trustagro.user.entity.Role.STORE_KEEPER
+            com.trustagro.user.entity.Role.INVENTORY_MANAGER
         );
     }
 
@@ -291,7 +297,7 @@ public class VeterinaryService {
         notificationService.createRoleNotification(
                 "New Health Issue Report",
                 farm.getFarmName() + " / " + flock.getBatchCode() + " requires veterinary review.",
-                com.trustagro.user.entity.Role.VETERINARY_OFFICER
+                com.trustagro.user.entity.Role.VETERINARIAN
         );
         return toHealthIssueReportResponse(saved);
     }
@@ -389,13 +395,38 @@ public class VeterinaryService {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         userRepository.findByEmail(email).ifPresent(p::setCreatedByVet);
+        p.setStatus(PrescriptionStatus.PENDING_PHARMACY);
         Prescription saved = prescriptionRepo.save(p);
         auditService.logObject("CREATE", MODULE, "PRESCRIPTION", saved.getId(), null, toPrescriptionResponse(saved));
         notificationService.createRoleNotification(
                 "Prescription Ready for Dispensing",
                 req.getPrescriptionNumber() + " has been sent to pharmacy.",
-                com.trustagro.user.entity.Role.PHARMACY_SALES
+                com.trustagro.user.entity.Role.PHARMACIST
         );
+        return toPrescriptionResponse(saved);
+    }
+
+    @Transactional
+    public PrescriptionResponse approvePrescription(Long id) {
+        Prescription p = prescriptionRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
+        if (p.getStatus() == PrescriptionStatus.DISPENSED || p.getStatus() == PrescriptionStatus.COMPLETED) {
+            throw new BusinessException("Prescription already dispensed");
+        }
+        if (p.getInventoryItemId() != null) {
+            InventoryItem item = inventoryItemRepository.findById(p.getInventoryItemId()).orElse(null);
+            if (item != null && item.getCurrentStock() != null && p.getQuantity() != null
+                    && item.getCurrentStock() < p.getQuantity()) {
+                throw new BusinessException("Insufficient stock for " + item.getItemName());
+            }
+        }
+        p.setStatus(PrescriptionStatus.APPROVED);
+        Prescription saved = prescriptionRepo.save(p);
+        notificationService.createRoleNotification(
+                "Prescription Approved",
+                "Order " + p.getPrescriptionNumber() + " approved by pharmacy.",
+                com.trustagro.user.entity.Role.VETERINARIAN);
+        auditService.logObject("APPROVE", MODULE, "PRESCRIPTION", saved.getId(), null, toPrescriptionResponse(saved));
         return toPrescriptionResponse(saved);
     }
 
@@ -407,6 +438,10 @@ public class VeterinaryService {
             throw new BusinessException("Prescription is cancelled");
         if (p.getStatus() == PrescriptionStatus.DISPENSED)
             throw new BusinessException("Prescription already dispensed");
+        if (p.getStatus() != PrescriptionStatus.APPROVED && p.getStatus() != PrescriptionStatus.PENDING_PHARMACY
+                && p.getStatus() != PrescriptionStatus.PENDING) {
+            throw new BusinessException("Prescription must be approved before dispensing");
+        }
         String before = summarizePrescription(p);
         deductStockIfApplicable(
                 p.getInventoryItemId(),
@@ -416,8 +451,30 @@ public class VeterinaryService {
                 p.getId(),
                 "Prescription Dispense - " + p.getPrescriptionNumber()
         );
+        BigDecimal expenseAmount = BigDecimal.ZERO;
+        if (p.getInventoryItemId() != null && p.getQuantity() != null) {
+            InventoryItem item = inventoryItemRepository.findById(p.getInventoryItemId()).orElse(null);
+            if (item != null) {
+                BigDecimal unitCost = item.getAvgUnitCost() != null ? item.getAvgUnitCost()
+                        : (item.getRetailPrice() != null ? item.getRetailPrice() : BigDecimal.ZERO);
+                expenseAmount = unitCost.multiply(BigDecimal.valueOf(p.getQuantity()));
+            }
+        }
+        if (expenseAmount.compareTo(BigDecimal.ZERO) > 0) {
+            financeService.postExpense(expenseAmount, com.trustagro.finance.entity.BusinessUnit.PHARMACY, "5120",
+                    "Vet dispense: " + p.getPrescriptionNumber() + " - " + p.getDrugName(),
+                    "VETERINARY", "PRESCRIPTION", p.getId());
+        }
         p.setStatus(PrescriptionStatus.DISPENSED);
         Prescription saved = prescriptionRepo.save(p);
+        notificationService.createRoleNotification(
+                "Prescription Dispensed",
+                "Order " + p.getPrescriptionNumber() + " dispensed. Stock deducted and expense recorded.",
+                com.trustagro.user.entity.Role.VETERINARIAN);
+        notificationService.createRoleNotification(
+                "Veterinary Expense Recorded",
+                String.format("ETB %s posted for Rx %s", expenseAmount, p.getPrescriptionNumber()),
+                com.trustagro.user.entity.Role.FINANCE);
         auditService.logObject("DISPENSE", MODULE, "PRESCRIPTION", saved.getId(), before, toPrescriptionResponse(saved));
         return toPrescriptionResponse(saved);
     }

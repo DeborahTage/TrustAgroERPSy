@@ -43,4 +43,6 @@ public class FarmCostAllocation {
     public void setTransactionDate(LocalDate transactionDate) { this.transactionDate = transactionDate; }
     public void setFlockId(Long flockId) { this.flockId = flockId; }
     public void setFarmId(Long farmId) { this.farmId = farmId; }
+    public BigDecimal getAmount() { return amount; }
+    public FarmCostType getCostType() { return costType; }
 }

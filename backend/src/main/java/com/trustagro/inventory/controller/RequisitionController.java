@@ -30,25 +30,25 @@ public class RequisitionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('STORE_KEEPER', 'ADMIN', 'FINANCE_OFFICER')")
+    @PreAuthorize("hasAnyRole('INVENTORY_MANAGER', 'ADMIN', 'FINANCE')")
     public ResponseEntity<List<InternalRequisition>> getAllRequisitions() {
         return ResponseEntity.ok(requisitionService.getAllRequisitions());
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('FARM_MANAGER', 'VETERINARY_OFFICER', 'PHARMACY_SALES')")
+    @PreAuthorize("hasAnyRole('FARM_MANAGER', 'VETERINARIAN', 'PHARMACIST')")
     public ResponseEntity<InternalRequisition> createRequisition(@RequestBody Map<String, Object> data, Authentication auth) {
         return ResponseEntity.ok(requisitionService.createRequisition(data, getUser(auth)));
     }
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasRole('STORE_KEEPER')")
+    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
     public ResponseEntity<InternalRequisition> approveRequisition(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(requisitionService.approveRequisition(id, getUser(auth)));
     }
 
     @PutMapping("/{id}/issue")
-    @PreAuthorize("hasRole('STORE_KEEPER')")
+    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
     public ResponseEntity<InternalRequisition> issueRequisition(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(requisitionService.issueRequisition(id, getUser(auth)));
     }

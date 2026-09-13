@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dailyRecordApi } from '../../api';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 import DataTable from '../../components/shared/DataTable';
-import PageHeader from '../../components/shared/PageHeader';
-import StatsCard from '../../components/shared/StatsCard';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { FileText, TrendingDown, Activity, Plus, Download, FileText as FileIcon, AlertTriangle } from 'lucide-react';
+import { FileText, TrendingDown, Activity, Plus, Egg } from 'lucide-react';
 import { formatDate } from '../../utils';
 
 const DailyFarmRecordList = () => {
@@ -16,149 +14,94 @@ const DailyFarmRecordList = () => {
   const { canPerformAction } = useAuth();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    dailyRecordApi.getAll().then(r => setRecords(r.data.data)).finally(() => setLoading(false));
+  const fetchRecords = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await dailyRecordApi.getAll();
+      setRecords(r.data.data || []);
+    } catch (e) {
+      setError('Failed to load daily records.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Calculate analytics
-  const totalRecords = records.length;
-  const todayRecords = records.filter(r => r.date === new Date().toISOString().split('T')[0]).length;
-  const totalMortality = records.reduce((sum, r) => sum + (Number(r.mortality) || 0), 0);
-  const totalEggs = records.reduce((sum, r) => sum + (Number(r.eggProduction) || 0), 0);
-  const highMortalityRecords = records.filter(r => r.mortality > 10).length;
+  useEffect(() => { fetchRecords(); }, [fetchRecords]);
 
-  const kpiCards = [
-    {
-      title: 'Total Records',
-      value: totalRecords,
-      icon: FileText,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      title: "Today's Records",
-      value: todayRecords,
-      icon: Activity,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-50'
-    },
-    {
-      title: 'Total Mortality',
-      value: totalMortality,
-      icon: TrendingDown,
-      iconColor: 'text-red-600',
-      bgColor: 'bg-red-50'
-    },
-    {
-      title: 'Total Eggs',
-      value: totalEggs.toLocaleString(),
-      icon: FileIcon,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    }
-  ];
+  const today = new Date().toISOString().split('T')[0];
 
-  const columns = [
+  const stats = useMemo(() => [
+    { title: 'Total Records', value: records.length, icon: FileText, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
+    { title: "Today's Records", value: records.filter((r) => r.date === today).length, icon: Activity, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: 'Total Mortality', value: records.reduce((s, r) => s + (Number(r.mortality) || 0), 0), icon: TrendingDown, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
+    { title: 'Total Eggs', value: records.reduce((s, r) => s + (Number(r.eggProduction) || 0), 0).toLocaleString(), icon: Egg, iconColor: 'text-purple-600', bgColor: 'bg-purple-50' },
+  ], [records, today]);
+
+  const columns = useMemo(() => [
     { accessorKey: 'date', header: t('dailyRecordList.date'), cell: ({ row }) => formatDate(row.original.date) },
     { accessorKey: 'farmName', header: t('dailyRecordList.farm') },
     { accessorKey: 'batchCode', header: t('dailyRecordList.batch') },
-    { accessorKey: 'openingBirdCount', header: t('dailyRecordList.opening'), cell: ({ row }) => Number(row.original.openingBirdCount).toLocaleString() },
-    { accessorKey: 'mortality', header: t('dailyRecordList.mortality'), cell: ({ row }) => row.original.mortality || 0 },
+    { accessorKey: 'openingBirdCount', header: t('dailyRecordList.opening'), cell: ({ row }) => Number(row.original.openingBirdCount || 0).toLocaleString() },
+    { accessorKey: 'mortality', header: t('dailyRecordList.mortality') },
     { accessorKey: 'feedConsumed', header: t('dailyRecordList.feed'), cell: ({ row }) => `${row.original.feedConsumed || 0} kg` },
-    { accessorKey: 'eggProduction', header: t('dailyRecordList.eggs'), cell: ({ row }) => row.original.eggProduction || 0 },
-    { accessorKey: 'mortalityRate', header: t('dailyRecordList.mortalityRate'), cell: ({ row }) => row.original.mortalityRate ? `${row.original.mortalityRate.toFixed(2)}%` : '-' },
+    { accessorKey: 'eggProduction', header: t('dailyRecordList.eggs') },
+    { accessorKey: 'mortalityRate', header: t('dailyRecordList.mortalityRate'), cell: ({ row }) => row.original.mortalityRate ? `${row.original.mortalityRate.toFixed(2)}%` : '—' },
     { accessorKey: 'recordedBy', header: t('dailyRecordList.recordedBy') },
     {
       id: 'actions',
       cell: ({ row }) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {canPerformAction('edit', 'dailyRecords') && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigate(`/daily-records/${row.original.id}/edit`)}
-          >
-            Edit
-          </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate(`/daily-records/${row.original.id}/edit`)}>Edit</Button>
           )}
           {(row.original.mortality > 0 || row.original.symptomsOrRemarks) && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate('/veterinary/health-reports/new', { state: { dailyRecord: row.original } })}
-            >
+            <Button size="sm" variant="outline" onClick={() => navigate('/veterinary/health-reports/new', { state: { dailyRecord: row.original } })}>
               Health Report
             </Button>
           )}
         </div>
-      )
+      ),
     },
+  ], [t, navigate, canPerformAction]);
+
+  const exportColumns = [
+    { header: 'Date', accessorKey: 'date' },
+    { header: 'Farm', accessorKey: 'farmName' },
+    { header: 'Batch', accessorKey: 'batchCode' },
+    { header: 'Mortality', accessorKey: 'mortality' },
+    { header: 'Eggs', accessorKey: 'eggProduction' },
   ];
 
-  const actions = [
-    {
-      label: 'Add Record',
-      icon: Plus,
-      onClick: () => navigate('/daily-records/new'),
-      show: canPerformAction('create', 'dailyRecords')
-    },
-    {
-      label: 'Export',
-      icon: Download,
-      onClick: () => console.log('Export records'),
-      show: true
-    },
-    {
-      label: 'Generate Report',
-      icon: FileIcon,
-      onClick: () => console.log('Generate report'),
-      show: true
-    }
-  ].filter(a => a.show);
-
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <PageHeader
-        title="Daily Operations"
-        description="Monitor daily farm operations, mortality analytics, and production trends."
-        actions={actions}
-      />
-
-      {/* KPI Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {kpiCards.map((card, index) => (
-          <StatsCard key={index} {...card} />
-        ))}
-      </div>
-
-      {/* Alert Banner */}
-      {highMortalityRecords > 0 && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-              <div>
-                <p className="font-semibold text-red-900">High Mortality Alert</p>
-                <p className="text-sm text-red-700">{highMortalityRecords} records show mortality above 10 birds</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <EnterprisePage
+      title="Daily Farm Records"
+      subtitle="Mortality, feed consumption, egg production, and flock performance logs"
+      breadcrumbs={['Farm', 'Daily Records']}
+      loading={loading}
+      error={error}
+      onRetry={fetchRecords}
+      stats={stats}
+      onRefresh={fetchRecords}
+      exportData={records}
+      exportColumns={exportColumns}
+      exportFilename="daily-records"
+      exportElementId="daily-records-table"
+      exportTitle="Daily Farm Records"
+      empty={!records.length ? { title: 'No daily records', description: 'Record today\'s farm operations to track production and mortality.' } : null}
+      actions={canPerformAction('create', 'dailyRecords') && (
+        <Button onClick={() => navigate('/daily-records/new')} className="h-11 bg-primary hover:bg-primary/90 rounded-xl">
+          <Plus className="mr-2 h-4 w-4" /> New Record
+        </Button>
       )}
-
-      {/* Main Content */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Daily Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable columns={columns} data={records} loading={loading} />
-        </CardContent>
-      </Card>
-    </div>
+    >
+      <div id="daily-records-table">
+        <DataTable columns={columns} data={records} searchable pagination pageSize={15} />
+      </div>
+    </EnterprisePage>
   );
 };
 

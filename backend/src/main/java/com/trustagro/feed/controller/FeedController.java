@@ -34,7 +34,7 @@ public class FeedController {
     }
 
     @PostMapping("/deliveries")
-    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER','STORE_KEEPER')")
+    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER','INVENTORY_MANAGER')")
     public ResponseEntity<ApiResponse<Void>> logDelivery(@RequestBody FeedDelivery delivery) {
         feedService.logDelivery(delivery);
         return ResponseEntity.ok(ApiResponse.success("Delivery logged", null));

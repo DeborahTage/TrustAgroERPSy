@@ -19,7 +19,7 @@ const ActivityTimeline = ({ activities = [], className }) => {
       case 'stock':
       case 'stock_in':
       case 'stock_out':
-        return <Package className="h-4 w-4 text-indigo-600" />;
+        return <Package className="h-4 w-4 text-primary" />;
       case 'disease':
       case 'health':
         return <Activity className="h-4 w-4 text-rose-600" />;
@@ -44,7 +44,7 @@ const ActivityTimeline = ({ activities = [], className }) => {
       case 'stock':
       case 'stock_in':
       case 'stock_out':
-        return 'bg-indigo-50 border-indigo-100';
+        return 'bg-primary/10 border-primary/20';
       default:
         return 'bg-slate-50 border-slate-100';
     }

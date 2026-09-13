@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { dailyRecordApi, farmApi, flockApi } from '../../api';
-import { Card, Form, Button, Row, Col, Alert } from 'react-bootstrap';
+import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { useLanguage } from '../../context/LanguageContext';
 import { toast } from 'react-toastify';
 
@@ -10,34 +15,72 @@ const DailyFarmRecordForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
-  const [form, setForm] = useState({ date: '', farmId: '', flockId: '', openingBirdCount: '', mortality: 0, culledBirds: 0, feedConsumed: '', waterConsumed: '', averageWeight: '', eggProduction: 0, damagedEggs: 0, symptomsOrRemarks: '', mortalityCause: '', mortalityNotes: '' });
+  const [form, setForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    farmId: '', flockId: '',     openingBirdCount: '', mortality: 0, culledBirds: 0, chickensSold: 0,
+    feedConsumed: '', waterConsumed: '', averageWeight: '',
+    symptomsOrRemarks: '', mortalityCause: '', mortalityNotes: '',
+  });
   const [farms, setFarms] = useState([]);
   const [flocks, setFlocks] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(isEdit);
 
   useEffect(() => {
-    farmApi.getAll().then(r => setFarms(r.data.data?.filter(f => f.status === 'ACTIVE') || []));
+    farmApi.getAll().then((r) => setFarms(r.data.data?.filter((f) => f.status === 'ACTIVE') || []));
     if (isEdit) {
-      dailyRecordApi.getById(id).then(r => {
-        const d = r.data.data;
-        setForm({ date: d.date, farmId: d.farmId, flockId: d.flockId, openingBirdCount: d.openingBirdCount || '', mortality: d.mortality || 0, culledBirds: d.culledBirds || 0, feedConsumed: d.feedConsumed || '', waterConsumed: d.waterConsumed || '', averageWeight: d.averageWeight || '', eggProduction: d.eggProduction || 0, damagedEggs: d.damagedEggs || 0, symptomsOrRemarks: d.symptomsOrRemarks || '', mortalityCause: d.mortalityCause || '', mortalityNotes: d.mortalityNotes || '' });
-        flockApi.getAll().then(fr => setFlocks(fr.data.data?.filter(f => f.farmId === d.farmId) || []));
-      });
+      setFetching(true);
+      dailyRecordApi.getById(id)
+        .then(async (r) => {
+          const d = r.data.data;
+          setForm({
+            date: d.date, farmId: String(d.farmId), flockId: String(d.flockId),
+            openingBirdCount: d.openingBirdCount || '', mortality: d.mortality || 0,
+            culledBirds: d.culledBirds || 0, chickensSold: d.chickensSold || d.culledBirds || 0,
+            feedConsumed: d.feedConsumed || '',
+            waterConsumed: d.waterConsumed || '', averageWeight: d.averageWeight || '',
+            symptomsOrRemarks: d.symptomsOrRemarks || '', mortalityCause: d.mortalityCause || '',
+            mortalityNotes: d.mortalityNotes || '',
+          });
+          const fr = await flockApi.getAll();
+          setFlocks(fr.data.data?.filter((f) => String(f.farmId) === String(d.farmId)) || []);
+        })
+        .catch(() => setError('Failed to load record.'))
+        .finally(() => setFetching(false));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isEdit]);
 
   const handleFarmChange = (farmId) => {
-    setForm(f => ({ ...f, farmId, flockId: '' }));
-    if (farmId) flockApi.getAll().then(r => setFlocks(r.data.data?.filter(f => String(f.farmId) === String(farmId) && f.status === 'ACTIVE') || []));
+    setForm((f) => ({ ...f, farmId, flockId: '' }));
+    if (farmId) {
+      flockApi.getAll().then((r) =>
+        setFlocks(r.data.data?.filter((f) => String(f.farmId) === String(farmId) && f.status === 'ACTIVE') || [])
+      );
+    } else setFlocks([]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
-      const payload = { ...form, farmId: Number(form.farmId), flockId: Number(form.flockId), openingBirdCount: Number(form.openingBirdCount), mortality: Number(form.mortality), culledBirds: Number(form.culledBirds), feedConsumed: Number(form.feedConsumed), waterConsumed: Number(form.waterConsumed), averageWeight: form.averageWeight ? Number(form.averageWeight) : null, eggProduction: Number(form.eggProduction), damagedEggs: Number(form.damagedEggs), mortalityCause: form.mortalityCause || null };
+      const payload = {
+        ...form,
+        farmId: Number(form.farmId),
+        flockId: Number(form.flockId),
+        openingBirdCount: Number(form.openingBirdCount),
+        mortality: Number(form.mortality),
+        culledBirds: Number(form.culledBirds),
+        feedConsumed: Number(form.feedConsumed),
+        waterConsumed: Number(form.waterConsumed),
+        averageWeight: form.averageWeight ? Number(form.averageWeight) : null,
+        chickensSold: Number(form.chickensSold) || 0,
+        culledBirds: Number(form.culledBirds) || 0,
+        eggProduction: 0,
+        damagedEggs: 0,
+        mortalityCause: form.mortalityCause || null,
+      };
       if (isEdit) await dailyRecordApi.update(id, payload);
       else await dailyRecordApi.create(payload);
       toast.success(t('dailyRecordForm.success'));
@@ -50,57 +93,87 @@ const DailyFarmRecordForm = () => {
   };
 
   return (
-    <div>
-      <h5 className="fw-bold mb-3">{isEdit ? t('dailyRecordForm.editTitle') : t('dailyRecordForm.addTitle')}</h5>
-      <Card className="border-0 shadow-sm" style={{ maxWidth: 700 }}>
-        <Card.Body className="p-4">
-          {error && <Alert variant="danger" className="py-2 small">{error}</Alert>}
-          <Form onSubmit={handleSubmit}>
-            <Row className="g-3">
-              <Col xs={12} sm={4}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.date')}</Form.Label><Form.Control type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required /></Form.Group></Col>
-              <Col xs={12} sm={4}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.farm')}</Form.Label><Form.Select value={form.farmId} onChange={e => handleFarmChange(e.target.value)} required><option value="">{t('forms.select')}</option>{farms.map(f => <option key={f.id} value={f.id}>{f.farmName}</option>)}</Form.Select></Form.Group></Col>
-              <Col xs={12} sm={4}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.flock')}</Form.Label><Form.Select value={form.flockId} onChange={e => setForm({ ...form, flockId: e.target.value })} required><option value="">{t('forms.select')}</option>{flocks.map(f => <option key={f.id} value={f.id}>{f.batchCode}</option>)}</Form.Select></Form.Group></Col>
-              <Col xs={6} sm={3}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.openingCount')}</Form.Label><Form.Control type="number" value={form.openingBirdCount} onChange={e => setForm({ ...form, openingBirdCount: e.target.value })} /></Form.Group></Col>
-              <Col xs={6} sm={3}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.mortality')}</Form.Label><Form.Control type="number" min="0" value={form.mortality} onChange={e => setForm({ ...form, mortality: e.target.value })} /></Form.Group></Col>
-              <Col xs={6} sm={3}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.culledBirds')}</Form.Label><Form.Control type="number" min="0" value={form.culledBirds} onChange={e => setForm({ ...form, culledBirds: e.target.value })} /></Form.Group></Col>
-              <Col xs={6} sm={3}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.feedConsumed')}</Form.Label><Form.Control type="number" min="0" step="0.01" value={form.feedConsumed} onChange={e => setForm({ ...form, feedConsumed: e.target.value })} /></Form.Group></Col>
-              <Col xs={6} sm={3}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.water')}</Form.Label><Form.Control type="number" min="0" step="0.01" value={form.waterConsumed} onChange={e => setForm({ ...form, waterConsumed: e.target.value })} /></Form.Group></Col>
-              <Col xs={6} sm={3}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.averageWeight')}</Form.Label><Form.Control type="number" min="0" step="0.01" value={form.averageWeight} onChange={e => setForm({ ...form, averageWeight: e.target.value })} /></Form.Group></Col>
-              <Col xs={6} sm={3}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.eggProduction')}</Form.Label><Form.Control type="number" min="0" value={form.eggProduction} onChange={e => setForm({ ...form, eggProduction: e.target.value })} /></Form.Group></Col>
-              <Col xs={6} sm={3}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.damagedEggs')}</Form.Label><Form.Control type="number" min="0" value={form.damagedEggs} onChange={e => setForm({ ...form, damagedEggs: e.target.value })} /></Form.Group></Col>
-              <Col xs={12}><Form.Group><Form.Label className="small fw-semibold">{t('dailyRecordForm.symptoms')}</Form.Label><Form.Control as="textarea" rows={2} value={form.symptomsOrRemarks} onChange={e => setForm({ ...form, symptomsOrRemarks: e.target.value })} /></Form.Group></Col>
-              {Number(form.mortality) > 0 && (
-                <>
-                  <Col xs={12} sm={6}>
-                    <Form.Group>
-                      <Form.Label className="small fw-semibold text-danger">Mortality Cause</Form.Label>
-                      <Form.Select value={form.mortalityCause} onChange={e => setForm({ ...form, mortalityCause: e.target.value })}>
-                        <option value="">Select Cause</option>
-                        <option value="DISEASE">DISEASE</option>
-                        <option value="PREDATOR">PREDATOR</option>
-                        <option value="HEAT">HEAT</option>
-                        <option value="CULLING">CULLING</option>
-                        <option value="UNKNOWN">UNKNOWN</option>
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                  <Col xs={12} sm={6}>
-                    <Form.Group>
-                      <Form.Label className="small fw-semibold">Mortality Notes</Form.Label>
-                      <Form.Control type="text" placeholder="Detailed reason..." value={form.mortalityNotes} onChange={e => setForm({ ...form, mortalityNotes: e.target.value })} />
-                    </Form.Group>
-                  </Col>
-                </>
-              )}
-            </Row>
-            <div className="d-flex gap-2 mt-4">
-              <Button type="submit" variant="success" disabled={loading}>{loading ? t('forms.saving') : t('forms.save')}</Button>
-              <Button variant="outline-secondary" onClick={() => navigate('/daily-records')}>{t('forms.cancel')}</Button>
+    <EnterpriseFormPage
+      title={isEdit ? t('dailyRecordForm.editTitle') : t('dailyRecordForm.addTitle')}
+      subtitle="Daily mortality, feed, water, growth, and chicken sales records"
+      breadcrumbs={['Farm', 'Daily Records', isEdit ? 'Edit' : 'New']}
+      backTo="/daily-records"
+      loading={fetching}
+      error={error}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>{t('dailyRecordForm.date')}</Label>
+            <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('dailyRecordForm.farm')}</Label>
+            <Select value={form.farmId || 'none'} onValueChange={(v) => handleFarmChange(v === 'none' ? '' : v)}>
+              <SelectTrigger><SelectValue placeholder={t('forms.select')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t('forms.select')}</SelectItem>
+                {farms.map((f) => <SelectItem key={f.id} value={String(f.id)}>{f.farmName}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t('dailyRecordForm.flock')}</Label>
+            <Select value={form.flockId || 'none'} onValueChange={(v) => setForm({ ...form, flockId: v === 'none' ? '' : v })}>
+              <SelectTrigger><SelectValue placeholder={t('forms.select')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t('forms.select')}</SelectItem>
+                {flocks.map((f) => <SelectItem key={f.id} value={String(f.id)}>{f.batchCode}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="space-y-2"><Label>{t('dailyRecordForm.openingCount')}</Label><Input type="number" value={form.openingBirdCount} onChange={(e) => setForm({ ...form, openingBirdCount: e.target.value })} /></div>
+          <div className="space-y-2"><Label>{t('dailyRecordForm.mortality')}</Label><Input type="number" min="0" value={form.mortality} onChange={(e) => setForm({ ...form, mortality: e.target.value })} /></div>
+          <div className="space-y-2"><Label>{t('dailyRecordForm.culledBirds')}</Label><Input type="number" min="0" value={form.culledBirds} onChange={(e) => setForm({ ...form, culledBirds: e.target.value })} /></div>
+          <div className="space-y-2"><Label>{t('dailyRecordForm.feedConsumed')}</Label><Input type="number" min="0" step="0.01" value={form.feedConsumed} onChange={(e) => setForm({ ...form, feedConsumed: e.target.value })} /></div>
+          <div className="space-y-2"><Label>{t('dailyRecordForm.water')}</Label><Input type="number" min="0" step="0.01" value={form.waterConsumed} onChange={(e) => setForm({ ...form, waterConsumed: e.target.value })} /></div>
+          <div className="space-y-2"><Label>{t('dailyRecordForm.averageWeight')}</Label><Input type="number" min="0" step="0.01" value={form.averageWeight} onChange={(e) => setForm({ ...form, averageWeight: e.target.value })} /></div>
+          <div className="space-y-2"><Label>Chickens Sold</Label><Input type="number" min="0" value={form.chickensSold} onChange={(e) => setForm({ ...form, chickensSold: e.target.value })} /></div>
+          <div className="space-y-2"><Label>Harvested / Culled</Label><Input type="number" min="0" value={form.culledBirds} onChange={(e) => setForm({ ...form, culledBirds: e.target.value })} /></div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>{t('dailyRecordForm.symptoms')}</Label>
+          <Textarea rows={2} value={form.symptomsOrRemarks} onChange={(e) => setForm({ ...form, symptomsOrRemarks: e.target.value })} />
+        </div>
+
+        {Number(form.mortality) > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-rose-50 rounded-xl border border-rose-100">
+            <div className="space-y-2">
+              <Label className="text-rose-700">Mortality Cause</Label>
+              <Select value={form.mortalityCause || 'none'} onValueChange={(v) => setForm({ ...form, mortalityCause: v === 'none' ? '' : v })}>
+                <SelectTrigger><SelectValue placeholder="Select cause" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Select cause</SelectItem>
+                  {['DISEASE', 'PREDATOR', 'HEAT', 'CULLING', 'UNKNOWN'].map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </Form>
-        </Card.Body>
-      </Card>
-    </div>
+            <div className="space-y-2">
+              <Label>Mortality Notes</Label>
+              <Input value={form.mortalityNotes} onChange={(e) => setForm({ ...form, mortalityNotes: e.target.value })} />
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-3 pt-4 border-t">
+          <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
+            {loading ? t('forms.saving') : t('forms.save')}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => navigate('/daily-records')}>{t('forms.cancel')}</Button>
+        </div>
+      </form>
+    </EnterpriseFormPage>
   );
 };
 

@@ -1,7 +1,7 @@
 package com.trustagro.pharmacy.entity;
 
 import com.trustagro.user.entity.User;
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -43,8 +43,8 @@ public class PharmacySale {
     private List<PharmacySaleItem> saleItems = new ArrayList<>();
 
     // Legacy JSON (kept read-only for existing data)
-    @Type(JsonBinaryType.class)
-    @Column(columnDefinition = "jsonb")
+    @Type(JsonType.class)
+    @Column(columnDefinition = "text")
     private List<Object> items;
 
     @Column(precision = 10, scale = 2)

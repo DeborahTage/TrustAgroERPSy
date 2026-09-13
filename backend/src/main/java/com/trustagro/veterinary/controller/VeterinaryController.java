@@ -35,13 +35,13 @@ public class VeterinaryController {
     }
 
     @PostMapping("/vaccinations")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN')")
     public ResponseEntity<ApiResponse<VaccinationResponse>> createVaccination(@Valid @RequestBody VaccinationRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Vaccination scheduled", vetService.createVaccination(req)));
     }
 
     @PatchMapping("/vaccinations/{id}/complete")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN')")
     public ResponseEntity<ApiResponse<VaccinationResponse>> completeVaccination(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("Vaccination completed", vetService.completeVaccination(id)));
     }
@@ -82,26 +82,26 @@ public class VeterinaryController {
     }
 
     @PostMapping("/health-reports")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER','FARM_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN','FARM_MANAGER')")
     public ResponseEntity<ApiResponse<HealthIssueReportResponse>> createHealthReport(@Valid @RequestBody HealthIssueReportRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Health issue report created", vetService.createHealthIssueReport(req)));
     }
 
     @PatchMapping("/health-reports/{id}/review")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN')")
     public ResponseEntity<ApiResponse<HealthIssueReportResponse>> reviewHealthReport(@PathVariable Long id,
                                                                                       @RequestBody HealthIssueReportReviewRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Health issue report reviewed", vetService.reviewHealthIssueReport(id, req)));
     }
 
     @PostMapping("/disease-cases")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER','FARM_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN','FARM_MANAGER')")
     public ResponseEntity<ApiResponse<DiseaseCaseResponse>> createDiseaseCase(@Valid @RequestBody DiseaseCaseRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Disease case recorded", vetService.createDiseaseCase(req)));
     }
 
     @PutMapping("/disease-cases/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN')")
     public ResponseEntity<ApiResponse<DiseaseCaseResponse>> updateDiseaseCase(@PathVariable Long id, @Valid @RequestBody DiseaseCaseRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Disease case updated", vetService.updateDiseaseCase(id, req)));
     }
@@ -112,7 +112,7 @@ public class VeterinaryController {
     }
 
     @PostMapping("/treatments")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN')")
     public ResponseEntity<ApiResponse<TreatmentResponse>> createTreatment(@Valid @RequestBody TreatmentRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Treatment recorded", vetService.createTreatment(req)));
     }
@@ -123,19 +123,25 @@ public class VeterinaryController {
     }
 
     @PostMapping("/prescriptions")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN')")
     public ResponseEntity<ApiResponse<PrescriptionResponse>> createPrescription(@Valid @RequestBody PrescriptionRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Prescription created", vetService.createPrescription(req)));
     }
 
+    @PatchMapping("/prescriptions/{id}/approve")
+    @PreAuthorize("hasAnyRole('ADMIN','PHARMACIST')")
+    public ResponseEntity<ApiResponse<PrescriptionResponse>> approvePrescription(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(vetService.approvePrescription(id)));
+    }
+
     @PatchMapping("/prescriptions/{id}/dispense")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER','STORE_KEEPER','PHARMACY_SALES')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN','INVENTORY_MANAGER','PHARMACIST')")
     public ResponseEntity<ApiResponse<PrescriptionResponse>> dispensePrescription(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("Prescription dispensed", vetService.dispensePrescription(id)));
     }
 
     @GetMapping("/reports/drug-usage")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER','FARM_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN','FARM_MANAGER')")
     public ResponseEntity<ApiResponse<DrugUsageReportResponse>> getDrugUsageReport(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,

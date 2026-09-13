@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { dailyRecordApi, inventoryApi, financeApi, pharmacyApi } from '../../api';
 import DataTable from '../../components/shared/DataTable';
-import PageHeader from '../../components/shared/PageHeader';
+import EnterprisePage from '../../components/layout/EnterprisePage';
+import { exportToCsv, exportToPdf } from '../../lib/exportTable';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatDate, formatCurrency } from '../../utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { 
-  FileText, 
   Download, 
   Printer, 
-  BarChart3, 
   TrendingUp, 
   Package, 
   DollarSign, 
@@ -48,13 +47,6 @@ const normalizeDate = (value) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const escapeHtml = (value) => String(value ?? '')
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#39;');
-
 const Reports = () => {
   const { t } = useLanguage();
   const [activeReport, setActiveReport] = useState('mortality');
@@ -72,8 +64,13 @@ const Reports = () => {
         else if (activeReport === 'lowstock') res = await inventoryApi.getLowStock();
         else if (activeReport === 'expiry') res = await inventoryApi.getExpiryAlerts();
         else if (activeReport === 'sales') res = await pharmacyApi.getSales();
-        else if (activeReport === 'income') res = await financeApi.getIncome();
-        else if (activeReport === 'expenses') res = await financeApi.getExpenses();
+        else if (activeReport === 'income' || activeReport === 'expenses') {
+          const txRes = await financeApi.getTransactions();
+          const txs = txRes?.data?.data || [];
+          const type = activeReport === 'income' ? 'INCOME' : 'EXPENSE';
+          setData(txs.filter((tx) => tx.transactionType === type));
+          return;
+        }
         setData(res?.data?.data || []);
       } finally {
         setLoading(false);
@@ -154,95 +151,25 @@ const Reports = () => {
   const columns = getColumns();
   const selectedReportLabel = reportTypes.find((report) => report.key === activeReport)?.label || t('reportsPage.title');
 
-  const getCellText = (row, column) => {
-    const rawValue = column.render ? column.render(row) : row[column.key];
-    if (rawValue === null || rawValue === undefined || rawValue === '') return '-';
-    if (typeof rawValue === 'string' || typeof rawValue === 'number') return String(rawValue);
-    return '-';
-  };
-
-  const downloadFile = (blob, filename) => {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  };
-
   const exportToExcel = () => {
-    const headerRow = columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join('');
-    const bodyRows = filteredData.map((row) => (
-      `<tr>${columns.map((column) => `<td>${escapeHtml(getCellText(row, column))}</td>`).join('')}</tr>`
-    )).join('');
-    const html = `
-      <html>
-        <head><meta charset="utf-8" /></head>
-        <body>
-          <h2>${escapeHtml(selectedReportLabel)}</h2>
-          <p>${escapeHtml(t(`reportsPage.${reportPeriod}Period`))}</p>
-          <table border="1">
-            <thead><tr>${headerRow}</tr></thead>
-            <tbody>${bodyRows}</tbody>
-          </table>
-        </body>
-      </html>
-    `;
-    downloadFile(
-      new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel;charset=utf-8;' }),
-      `${activeReport}-${reportPeriod}-report.xls`
-    );
+    exportToCsv(filteredData, columns, `${activeReport}-${reportPeriod}-report`);
   };
 
-  const exportToPdf = () => {
-    const printWindow = window.open('', '_blank', 'width=1100,height=800');
-    if (!printWindow) return;
-
-    const headerRow = columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join('');
-    const bodyRows = filteredData.map((row) => (
-      `<tr>${columns.map((column) => `<td>${escapeHtml(getCellText(row, column))}</td>`).join('')}</tr>`
-    )).join('');
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>${escapeHtml(selectedReportLabel)}</title>
-          <style>
-            body { font-family: "Times New Roman", serif; padding: 24px; color: #1f2937; }
-            h2 { margin-bottom: 8px; }
-            p { margin-top: 0; color: #4b5563; }
-            table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-            th, td { border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; font-size: 12px; }
-            th { background: #f3f4f6; }
-          </style>
-        </head>
-        <body>
-          <h2>${escapeHtml(selectedReportLabel)}</h2>
-          <p>${escapeHtml(t(`reportsPage.${reportPeriod}Period`))}</p>
-          <table>
-            <thead><tr>${headerRow}</tr></thead>
-            <tbody>${bodyRows}</tbody>
-          </table>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-    }, 300);
+  const handleExportPdf = () => {
+    exportToPdf(selectedReportLabel, 'reports-data-table');
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <PageHeader
-        title="Report Center"
-        description="Generate and export comprehensive reports across all modules."
-      />
-
+    <EnterprisePage
+      title="Report Center"
+      subtitle="Generate and export comprehensive reports across all modules"
+      breadcrumbs={['Reports']}
+      exportData={filteredData}
+      exportColumns={columns}
+      exportFilename={`${activeReport}-report`}
+      exportElementId="reports-data-table"
+      exportTitle={selectedReportLabel}
+    >
       {/* Report Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {reportTypes.map((report) => (
@@ -289,18 +216,18 @@ const Reports = () => {
                 <Download className="mr-2 h-4 w-4" />
                 Excel
               </Button>
-              <Button onClick={exportToPdf}>
+              <Button onClick={handleExportPdf}>
                 <Printer className="mr-2 h-4 w-4" />
                 PDF
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent id="reports-data-table">
           <DataTable columns={columns} data={filteredData} loading={loading} searchable pagination />
         </CardContent>
       </Card>
-    </div>
+    </EnterprisePage>
   );
 };
 

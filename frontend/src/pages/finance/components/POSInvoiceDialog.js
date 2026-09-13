@@ -38,7 +38,7 @@ const POSInvoiceDialog = ({ open, onOpenChange, onSuccess }) => {
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <ShoppingBag className="h-5 w-5 text-indigo-600" />
+                        <ShoppingBag className="h-5 w-5 text-primary" />
                         Quick POS Invoice
                     </DialogTitle>
                     <DialogDescription>
@@ -73,7 +73,7 @@ const POSInvoiceDialog = ({ open, onOpenChange, onSuccess }) => {
                     {error && <div className="text-xs text-rose-600 bg-rose-50 p-2 rounded border border-rose-100">{error}</div>}
 
                     <DialogFooter>
-                        <Button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                        <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/90">
                             {loading ? 'Processing...' : 'Charge & Print Receipt'}
                         </Button>
                     </DialogFooter>

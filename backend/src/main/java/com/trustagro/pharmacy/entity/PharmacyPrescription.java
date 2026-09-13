@@ -2,7 +2,7 @@ package com.trustagro.pharmacy.entity;
 
 import com.trustagro.user.entity.User;
 import com.trustagro.veterinary.entity.Prescription;
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -46,8 +46,8 @@ public class PharmacyPrescription {
     @Column(columnDefinition = "TEXT")
     private String diagnosis;
 
-    @Type(JsonBinaryType.class)
-    @Column(columnDefinition = "jsonb")
+    @Type(JsonType.class)
+    @Column(columnDefinition = "text")
     private List<Object> durWarnings;
 
     @Column(precision = 10, scale = 2)

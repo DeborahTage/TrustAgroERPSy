@@ -69,7 +69,7 @@ public class Flock {
     public Barn getBarn() { return barn; }
     public void setFarm(Farm farm) { this.farm = farm; }
     public void setBatchCode(String batchCode) { this.batchCode = batchCode; }
-    public void setBirdType(String birdType) { this.birdType = birdType; }
+    public void setBreed(String breed) { this.breed = breed; }
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
     public void setStatus(FlockStatus status) { this.status = status; }
     public Farm getFarm() { return farm; }

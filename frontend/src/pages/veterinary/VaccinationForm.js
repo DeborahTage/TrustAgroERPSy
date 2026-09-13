@@ -84,7 +84,7 @@ const VaccinationForm = () => {
           <div>
             <h1 className="text-3xl font-black tracking-tight text-gray-900 flex items-center gap-3">
               Schedule Protocol
-              <div className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-indigo-100 flex items-center gap-1.5">
+              <div className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/20 flex items-center gap-1.5">
                 <Syringe className="h-3 w-3" />
                 Medical Order
               </div>
@@ -94,7 +94,7 @@ const VaccinationForm = () => {
         </div>
         <div className="h-px flex-1 bg-gray-100 hidden md:block mx-8" />
         <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100">
-          <Clock className="h-4 w-4 text-indigo-500" />
+          <Clock className="h-4 w-4 text-primary" />
           <span className="text-[10px] font-black uppercase text-gray-500">Global Medical Clock Active</span>
         </div>
       </div>
@@ -104,7 +104,7 @@ const VaccinationForm = () => {
           <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-8">
               <CardTitle className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2 uppercase">
-                <FlaskConical className="h-5 w-5 text-indigo-600" />
+                <FlaskConical className="h-5 w-5 text-primary" />
                 Biological Configuration
               </CardTitle>
               <CardDescription className="text-xs font-bold text-gray-400">Specify biological agent and target population parameters</CardDescription>
@@ -122,7 +122,7 @@ const VaccinationForm = () => {
                   <div className="space-y-3">
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Farm Zone *</Label>
                     <Select value={String(form.farmId)} onValueChange={handleFarmChange}>
-                      <SelectTrigger className="h-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-indigo-600 transition-all">
+                      <SelectTrigger className="h-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-primary transition-all">
                         <SelectValue placeholder="Select target facility" />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-none shadow-2xl">
@@ -136,7 +136,7 @@ const VaccinationForm = () => {
                   <div className="space-y-3">
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Flock Population *</Label>
                     <Select value={String(form.flockId)} onValueChange={(v) => setForm({ ...form, flockId: v })} disabled={!form.farmId}>
-                      <SelectTrigger className={cn("h-12 border-2 rounded-2xl font-bold transition-all", !form.farmId ? "bg-gray-50 border-gray-100" : "bg-white border-gray-100 focus:ring-indigo-600")}>
+                      <SelectTrigger className={cn("h-12 border-2 rounded-2xl font-bold transition-all", !form.farmId ? "bg-gray-50 border-gray-100" : "bg-white border-gray-100 focus:ring-primary")}>
                         <SelectValue placeholder="Select target batch" />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-none shadow-2xl">
@@ -152,7 +152,7 @@ const VaccinationForm = () => {
                     <div className="relative">
                       <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                       <Input
-                        className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-indigo-600 transition-all"
+                        className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-primary transition-all"
                         value={form.vaccineName}
                         onChange={(e) => setForm({ ...form, vaccineName: e.target.value })}
                         placeholder="e.g. LaSota B1, Mareks HVT"
@@ -165,7 +165,7 @@ const VaccinationForm = () => {
                     <div className="relative">
                       <ShieldCheck className="absolute z-10 left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 pointer-events-none" />
                       <Select value={form.diseaseProtectedAgainst} onValueChange={(v) => setForm({ ...form, diseaseProtectedAgainst: v })}>
-                        <SelectTrigger className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-indigo-600 transition-all">
+                        <SelectTrigger className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-primary transition-all">
                           <SelectValue placeholder="e.g. Newcastle, Gumboro" />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl border-none shadow-2xl">
@@ -183,7 +183,7 @@ const VaccinationForm = () => {
                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                       <Input
                         type="date"
-                        className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-indigo-600 transition-all"
+                        className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-primary transition-all"
                         value={form.scheduledDate}
                         onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })}
                       />
@@ -194,7 +194,7 @@ const VaccinationForm = () => {
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Specific Protocol Remarks</Label>
                     <Textarea
                       rows={4}
-                      className="bg-white border-2 border-gray-100 rounded-2xl font-medium text-sm focus:ring-indigo-600 transition-all p-4 leading-relaxed"
+                      className="bg-white border-2 border-gray-100 rounded-2xl font-medium text-sm focus:ring-primary transition-all p-4 leading-relaxed"
                       value={form.remarks}
                       onChange={(e) => setForm({ ...form, remarks: e.target.value })}
                       placeholder="Include cold chain requirements, administration route (In-ovo, spray, ocular), or dosage specifics..."
@@ -203,7 +203,7 @@ const VaccinationForm = () => {
                 </div>
 
                 <div className="flex gap-4 pt-8">
-                  <Button type="submit" className="flex-[2] h-14 rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95" disabled={loading}>
+                  <Button type="submit" className="flex-[2] h-14 rounded-2xl bg-emerald-900 hover:bg-emerald-800 text-white font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95" disabled={loading}>
                     {loading ? 'Orchestrating Cycle...' : 'Authorize Schedule'}
                   </Button>
                   <Button type="button" variant="outline" className="flex-1 h-14 rounded-2xl border-2 font-black text-sm uppercase tracking-widest hover:bg-gray-50" onClick={() => navigate('/veterinary')}>
@@ -216,12 +216,12 @@ const VaccinationForm = () => {
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-indigo-600 text-white overflow-hidden p-8">
+          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-primary text-white overflow-hidden p-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-white/10 rounded-xl">
-                <Info className="h-5 w-5 text-indigo-100" />
+                <Info className="h-5 w-5 text-emerald-100" />
               </div>
-              <span className="text-xs font-black uppercase tracking-widest text-indigo-100">Medical Guard</span>
+              <span className="text-xs font-black uppercase tracking-widest text-emerald-100">Medical Guard</span>
             </div>
             <div className="space-y-6">
               <div className="space-y-3">
@@ -229,13 +229,13 @@ const VaccinationForm = () => {
                   <CheckCircle2 className="h-4 w-4 text-emerald-300" />
                   Cold Chain Protocol
                 </h4>
-                <p className="text-xs text-indigo-100/70 font-medium leading-relaxed italic">
+                <p className="text-xs text-emerald-100/70 font-medium leading-relaxed italic">
                   Ensure vaccines are maintained between 2°C and 8°C throughout the transit and administration phase.
                 </p>
               </div>
               <div className="h-px bg-white/10" />
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-200">Compliance Checklist</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">Compliance Checklist</p>
                 <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
                   <div className="h-1.5 w-1.5 bg-emerald-400 rounded-full" />
                   <span className="text-[10px] font-bold">Withdrawal period verification</span>
@@ -248,14 +248,14 @@ const VaccinationForm = () => {
             </div>
           </Card>
 
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-indigo-900 p-8 text-white">
+          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-emerald-900 p-8 text-white">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Upcoming Vol</span>
-                <TrendingUp className="h-4 w-4 text-indigo-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">Upcoming Vol</span>
+                <TrendingUp className="h-4 w-4 text-primary/70" />
               </div>
               <p className="text-2xl font-black">4,200</p>
-              <p className="text-[10px] font-bold text-indigo-300/60 uppercase tracking-widest">Birds Targeted this Week</p>
+              <p className="text-[10px] font-bold text-emerald-300/60 uppercase tracking-widest">Birds Targeted this Week</p>
             </div>
           </Card>
         </div>

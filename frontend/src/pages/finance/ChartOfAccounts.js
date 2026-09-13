@@ -1,108 +1,88 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { financeApi } from '../../api';
-import PageHeader from '../../components/shared/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import EnterprisePage from '../../components/layout/EnterprisePage';
+import DataTable from '../../components/shared/DataTable';
 import { Badge } from '../../components/ui/badge';
 import { formatCurrency } from '../../utils';
-import { Layers, Activity, Search } from 'lucide-react';
-import { Input } from '../../components/ui/input';
 
 const ChartOfAccounts = () => {
-    const [accounts, setAccounts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchAccounts = async () => {
-            try {
-                // For now, using the transactional chart of accounts derived from AccountCode enum mapping
-                // Real implementation would fetch from /api/finance/chart-of-accounts
-                const res = await financeApi.getTransactions();
-                // Group by account code for visualization
-                const uniqueAccounts = {};
-                res.data.data.forEach(tx => {
-                    if (tx.accountCode) {
-                        if (!uniqueAccounts[tx.accountCode]) {
-                            uniqueAccounts[tx.accountCode] = {
-                                code: tx.accountCode,
-                                name: tx.accountCode.replace(/_/g, ' '),
-                                unit: tx.businessUnit,
-                                balance: 0
-                            };
-                        }
-                        uniqueAccounts[tx.accountCode].balance += (tx.transactionType === 'INCOME' ? tx.amount : -tx.amount);
-                    }
-                });
-                setAccounts(Object.values(uniqueAccounts));
-            } catch (e) {
-                console.error('Failed to fetch COA', e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAccounts();
-    }, []);
+  const fetchAccounts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await financeApi.getAccounts();
+      setAccounts(res.data.data || []);
+    } catch (e) {
+      setError('Failed to load chart of accounts.');
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    const filtered = accounts.filter(a => a.name.toLowerCase().includes(search.toLowerCase()) || a.code.toLowerCase().includes(search.toLowerCase()));
+  useEffect(() => { fetchAccounts(); }, [fetchAccounts]);
 
-    return (
-        <div className="flex flex-col gap-6 p-4 md:p-8 bg-slate-50 min-h-screen">
-            <PageHeader
-                title="Chart of Accounts"
-                subtitle="Double-entry ledger structure for all business units"
-            />
+  const stats = useMemo(() => {
+    const byType = (type) => accounts.filter((a) => a.accountType === type);
+    const sumBalance = (list) => list.reduce((s, a) => s + Number(a.balance || 0), 0);
+    return [
+      { title: 'Total Accounts', value: accounts.length, description: 'Ledger accounts' },
+      { title: 'Assets', value: formatCurrency(sumBalance(byType('ASSET'))), description: `${byType('ASSET').length} accounts` },
+      { title: 'Revenue', value: formatCurrency(sumBalance(byType('REVENUE'))), description: `${byType('REVENUE').length} accounts` },
+      { title: 'Expenses', value: formatCurrency(sumBalance(byType('EXPENSE'))), description: `${byType('EXPENSE').length} accounts` },
+    ];
+  }, [accounts]);
 
-            <div className="flex items-center gap-4 mb-2">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                        placeholder="Search accounts..."
-                        className="pl-9 bg-white"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                </div>
-            </div>
+  const columns = useMemo(() => [
+    { accessorKey: 'accountCode', header: 'Code', cell: ({ row }) => <Badge variant="outline" className="font-mono text-[10px]">{row.original.accountCode}</Badge> },
+    { accessorKey: 'accountName', header: 'Account Name', cell: ({ row }) => <span className="font-bold text-slate-800">{row.original.accountName}</span> },
+    { accessorKey: 'accountType', header: 'Type', cell: ({ row }) => <Badge className="bg-slate-100 text-slate-700">{row.original.accountType}</Badge> },
+    { accessorKey: 'businessUnit', header: 'Unit', cell: ({ row }) => row.original.businessUnit || 'GENERAL' },
+    {
+      accessorKey: 'balance',
+      header: 'Balance',
+      cell: ({ row }) => (
+        <span className={`font-bold ${Number(row.original.balance) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+          {formatCurrency(row.original.balance)}
+        </span>
+      ),
+    },
+  ], []);
 
-            <Card className="border-none shadow-sm overflow-hidden">
-                <CardHeader className="bg-white border-b py-4">
-                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                        <Layers className="h-5 w-5 text-indigo-500" /> General Ledger Accounts
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader className="bg-slate-50">
-                            <TableRow>
-                                <TableHead>Account Name</TableHead>
-                                <TableHead>Code</TableHead>
-                                <TableHead>Business Unit</TableHead>
-                                <TableHead className="text-right">Balance</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody className="bg-white">
-                            {filtered.map((acc, i) => (
-                                <TableRow key={i} className="hover:bg-slate-50 transition-colors">
-                                    <TableCell className="font-bold text-slate-800">{acc.name}</TableCell>
-                                    <TableCell><Badge variant="outline" className="font-mono text-[10px]">{acc.code}</Badge></TableCell>
-                                    <TableCell><Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100">{acc.unit}</Badge></TableCell>
-                                    <TableCell className={`text-right font-bold ${acc.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                        {formatCurrency(acc.balance)}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {filtered.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="text-center py-20 text-slate-400 italic">No accounts found matching your search.</TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
-    );
+  const exportColumns = [
+    { header: 'Code', accessorKey: 'accountCode' },
+    { header: 'Name', accessorKey: 'accountName' },
+    { header: 'Type', accessorKey: 'accountType' },
+    { header: 'Unit', accessorKey: 'businessUnit' },
+    { header: 'Balance', accessorKey: 'balance' },
+  ];
+
+  return (
+    <EnterprisePage
+      title="Chart of Accounts"
+      subtitle="General ledger structure — all balances from posted transactions"
+      breadcrumbs={['Finance', 'Chart of Accounts']}
+      loading={loading}
+      error={error}
+      onRetry={fetchAccounts}
+      stats={stats}
+      onRefresh={fetchAccounts}
+      exportData={accounts}
+      exportColumns={exportColumns}
+      exportFilename="chart-of-accounts"
+      exportElementId="coa-table"
+      exportTitle="Chart of Accounts"
+      empty={!accounts.length ? { title: 'No accounts configured', description: 'Accounts are seeded at startup. Post transactions to update balances.' } : null}
+    >
+      <div id="coa-table">
+        <DataTable columns={columns} data={accounts} searchable pagination pageSize={20} />
+      </div>
+    </EnterprisePage>
+  );
 };
 
 export default ChartOfAccounts;

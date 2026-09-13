@@ -12,6 +12,9 @@ export const PATH_MODULE_MAP = {
   '/pharmacy': 'pharmacy',
   '/finance': 'finance',
   '/crm': 'crm',
+  '/marketing': 'marketing',
+  '/training': 'training',
+  '/consultancy': 'consultancy',
   '/reports': 'reports',
   '/settings': 'settings',
 };

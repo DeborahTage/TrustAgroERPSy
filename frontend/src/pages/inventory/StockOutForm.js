@@ -12,7 +12,7 @@ import { toast } from 'react-toastify';
 import { ArrowLeft, ArrowDownRight, Building2, User, FileText, Calendar, Box, Tag, Save, X, Info, Layers, Stethoscope, Syringe } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import api from '../../api/axios';
-import PageHeader from '../../components/shared/PageHeader';
+import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
 
 const StockOutForm = () => {
   const { t } = useLanguage();
@@ -93,22 +93,13 @@ const StockOutForm = () => {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto pb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <PageHeader
-        title="Inventory Stock-Out"
-        subtitle="Record stock issuance for farms, departments, or internal use."
-        backTo="/inventory"
-      />
-
-      {error && (
-        <Card className="bg-rose-50 border-rose-200">
-          <CardContent className="p-4 flex items-center gap-3 text-rose-800">
-            <X className="h-4 w-4 bg-rose-600 text-white rounded-full p-0.5" />
-            <p className="text-sm font-bold tracking-tight">{error}</p>
-          </CardContent>
-        </Card>
-      )}
-
+    <EnterpriseFormPage
+      title="Inventory Stock-Out"
+      subtitle="Record stock issuance for farms, departments, or internal use"
+      breadcrumbs={['Inventory', 'Stock Out']}
+      backTo="/inventory"
+      error={error}
+    >
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <Card className="border-none shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden bg-white">
@@ -333,7 +324,7 @@ const StockOutForm = () => {
           </Card>
         </div>
       </form>
-    </div>
+    </EnterpriseFormPage>
   );
 };
 

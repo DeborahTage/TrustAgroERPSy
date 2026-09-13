@@ -23,6 +23,7 @@ import { inventoryApi, pharmacyApi } from '../../api';
 import { formatCurrency } from '../../utils';
 import { toast } from 'react-toastify';
 import { cn } from '../../lib/utils';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 
 const CATEGORY_TABS = ['ALL', 'DRUG', 'VACCINE', 'VITAMIN', 'EQUIPMENT', 'FEED', 'FARM_MATERIAL'];
 
@@ -57,7 +58,7 @@ const POSTerminal = () => {
         setLoading(true);
         try {
             const [prodRes, custRes] = await Promise.all([
-                inventoryApi.getItems(),
+                pharmacyApi.getPharmacyCatalog(),
                 pharmacyApi.getCustomers()
             ]);
             setProducts(prodRes.data?.data || []);
@@ -108,7 +109,8 @@ const POSTerminal = () => {
         }
 
         if (price <= 0) {
-            toast.warning(`${product.itemName} has no price set. Please update inventory pricing.`);
+            toast.error(`${product.itemName} has no price set. Update inventory pricing before selling.`);
+            return;
         }
 
         if (existing) {
@@ -168,7 +170,13 @@ const POSTerminal = () => {
     const hasUnpricedItems = cart.some(i => i.price <= 0);
 
     return (
-        <div className="flex h-[calc(100vh-120px)] gap-6 animate-in fade-in duration-300 overflow-hidden">
+        <EnterprisePage
+            title="POS Terminal"
+            subtitle="Point-of-sale with live inventory sync, tiered pricing, and controlled substance checks"
+            breadcrumbs={['Pharmacy', 'POS']}
+            onRefresh={fetchData}
+        >
+        <div className="flex h-[calc(100vh-220px)] gap-6 animate-in fade-in duration-300 overflow-hidden">
 
             {/* LEFT: Product Catalog */}
             <div className="flex-1 flex flex-col gap-3 overflow-hidden min-w-0">
@@ -197,7 +205,7 @@ const POSTerminal = () => {
                                 key={cat}
                                 variant={selectedCategory === cat ? 'default' : 'outline'}
                                 size="sm"
-                                className={cn('h-8 whitespace-nowrap text-xs font-semibold', selectedCategory === cat && 'bg-indigo-600')}
+                                className={cn('h-8 whitespace-nowrap text-xs font-semibold', selectedCategory === cat && 'bg-primary')}
                                 onClick={() => setSelectedCategory(cat)}
                             >
                                 {cat !== 'ALL' && <span className="mr-1">{getCatIcon(cat)}</span>}
@@ -227,7 +235,7 @@ const POSTerminal = () => {
                                     <Card
                                         key={p.id}
                                         className={cn(
-                                            'cursor-pointer hover:border-indigo-400 hover:shadow-md transition-all h-fit group',
+                                            'cursor-pointer hover:border-primary/50 hover:shadow-md transition-all h-fit group',
                                             outOfStock && 'opacity-50 cursor-not-allowed'
                                         )}
                                         onClick={() => !outOfStock && addToCart(p)}
@@ -240,15 +248,17 @@ const POSTerminal = () => {
                                                 }
                                                 <span className="text-[10px] font-mono text-gray-400">{p.sku}</span>
                                             </div>
-                                            <div className="font-bold text-gray-800 line-clamp-1 group-hover:text-indigo-600 transition-colors text-sm">
+                                            <div className="font-bold text-gray-800 line-clamp-1 group-hover:text-primary transition-colors text-sm">
                                                 {p.itemName}
                                             </div>
                                             <div className="flex justify-between items-end mt-2">
-                                                <div className={cn('text-base font-black', price > 0 ? 'text-indigo-600' : 'text-rose-400')}>
+                                                <div className={cn('text-base font-black', price > 0 ? 'text-primary' : 'text-rose-400')}>
                                                     {price > 0 ? formatCurrency(price) : 'No Price'}
                                                 </div>
-                                                <div className={cn('text-xs font-semibold', outOfStock ? 'text-rose-600' : p.currentStock <= (p.reorderPoint || 0) ? 'text-amber-600' : 'text-emerald-600')}>
-                                                    {outOfStock ? 'Out of Stock' : `${p.currentStock} ${p.unit || ''}`}
+                                                <div className={cn('text-xs font-semibold text-right', outOfStock ? 'text-rose-600' : p.currentStock <= (p.reorderPoint || 0) ? 'text-amber-600' : 'text-emerald-600')}>
+                                                    <div>{outOfStock ? 'Out of Stock' : `${p.currentStock} ${p.unit || ''}`}</div>
+                                                    {p.batchNumber && <div className="text-[10px] text-gray-400">Batch: {p.batchNumber}</div>}
+                                                    {p.expiryDate && <div className="text-[10px] text-gray-400">Exp: {p.expiryDate}</div>}
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -261,8 +271,8 @@ const POSTerminal = () => {
             </div>
 
             {/* RIGHT: Checkout Panel */}
-            <Card className="w-[400px] flex flex-col shadow-xl border-indigo-100 bg-white shrink-0">
-                <CardHeader className="bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-t-xl pb-4">
+            <Card className="w-[400px] flex flex-col shadow-xl border-primary/20 bg-white shrink-0">
+                <CardHeader className="bg-gradient-to-br from-primary to-primary/90 text-white rounded-t-xl pb-4">
                     <div className="flex items-center gap-2">
                         <ShoppingCart className="h-5 w-5" />
                         <CardTitle className="text-lg">Checkout Terminal</CardTitle>
@@ -298,7 +308,7 @@ const POSTerminal = () => {
                             />
                         </div>
                         {selectedCustomer && (
-                            <div className="text-xs flex gap-3 text-gray-500 bg-indigo-50 p-2 rounded">
+                            <div className="text-xs flex gap-3 text-gray-500 bg-primary/10 p-2 rounded">
                                 <span>Type: <b>{selectedCustomer.customerType}</b></span>
                                 <span>Balance: <b className="text-rose-600">{formatCurrency(selectedCustomer.outstandingBalance || 0)}</b></span>
                             </div>
@@ -319,7 +329,7 @@ const POSTerminal = () => {
                                     <div key={item.id} className="flex gap-2 items-start p-2 rounded-lg bg-gray-50 border border-gray-100 animate-in slide-in-from-right-2">
                                         <div className="flex-1 min-w-0">
                                             <div className="font-semibold text-sm text-gray-800 truncate">{item.itemName}</div>
-                                            <div className="text-xs text-indigo-600 font-medium">
+                                            <div className="text-xs text-primary font-medium">
                                                 {item.price > 0 ? formatCurrency(item.price) + ' / unit' : <span className="text-rose-500">⚠ No price set</span>}
                                             </div>
                                             <div className="text-xs text-gray-400">Subtotal: {formatCurrency(item.price * item.qty)}</div>
@@ -354,7 +364,7 @@ const POSTerminal = () => {
                                 <span>VAT (15%)</span><span>{formatCurrency(tax)}</span>
                             </div>
                             <div className="flex justify-between text-xl font-black text-gray-900 border-t pt-2 mt-1">
-                                <span>TOTAL</span><span className="text-indigo-700">{formatCurrency(total)}</span>
+                                <span>TOTAL</span><span className="text-primary">{formatCurrency(total)}</span>
                             </div>
                         </div>
                     )}
@@ -364,7 +374,7 @@ const POSTerminal = () => {
                     <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                         <SelectTrigger className="w-full h-10 font-semibold text-gray-700">
                             <div className="flex items-center gap-2">
-                                <CreditCard className="h-3.5 w-3.5 text-indigo-500" />
+                                <CreditCard className="h-3.5 w-3.5 text-primary" />
                                 <SelectValue placeholder="Payment Method" />
                             </div>
                         </SelectTrigger>
@@ -382,8 +392,8 @@ const POSTerminal = () => {
                             </Button>
                         )}
                         <Button
-                            className="flex-1 h-12 text-base font-bold bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200"
-                            disabled={cart.length === 0 || processing}
+                            className="flex-1 h-12 text-base font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/15"
+                            disabled={cart.length === 0 || processing || hasUnpricedItems || total <= 0}
                             onClick={() => setShowCheckout(true)}
                         >
                             {processing ? 'Processing...' : 'Complete Transaction'}
@@ -434,7 +444,7 @@ const POSTerminal = () => {
                             </div>
                             <div className="pt-2 space-y-1">
                                 <div className="flex justify-between text-sm text-gray-500"><span>VAT (15%):</span><span>{formatCurrency(tax)}</span></div>
-                                <div className="flex justify-between text-lg font-black"><span>Total:</span><span className="text-indigo-700">{formatCurrency(total)}</span></div>
+                                <div className="flex justify-between text-lg font-black"><span>Total:</span><span className="text-primary">{formatCurrency(total)}</span></div>
                             </div>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600 bg-gray-50 p-3 rounded border">
@@ -479,6 +489,7 @@ const POSTerminal = () => {
                 </div>
             )}
         </div>
+        </EnterprisePage>
     );
 };
 

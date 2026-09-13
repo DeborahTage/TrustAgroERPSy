@@ -7,9 +7,8 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import PageHeader from '../../components/shared/PageHeader';
+import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
 import { toast } from 'react-toastify';
-import { ArrowLeft, BookOpen } from 'lucide-react';
 
 const TransactionForm = () => {
   const navigate = useNavigate();
@@ -75,26 +74,13 @@ const TransactionForm = () => {
   );
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-8 bg-slate-50 min-h-screen">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/finance')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <PageHeader
-          title="Post Manual Journal Entry"
-          subtitle="Record a double-entry transaction directly in the ledger"
-        />
-      </div>
-
-      <div className="max-w-2xl mx-auto w-full">
-        <Card className="border-none shadow-sm">
-          <CardHeader className="border-b">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BookOpen className="h-4 w-4 text-indigo-600" />
-              Journal Entry
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
+    <EnterpriseFormPage
+      title="Post Manual Journal Entry"
+      subtitle="Record a double-entry transaction directly in the ledger"
+      breadcrumbs={['Finance', 'Journal Entry']}
+      backTo="/finance"
+      error={error}
+    >
             <form onSubmit={handleSubmit} className="space-y-6">
 
               {/* Transaction Type */}
@@ -197,7 +183,7 @@ const TransactionForm = () => {
 
               {/* Actions */}
               <div className="flex gap-3 pt-2">
-                <Button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 flex-1">
+                <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90 flex-1">
                   {loading ? 'Posting…' : 'Post to Ledger'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => navigate('/finance')}>
@@ -205,10 +191,7 @@ const TransactionForm = () => {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    </EnterpriseFormPage>
   );
 };
 

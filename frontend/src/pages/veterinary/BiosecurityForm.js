@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { farmApi } from '../../api';
-import PageHeader from '../../components/shared/PageHeader';
+import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
 import { Card, CardContent } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -50,18 +50,12 @@ const BiosecurityForm = () => {
     };
 
     return (
-        <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-700 pb-16">
-            <PageHeader
-                title="Protocol Compliance Log"
-                subtitle="Record sanitization standards, visitor access, and PPE enforcement."
-                onBack={() => navigate(-1)}
-            >
-                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-2xl border border-emerald-100">
-                    <ShieldCheck className="h-5 w-5 text-emerald-600" />
-                    <span className="text-xs font-black uppercase text-emerald-700 tracking-widest">Active Audit</span>
-                </div>
-            </PageHeader>
-
+        <EnterpriseFormPage
+            title="Protocol Compliance Log"
+            subtitle="Record sanitization standards, visitor access, and PPE enforcement"
+            breadcrumbs={['Veterinary', 'Biosecurity']}
+            backTo="/veterinary"
+        >
             <form onSubmit={handleSubmit}>
                 <Card className="border-none shadow-2xl shadow-gray-200/50 rounded-[2.5rem] bg-white overflow-hidden">
                     <CardContent className="p-8 space-y-8">
@@ -83,7 +77,7 @@ const BiosecurityForm = () => {
                                 <Input type="checkbox" className="h-6 w-6 rounded-lg text-emerald-600" checked={form.footbathRefreshed} onChange={e => setForm({ ...form, footbathRefreshed: e.target.checked })} />
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="font-bold flex items-center gap-2"><Truck className="h-5 w-5 text-indigo-500" /> Vehicular Spray Used?</span>
+                                <span className="font-bold flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /> Vehicular Spray Used?</span>
                                 <Input type="checkbox" className="h-6 w-6 rounded-lg text-emerald-600" checked={form.vehicularSpray} onChange={e => setForm({ ...form, vehicularSpray: e.target.checked })} />
                             </div>
                             <div className="flex items-center justify-between">
@@ -148,7 +142,7 @@ const BiosecurityForm = () => {
                     </Button>
                 </div>
             </form>
-        </div>
+        </EnterpriseFormPage>
     );
 };
 

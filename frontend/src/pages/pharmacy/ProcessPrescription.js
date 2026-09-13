@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { pharmacyApi } from '../../api';
-import PageHeader from '../../components/shared/PageHeader';
-import PageContainer from '../../components/layout/PageContainer';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -54,8 +53,8 @@ export default function ProcessPrescription() {
             const found = (res.data.data || []).find(r => String(r.id) === String(id));
             if (found) {
                 setRx(found);
-                if (found.status === 'Approved') setStep(2);
-                if (found.status === 'Dispensed') setStep(3);
+                if (found.status === 'APPROVED') setStep(2);
+                if (found.status === 'DISPENSED' || found.status === 'COMPLETED') setStep(3);
             } else {
                 toast.error("Prescription not found or already processed");
             }
@@ -73,7 +72,7 @@ export default function ProcessPrescription() {
             await pharmacyApi.approvePrescription(rx.id);
             toast.success("Prescription instructions verified and approved.");
             setStep(2);
-            setRx({ ...rx, status: 'Approved' });
+            setRx({ ...rx, status: 'APPROVED' });
         } catch (error) {
             toast.error(error.response?.data?.message || "Approval failure");
         } finally {
@@ -88,7 +87,7 @@ export default function ProcessPrescription() {
             await pharmacyApi.dispensePrescription(rx.id);
             toast.success("Medical stock successfully issued and ledgered.");
             setStep(3);
-            setRx({ ...rx, status: 'Dispensed' });
+            setRx({ ...rx, status: 'DISPENSED' });
             setTimeout(() => navigate('/pharmacy/overview'), 2000);
         } catch (error) {
             toast.error(error.response?.data?.message || "Dispensing failure");
@@ -99,28 +98,21 @@ export default function ProcessPrescription() {
 
     if (loading) {
         return (
-            <PageContainer>
-                <div className="h-96 bg-gray-100 rounded-[2.5rem] animate-pulse flex flex-col items-center justify-center">
-                    <Activity className="h-12 w-12 text-gray-300 animate-spin mb-4" />
-                    <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Synchronizing Medical Ledger...</p>
-                </div>
-            </PageContainer>
+            <EnterprisePage title="Dispensing Command" subtitle="Loading prescription..." breadcrumbs={['Pharmacy', 'Fulfillment']} loading />
         );
     }
 
     return (
-        <PageContainer>
-            <PageHeader
-                title="Dispensing Command"
-                subtitle="Verify clinical directives and execute pharmaceutical issuance."
-                breadcrumbs={['Pharmacy', 'Fulfillment', rx?.prescriptionCode || 'Order']}
-            >
-                <Button variant="ghost" className="rounded-2xl font-bold" onClick={() => navigate(-1)}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Queue
+        <EnterprisePage
+            title="Dispensing Command"
+            subtitle="Verify clinical directives and execute pharmaceutical issuance"
+            breadcrumbs={['Pharmacy', 'Fulfillment', rx?.prescriptionCode || rx?.prescriptionNumber || 'Order']}
+            actions={
+                <Button variant="outline" onClick={() => navigate(-1)}>
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Back
                 </Button>
-            </PageHeader>
-
+            }
+        >
             {!rx ? (
                 <Card className="border-none shadow-2xl shadow-gray-200/50 rounded-[2.5rem] bg-white h-[400px] flex flex-col items-center justify-center gap-6">
                     <div className="h-20 w-20 bg-gray-50 rounded-3xl flex items-center justify-center">
@@ -151,13 +143,13 @@ export default function ProcessPrescription() {
                                     )}>
                                         <div className={cn(
                                             "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
-                                            step >= item.s ? "bg-indigo-900 text-white shadow-lg shadow-indigo-100" : "bg-gray-100"
+                                            step >= item.s ? "bg-emerald-900 text-white shadow-lg shadow-primary/10" : "bg-gray-100"
                                         )}>
                                             <item.icon className="h-5 w-5" />
                                         </div>
                                         <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
                                     </div>
-                                    {i < 2 && <div className={cn("h-px flex-1 mx-4 max-w-[60px]", step > item.s ? "bg-indigo-900" : "bg-gray-100")} />}
+                                    {i < 2 && <div className={cn("h-px flex-1 mx-4 max-w-[60px]", step > item.s ? "bg-emerald-900" : "bg-gray-100")} />}
                                 </React.Fragment>
                             ))}
                         </div>
@@ -172,7 +164,7 @@ export default function ProcessPrescription() {
                                         <div className="flex gap-2">
                                             <Badge className={cn(
                                                 "border-none font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full",
-                                                step === 3 ? "bg-emerald-500" : "bg-indigo-500"
+                                                step === 3 ? "bg-emerald-500" : "bg-primary/100"
                                             )}>
                                                 {rx.status.toUpperCase()}
                                             </Badge>
@@ -181,13 +173,13 @@ export default function ProcessPrescription() {
                                             )}
                                         </div>
                                         <CardTitle className="text-4xl font-black tracking-tighter">{rx.prescriptionCode}</CardTitle>
-                                        <CardDescription className="text-indigo-300 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                        <CardDescription className="text-emerald-300 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
                                             <Calendar className="h-3 w-3" />
                                             Authorized {format(new Date(rx.createdAt || Date.now()), 'PPP')}
                                         </CardDescription>
                                     </div>
                                     <div className="h-16 w-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                                        <Pill className="h-8 w-8 text-indigo-300" />
+                                        <Pill className="h-8 w-8 text-emerald-300" />
                                     </div>
                                 </div>
                             </CardHeader>
@@ -199,7 +191,7 @@ export default function ProcessPrescription() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Dose Quantity</Label>
-                                        <p className="text-2xl font-black text-indigo-600 tracking-tight">
+                                        <p className="text-2xl font-black text-primary tracking-tight">
                                             {rx.quantity || rx.vetPrescription?.quantity}
                                             <span className="text-sm font-bold text-gray-400 uppercase tracking-tighter ml-2">Units</span>
                                         </p>
@@ -266,12 +258,12 @@ export default function ProcessPrescription() {
                             </CardHeader>
                             <CardContent className="p-8 space-y-8">
                                 <div className="flex items-start gap-4">
-                                    <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                                         <Hash className="h-7 w-7" />
                                     </div>
                                     <div>
                                         <p className="font-black text-gray-900 text-lg leading-tight">{rx.vetPrescription?.flockBatchCode || 'Internal Flock'}</p>
-                                        <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest mt-1">Farm Hub ID: {rx.vetPrescription?.farmId}</p>
+                                        <p className="text-[10px] text-primary font-black uppercase tracking-widest mt-1">Farm Hub ID: {rx.vetPrescription?.farmId}</p>
                                     </div>
                                 </div>
                                 <div className="space-y-6 pt-4">
@@ -282,7 +274,7 @@ export default function ProcessPrescription() {
                                     <div className="space-y-1">
                                         <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Protocol Period</Label>
                                         <div className="flex items-center gap-2 text-sm font-black text-gray-700">
-                                            <Calendar className="h-4 w-4 text-indigo-500" />
+                                            <Calendar className="h-4 w-4 text-primary" />
                                             {format(new Date(rx.createdAt || Date.now()), 'dd MMM yyyy')}
                                         </div>
                                     </div>
@@ -301,7 +293,7 @@ export default function ProcessPrescription() {
                             </Button>
                         ) : step === 2 ? (
                             <Button
-                                className="w-full h-20 rounded-[2rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg shadow-2xl shadow-indigo-100 transition-all active:scale-95 group"
+                                className="w-full h-20 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-2xl shadow-primary/10 transition-all active:scale-95 group"
                                 onClick={handleDispense}
                                 disabled={processing}
                             >
@@ -318,14 +310,14 @@ export default function ProcessPrescription() {
                             </Button>
                         )}
 
-                        <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100/50">
-                            <p className="text-[9px] text-center text-indigo-600/60 font-black uppercase tracking-widest leading-relaxed">
+                        <div className="bg-primary/10/50 p-6 rounded-3xl border border-primary/20/50">
+                            <p className="text-[9px] text-center text-primary/60 font-black uppercase tracking-widest leading-relaxed">
                                 PHARMACEUTICAL CONTROL SYSTEM ACTIVE. DISPENSING TRIGGERS AUTOMATIC STOCK DEDUCTION AND FINANCIAL RECOGNITION.
                             </p>
                         </div>
                     </div>
                 </div>
             )}
-        </PageContainer>
+        </EnterprisePage>
     );
 }

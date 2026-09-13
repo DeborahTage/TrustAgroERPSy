@@ -4,7 +4,7 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $backendDir = Join-Path $root "backend"
 $frontendDir = Join-Path $root "frontend"
 $backendLog = Join-Path $backendDir "backend-run.log"
-$backendPort = 8082
+$backendPort = 8081
 $backendHost = "localhost"
 $backendStartupTimeoutSeconds = 45
 

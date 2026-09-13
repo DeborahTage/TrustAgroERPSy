@@ -69,7 +69,7 @@ public class NotificationScheduler {
                 notificationService.createRoleNotification(
                     "Upcoming Vaccination Alert",
                     v.getVaccineName() + " for Flock " + v.getFlock().getBatchCode() + " is due on " + v.getScheduledDate(),
-                    Role.VETERINARY_OFFICER
+                    Role.VETERINARIAN
                 );
             });
     }

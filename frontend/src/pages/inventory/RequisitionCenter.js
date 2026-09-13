@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { requisitionApi, inventoryApi, farmApi } from '../../api';
-import PageHeader from '../../components/shared/PageHeader';
-import PageContainer from '../../components/layout/PageContainer';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 import DataTable from '../../components/shared/DataTable';
 import StatusBadge from '../../components/shared/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
@@ -144,7 +143,7 @@ export default function RequisitionCenter() {
                             </Button>
                         )}
                         {isIM && rx.status === 'APPROVED' && (
-                            <Button size="sm" className="h-8 bg-indigo-600 hover:bg-indigo-700 font-black text-[10px] rounded-lg" onClick={() => issueMutation.mutate(rx.id)}>
+                            <Button size="sm" className="h-8 bg-primary hover:bg-primary/90 font-black text-[10px] rounded-lg" onClick={() => issueMutation.mutate(rx.id)}>
                                 ISSUE STOCK
                             </Button>
                         )}
@@ -158,78 +157,49 @@ export default function RequisitionCenter() {
     ];
 
     return (
-        <PageContainer>
-            <PageHeader
-                title="Internal Requisition Center"
-                subtitle="Centralized material request and fulfillment hub for farm operations."
-                breadcrumbs={['Inventory', 'Requisitions']}
-            >
-                {canRequest && (
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 font-black tracking-tight">
-                                <Plus className="mr-2 h-5 w-5 stroke-[3px]" />
-                                New Request
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl rounded-[2.5rem]">
-                            <DialogHeader>
-                                <DialogTitle className="text-2xl font-black tracking-tighter">Material Requisition</DialogTitle>
-                                <DialogDescription className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">Submit an operational request for warehouse stock.</DialogDescription>
-                            </DialogHeader>
-                            <RequisitionForm farms={farms} items={items} onSubmit={(data) => createMutation.mutate(data)} loading={createMutation.isLoading} />
-                        </DialogContent>
-                    </Dialog>
-                )}
-            </PageHeader>
-
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <Card className="lg:col-span-1 border-none shadow-sm bg-white rounded-[2rem] h-fit">
-                    <CardHeader className="pb-4">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Queue Analytics</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6 pb-8">
-                        {[
-                            { label: 'Pending Approval', count: requisitions.filter(r => r.status === 'REQUESTED').length, color: 'text-amber-600', bg: 'bg-amber-50', icon: Clock },
-                            { label: 'Approved & Ready', count: requisitions.filter(r => r.status === 'APPROVED').length, color: 'text-indigo-600', bg: 'bg-indigo-50', icon: CheckCircle2 },
-                            { label: 'Fulfilled Today', count: requisitions.filter(r => r.status === 'ISSUED' && format(new Date(r.issuedAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: Truck }
-                        ].map((stat, i) => (
-                            <div key={i} className="flex flex-col gap-3">
-                                <div className="flex justify-between items-center">
-                                    <div className="flex items-center gap-3">
-                                        <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", stat.bg)}>
-                                            <stat.icon className={cn("h-5 w-5", stat.color)} />
-                                        </div>
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{stat.label}</span>
-                                    </div>
-                                    <span className="text-xl font-black text-slate-900">{stat.count}</span>
-                                </div>
-                                <div className="w-full h-1 bg-slate-50 rounded-full overflow-hidden">
-                                    <div className={cn("h-full", stat.color.replace('text', 'bg'))} style={{ width: `${(stat.count / (requisitions.length || 1)) * 100}%` }} />
-                                </div>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-
-                <div className="lg:col-span-3">
-                    <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+        <EnterprisePage
+            title="Internal Requisition Center"
+            subtitle="Centralized material request and fulfillment hub for farm operations"
+            breadcrumbs={['Inventory', 'Requisitions']}
+            loading={loadingReqs}
+            stats={[
+                { title: 'Pending Approval', value: requisitions.filter(r => r.status === 'REQUESTED').length, icon: Clock, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+                { title: 'Approved & Ready', value: requisitions.filter(r => r.status === 'APPROVED').length, icon: CheckCircle2, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+                { title: 'Fulfilled Today', value: requisitions.filter(r => r.status === 'ISSUED' && format(new Date(r.issuedAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, icon: Truck, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+            ]}
+            actions={canRequest ? (
+                <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="h-11 rounded-xl bg-primary hover:bg-primary/90">
+                            <Plus className="mr-2 h-5 w-5" />
+                            New Request
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-bold">Material Requisition</DialogTitle>
+                            <DialogDescription>Submit an operational request for warehouse stock.</DialogDescription>
+                        </DialogHeader>
+                        <RequisitionForm farms={farms} items={items} onSubmit={(data) => createMutation.mutate(data)} loading={createMutation.isLoading} />
+                    </DialogContent>
+                </Dialog>
+            ) : null}
+        >
+            <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
                         <CardHeader className="bg-white py-6 border-b border-slate-50 px-8 flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle className="text-lg font-black tracking-tight text-slate-900 flex items-center gap-2">
-                                    <ClipboardList className="h-5 w-5 text-indigo-600" /> Operational Queue
+                                    <ClipboardList className="h-5 w-5 text-primary" /> Operational Queue
                                 </CardTitle>
                                 <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tracking all cross-module material movements</CardDescription>
                             </div>
-                            <Badge className="bg-slate-50 text-indigo-600 border-none font-bold uppercase tracking-widest text-[9px]">Live Monitoring</Badge>
+                            <Badge className="bg-slate-50 text-primary border-none font-bold uppercase tracking-widest text-[9px]">Live Monitoring</Badge>
                         </CardHeader>
                         <CardContent className="p-0">
                             <DataTable columns={columns} data={requisitions} loading={loadingReqs} pageSize={10} selectable />
                         </CardContent>
-                    </Card>
-                </div>
-            </div>
-        </PageContainer>
+            </Card>
+        </EnterprisePage>
     );
 }
 
@@ -279,7 +249,7 @@ function RequisitionForm({ farms, items, onSubmit, loading }) {
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Requested Materials</Label>
-                    <Button type="button" variant="ghost" size="sm" onClick={addItem} className="h-8 rounded-lg text-[10px] font-black text-indigo-600 hover:bg-indigo-50">
+                    <Button type="button" variant="ghost" size="sm" onClick={addItem} className="h-8 rounded-lg text-[10px] font-black text-primary hover:bg-primary/10">
                         <Plus className="h-3 w-3 mr-1" /> ADD ITEM
                     </Button>
                 </div>
@@ -327,7 +297,7 @@ function RequisitionForm({ farms, items, onSubmit, loading }) {
             <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Protocol Remarks</Label>
                 <textarea
-                    className="w-full min-h-[100px] rounded-2xl bg-slate-50 border-none p-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                    className="w-full min-h-[100px] rounded-2xl bg-slate-50 border-none p-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                     placeholder="Provide specific clinical or operational justification..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}

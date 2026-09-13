@@ -14,36 +14,33 @@ const PageHeader = ({
   breadcrumbs = []
 }) => {
   return (
-    <div className={cn("flex flex-col gap-6 mb-8", className)}>
+    <div className={cn("flex flex-col gap-4 mb-6", className)}>
       {breadcrumbs.length > 0 && (
-        <nav className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        <nav className="flex items-center gap-1 text-xs text-muted-foreground">
           {breadcrumbs.map((crumb, i) => (
             <React.Fragment key={i}>
-              <span className={cn(i === breadcrumbs.length - 1 ? "text-indigo-600" : "hover:text-gray-600 cursor-pointer transition-colors")}>
+              {i > 0 && <ChevronRight className="h-3 w-3" />}
+              <span className={cn(i === breadcrumbs.length - 1 && "font-medium text-foreground")}>
                 {crumb}
               </span>
-              {i < breadcrumbs.length - 1 && <ChevronRight className="h-3 w-3" />}
             </React.Fragment>
           ))}
         </nav>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">{title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{title}</h1>
           {subtitle && (
-            <p className="text-sm text-gray-500 font-medium max-w-2xl">{subtitle}</p>
+            <p className="text-sm text-muted-foreground max-w-2xl">{subtitle}</p>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           {children}
           {(action || onAction) && (
-            <Button
-              onClick={onAction || action}
-              className="h-11 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95"
-            >
-              <Plus className="mr-2 h-4 w-4 stroke-[3px]" />
+            <Button onClick={onAction || action} className="h-10 rounded-xl shadow-sm shadow-primary/15">
+              <Plus className="mr-2 h-4 w-4" />
               {actionLabel || 'Add New'}
             </Button>
           )}

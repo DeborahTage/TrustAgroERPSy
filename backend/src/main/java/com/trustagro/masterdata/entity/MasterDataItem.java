@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "master_data_items", uniqueConstraints = {
-    @UniqueConstraint(name = "uq_master_data_category_value", columnNames = {"category", "value"})
+    @UniqueConstraint(name = "uq_master_data_category_value", columnNames = {"category", "item_value"})
 })
 @Data
 public class MasterDataItem {
@@ -23,7 +23,7 @@ public class MasterDataItem {
     private MasterDataCategory category;
 
     /** Internal code value (e.g. "BROILER", "LAYER") */
-    @Column(nullable = false, length = 100)
+    @Column(name = "item_value", nullable = false, length = 100)
     private String value;
 
     /** Human-readable label (e.g. "Broiler Chicken") */

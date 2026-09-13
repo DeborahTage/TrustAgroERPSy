@@ -4,8 +4,7 @@ import { toast } from 'react-toastify';
 import { vetApi, farmApi } from '../../api';
 import DataTable from '../../components/shared/DataTable';
 import StatusBadge from '../../components/shared/StatusBadge';
-import PageHeader from '../../components/shared/PageHeader';
-import PageContainer from '../../components/layout/PageContainer';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatDate } from '../../utils';
@@ -59,15 +58,15 @@ const VeterinaryPage = () => {
 
       days.push(
         <div key={i} className={cn(
-          "h-24 p-3 border border-gray-100 rounded-2xl flex flex-col overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all cursor-pointer group",
-          isToday ? "bg-indigo-900 border-indigo-900 text-white shadow-xl shadow-indigo-100" : "bg-white"
+          "h-24 p-3 border border-gray-100 rounded-2xl flex flex-col overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
+          isToday ? "bg-emerald-900 border-emerald-900 text-white shadow-xl shadow-primary/10" : "bg-white"
         )}>
-          <span className={cn("text-xs font-black uppercase tracking-tighter", isToday ? "text-indigo-200" : "text-gray-400 group-hover:text-indigo-600")}>{i}</span>
+          <span className={cn("text-xs font-black uppercase tracking-tighter", isToday ? "text-emerald-200" : "text-gray-400 group-hover:text-primary")}>{i}</span>
           <div className="flex-1 overflow-y-auto mt-2 space-y-1 scrollbar-hide">
             {dayVacs.map(v => (
               <div key={v.id} title={v.vaccineName} className={cn(
                 "text-[9px] px-2 py-0.5 rounded-lg truncate font-black uppercase tracking-tight",
-                isToday ? "bg-white/10 text-white" : v.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-700" : "bg-indigo-50 text-indigo-700"
+                isToday ? "bg-white/10 text-white" : v.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-700" : "bg-primary/10 text-primary"
               )}>
                 {v.vaccineName}
               </div>
@@ -87,7 +86,11 @@ const VeterinaryPage = () => {
     PERMISSIONS.MANAGE_VACCINATIONS,
   ]);
 
-  useEffect(() => {
+  const [error, setError] = useState(null);
+
+  const loadData = () => {
+    setLoading(true);
+    setError(null);
     Promise.all([
       vetApi.getVaccinations(),
       vetApi.getHealthReports(),
@@ -103,9 +106,12 @@ const VeterinaryPage = () => {
       fetchBiosecurityLogs();
     }).catch((err) => {
       console.error('Failed to load veterinary data', err);
+      setError('Could not load veterinary data.');
       toast.error('Could not load veterinary data. Please refresh or try again.');
     }).finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadData(); }, []);
 
   const fetchBiosecurityLogs = async () => {
     try {
@@ -163,7 +169,7 @@ const VeterinaryPage = () => {
       cell: ({ row }) => (
         <div className="flex flex-col">
           <span className="font-black text-gray-900 leading-tight">{row.original.farmName}</span>
-          <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{row.original.batchCode}</span>
+          <span className="text-[10px] font-black text-primary uppercase tracking-widest">{row.original.batchCode}</span>
         </div>
       )
     },
@@ -235,7 +241,7 @@ const VeterinaryPage = () => {
       id: 'actions',
       cell: ({ row }) => canWrite && (
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-indigo-50 hover:text-indigo-600" onClick={() => openReviewModal(row.original)}>
+          <Button size="sm" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary" onClick={() => openReviewModal(row.original)}>
             <ClipboardCheck className="h-4.5 w-4.5" />
           </Button>
           <Button size="sm" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-rose-50 hover:text-rose-600" onClick={() => navigate('/veterinary/disease-cases/new', { state: { healthReport: row.original } })}>
@@ -249,36 +255,34 @@ const VeterinaryPage = () => {
     },
   ], [canWrite, navigate]);
 
-  if (loading) {
-    return (
-      <PageContainer>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="h-80 bg-gray-100 rounded-[2.5rem] animate-pulse" />
-          <div className="lg:col-span-3 h-screen bg-gray-100 rounded-[2.5rem] animate-pulse" />
-        </div>
-      </PageContainer>
-    );
-  }
+  const vetStats = [
+    { title: 'Active Cases', value: diseaseCases.filter(c => c.status === 'ACTIVE').length, icon: Activity, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
+    { title: 'Open Reports', value: healthReports.filter(r => r.status === 'OPEN').length, icon: AlertTriangle, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { title: 'Pending Rx', value: prescriptions.filter(p => p.status === 'PENDING').length, icon: Pill, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+    { title: 'Vaccinations', value: vaccinations.filter(v => v.status !== 'COMPLETED').length, icon: Syringe, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+  ];
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Veterinary Command Center"
-        subtitle="Global medical surveillance, biosecurity enforcement, and pharmaceutical oversight."
-        breadcrumbs={['Veterinary', 'Terminal']}
-      >
-        <div className="flex gap-2">
-          <Button variant="outline" className="h-11 rounded-2xl font-bold border-gray-200" onClick={() => navigate('/veterinary/reports')}>
-            <FileText className="mr-2 h-4 w-4 text-indigo-500" />
-            Archives
+    <EnterprisePage
+      title="Veterinary Command Center"
+      subtitle="Medical surveillance, biosecurity enforcement, and pharmaceutical oversight"
+      breadcrumbs={['Veterinary', 'Hub']}
+      loading={loading}
+      error={error}
+      onRetry={loadData}
+      onRefresh={loadData}
+      stats={vetStats}
+      actions={
+        <>
+          <Button variant="outline" onClick={() => navigate('/veterinary/reports')}>
+            <FileText className="mr-2 h-4 w-4" /> Reports
           </Button>
-          <Button className="h-11 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-tighter text-[11px] px-6 shadow-xl shadow-rose-100 transition-all active:scale-95" onClick={() => navigate('/veterinary/health-reports/new')}>
-            <AlertTriangle className="mr-2 h-4 w-4" />
-            Emergency Signal
+          <Button className="bg-rose-600 hover:bg-rose-700" onClick={() => navigate('/veterinary/health-reports/new')}>
+            <AlertTriangle className="mr-2 h-4 w-4" /> Emergency Signal
           </Button>
-        </div>
-      </PageHeader>
-
+        </>
+      }
+    >
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1 space-y-6">
           <Card className="border-none shadow-2xl shadow-gray-200/50 rounded-[2.5rem] bg-[#0f172a] text-white overflow-hidden relative">
@@ -286,12 +290,12 @@ const VeterinaryPage = () => {
               <Activity className="h-32 w-32 rotate-12" />
             </div>
             <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-indigo-300">Surveillance Pulse</CardTitle>
+              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Surveillance Pulse</CardTitle>
             </CardHeader>
             <CardContent className="p-8 pt-0 space-y-8">
               <div className="flex flex-col">
                 <span className="text-5xl font-black">{diseaseCases.filter(c => c.status === 'ACTIVE').length}</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mt-2">Active Pathologies</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-300 mt-2">Active Pathologies</span>
               </div>
               <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-8">
                 <div className="flex flex-col">
@@ -333,7 +337,7 @@ const VeterinaryPage = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <TabsList className="bg-gray-100/50 p-1.5 rounded-3xl h-auto border border-gray-100 flex-wrap sm:flex-nowrap">
                 {['vaccinations', 'healthReports', 'surveillance', 'ledger', 'biosecurity'].map(tab => (
-                  <TabsTrigger key={tab} value={tab} className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-lg rounded-2xl px-6 py-2.5 font-black text-[10px] uppercase tracking-wider transition-all">
+                  <TabsTrigger key={tab} value={tab} className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-lg rounded-2xl px-6 py-2.5 font-black text-[10px] uppercase tracking-wider transition-all">
                     {tab === 'healthReports' ? 'Surveillance' : tab === 'surveillance' ? 'Diseases' : tab === 'ledger' ? 'Rx Ledger' : tab}
                   </TabsTrigger>
                 ))}
@@ -349,10 +353,10 @@ const VeterinaryPage = () => {
                 <div className="flex justify-between items-center p-6 border-b border-gray-50">
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Vaccination Compliance</h3>
                   <div className="bg-gray-100 p-1 rounded-xl flex gap-1">
-                    <Button size="sm" variant={vaccinationView === 'list' ? 'default' : 'ghost'} className={cn("h-8 rounded-lg text-[9px] uppercase font-black", vaccinationView === 'list' && "bg-white text-indigo-600 shadow-sm hover:bg-white")} onClick={() => setVaccinationView('list')}>
+                    <Button size="sm" variant={vaccinationView === 'list' ? 'default' : 'ghost'} className={cn("h-8 rounded-lg text-[9px] uppercase font-black", vaccinationView === 'list' && "bg-white text-primary shadow-sm hover:bg-white")} onClick={() => setVaccinationView('list')}>
                       <List className="h-3 w-3 mr-1" /> Grid
                     </Button>
-                    <Button size="sm" variant={vaccinationView === 'calendar' ? 'default' : 'ghost'} className={cn("h-8 rounded-lg text-[9px] uppercase font-black", vaccinationView === 'calendar' && "bg-white text-indigo-600 shadow-sm hover:bg-white")} onClick={() => setVaccinationView('calendar')}>
+                    <Button size="sm" variant={vaccinationView === 'calendar' ? 'default' : 'ghost'} className={cn("h-8 rounded-lg text-[9px] uppercase font-black", vaccinationView === 'calendar' && "bg-white text-primary shadow-sm hover:bg-white")} onClick={() => setVaccinationView('calendar')}>
                       <CalendarIcon className="h-3 w-3 mr-1" /> Calendar
                     </Button>
                   </div>
@@ -362,7 +366,7 @@ const VeterinaryPage = () => {
                 ) : (
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-8">
-                      <h3 className="text-xl font-black text-indigo-900 uppercase tracking-tighter">
+                      <h3 className="text-xl font-black text-emerald-900 uppercase tracking-tighter">
                         {new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}
                       </h3>
                       <div className="flex gap-2">
@@ -394,7 +398,7 @@ const VeterinaryPage = () => {
 
               <TabsContent value="ledger" className="m-0 focus:ring-0 outline-none">
                 <DataTable columns={[
-                  { accessorKey: 'prescriptionNumber', header: 'Rx Reference', cell: ({ row }) => <span className="font-black text-indigo-600">#{row.original.prescriptionNumber}</span> },
+                  { accessorKey: 'prescriptionNumber', header: 'Rx Reference', cell: ({ row }) => <span className="font-black text-primary">#{row.original.prescriptionNumber}</span> },
                   { accessorKey: 'drugName', header: 'Medication', cell: ({ row }) => <span className="font-bold text-slate-700">{row.original.drugName}</span> },
                   { accessorKey: 'quantity', header: 'Dose Qty', cell: ({ row }) => <span className="font-black">{row.original.quantity} {row.original.unit}</span> },
                   { accessorKey: 'status', header: 'Fulfillment', cell: ({ row }) => <StatusBadge status={row.original.status?.toLowerCase()} /> }
@@ -414,7 +418,7 @@ const VeterinaryPage = () => {
                 <DataTable columns={[
                   { accessorKey: 'timestamp', header: 'Timestamp', cell: ({ row }) => <span className="font-medium text-gray-500">{new Date(row.original.timestamp).toLocaleString()}</span> },
                   { accessorKey: 'farmName', header: 'Entity', cell: ({ row }) => <span className="font-black">{row.original.farmName}</span> },
-                  { accessorKey: 'visitorName', header: 'Operator', cell: ({ row }) => <span className="font-bold text-indigo-700">{row.original.visitorName || 'External Staff'}</span> },
+                  { accessorKey: 'visitorName', header: 'Operator', cell: ({ row }) => <span className="font-bold text-primary">{row.original.visitorName || 'External Staff'}</span> },
                   {
                     id: 'compliance', header: 'Protocol Checks', cell: ({ row }) => (
                       <div className="flex gap-1.5 flex-wrap">
@@ -438,7 +442,7 @@ const VeterinaryPage = () => {
             </div>
             <DialogHeader>
               <DialogTitle className="text-3xl font-black tracking-tighter">Clinical Peer Review</DialogTitle>
-              <DialogDescription className="text-indigo-300 font-black uppercase tracking-widest text-[10px] mt-2 opacity-70">
+              <DialogDescription className="text-emerald-300 font-black uppercase tracking-widest text-[10px] mt-2 opacity-70">
                 Assessing Environmental Health Incident: {selectedReport?.id}
               </DialogDescription>
             </DialogHeader>
@@ -450,7 +454,7 @@ const VeterinaryPage = () => {
                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Diagnosis Confirmation</Label>
                 <Input
                   placeholder="Suspected Pathology..."
-                  className="h-12 rounded-2xl border-gray-100 bg-gray-50/50 font-bold focus:ring-indigo-600"
+                  className="h-12 rounded-2xl border-gray-100 bg-gray-50/50 font-bold focus:ring-primary"
                   value={reviewForm.suspectedDiagnosis}
                   onChange={e => setReviewForm(p => ({ ...p, suspectedDiagnosis: e.target.value }))}
                 />
@@ -480,14 +484,14 @@ const VeterinaryPage = () => {
 
             <div className="flex justify-between items-center pt-6 border-t border-gray-50">
               <Button variant="ghost" className="rounded-2xl font-black text-gray-400 uppercase tracking-widest text-[10px] px-8" onClick={() => setSelectedReport(null)}>Discard</Button>
-              <Button className="h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-tighter px-10 shadow-lg shadow-indigo-100" onClick={submitReview}>
+              <Button className="h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-tighter px-10 shadow-lg shadow-primary/10" onClick={submitReview}>
                 Commit Audit
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </EnterprisePage>
   );
 };
 

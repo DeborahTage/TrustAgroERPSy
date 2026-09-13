@@ -263,12 +263,12 @@ const TreatmentForm = () => {
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-indigo-900 text-white overflow-hidden p-8">
+          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-emerald-900 text-white overflow-hidden p-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-indigo-800 rounded-xl">
-                <Info className="h-5 w-5 text-indigo-300" />
+              <div className="p-2 bg-emerald-800 rounded-xl">
+                <Info className="h-5 w-5 text-emerald-300" />
               </div>
-              <span className="text-xs font-black uppercase tracking-widest text-indigo-200">Therapeutic Guard</span>
+              <span className="text-xs font-black uppercase tracking-widest text-emerald-200">Therapeutic Guard</span>
             </div>
             <div className="space-y-6">
               <div className="space-y-3">
@@ -276,18 +276,18 @@ const TreatmentForm = () => {
                   <Activity className="h-4 w-4 text-emerald-400" />
                   Clinical Oversight
                 </h4>
-                <p className="text-xs text-indigo-200/70 font-medium leading-relaxed italic">
+                <p className="text-xs text-emerald-200/70 font-medium leading-relaxed italic">
                   Ensure all pharmaceutical interventions are recorded for withdrawal tracking. Failure to log antibiotic use may void compliance certifications.
                 </p>
               </div>
-              <div className="h-px bg-indigo-800" />
+              <div className="h-px bg-emerald-800" />
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">Regimen Logic</p>
-                <div className="flex items-center gap-3 bg-indigo-950/30 p-3 rounded-xl border border-indigo-800/50">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">Regimen Logic</p>
+                <div className="flex items-center gap-3 bg-emerald-950/30 p-3 rounded-xl border border-emerald-800/50">
                   <div className="h-1.5 w-1.5 bg-emerald-400 rounded-full animate-pulse" />
                   <span className="text-[10px] font-bold">Automatic Withdrawal Monitoring</span>
                 </div>
-                <div className="flex items-center gap-3 bg-indigo-950/30 p-3 rounded-xl border border-indigo-800/50">
+                <div className="flex items-center gap-3 bg-emerald-950/30 p-3 rounded-xl border border-emerald-800/50">
                   <div className="h-1.5 w-1.5 bg-emerald-400 rounded-full animate-pulse" />
                   <span className="text-[10px] font-bold">Audit-Ready Medical Logs</span>
                 </div>

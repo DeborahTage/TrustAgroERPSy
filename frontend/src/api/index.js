@@ -58,10 +58,13 @@ export const inventoryApi = {
   updateItem: (id, data) => api.put(`/api/inventory/items/${id}`, data),
   stockIn: (data) => api.post('/api/inventory/stock-in', data),
   stockOut: (data) => api.post('/api/inventory/stock-out', data),
-  getCurrentStock: () => api.get('/api/inventory/current-stock'),
+  getCurrentStock: () => api.get('/api/inventory/items').then((res) => {
+    const items = normalizeList(res.data);
+    return { ...res, data: { data: items } };
+  }),
   getLowStock: () => api.get('/api/inventory/low-stock'),
-  getExpiryAlerts: () => api.get('/api/inventory/expiry-alerts'),
-  getMovements: () => api.get('/api/inventory/movements'),
+  getExpiryAlerts: () => api.get('/api/inventory/expiring'),
+  getMovements: () => api.get('/api/inventory/movements/recent'),
   getValuationReport: () => api.get('/api/inventory/reports/valuation'),
   getDashboardStats: () => api.get('/api/inventory/stats'),
 };
@@ -109,11 +112,19 @@ export const veterinaryApi = vetApi;
 
 export const pharmacyApi = {
   getDashboard: () => api.get('/api/pharmacy/dashboard'),
-  getCustomers: () => api.get('/api/pharmacy/customers'),
+  getPharmacyCatalog: () => api.get('/api/inventory/pharmacy-items').then((res) => {
+    const items = Array.isArray(res.data) ? res.data : res.data?.data || [];
+    return { ...res, data: { data: items } };
+  }),
+  getCustomers: () => api.get('/api/pharmacy/customers').then((res) => {
+    const customers = Array.isArray(res.data) ? res.data : res.data?.data || [];
+    return { ...res, data: { data: customers } };
+  }),
   createCustomer: (data) => api.post('/api/pharmacy/customers', data),
   getSales: () => api.get('/api/pharmacy/sales'),
   createSale: (data) => api.post('/api/pharmacy/sales', data),
   getPrescriptions: () => api.get('/api/vet/prescriptions'),
+  approvePrescription: (id) => api.patch(`/api/vet/prescriptions/${id}/approve`),
   dispensePrescription: (id) => api.patch(`/api/vet/prescriptions/${id}/dispense`),
   getReceipt: (id) => api.get(`/api/pharmacy/sales/${id}/receipt`),
 };
@@ -129,6 +140,11 @@ export const financeApi = {
   postTransaction: (data) => api.post('/api/finance/transactions', data),
   getAccounts: () => api.get('/api/finance/accounts'),
   getAuditTrail: () => api.get('/api/finance/audit-trail'),
+  getInvoices: () => api.get('/api/finance/invoices'),
+  getWallets: () => api.get('/api/finance/wallets'),
+  getWalletSummary: () => api.get('/api/finance/wallets/summary'),
+  depositWallet: (data) => api.post('/api/finance/wallets/deposit', data),
+  getFlockProfitLoss: (flockId) => api.get(`/api/finance/flocks/${flockId}/profit-loss`),
 };
 
 
@@ -139,10 +155,22 @@ export const crmApi = {
   getClient: (id) => api.get(`/api/crm/clients/${id}`),
   createClient: (data) => api.post('/api/crm/clients', data),
   updateClient: (id, data) => api.put(`/api/crm/clients/${id}`, data),
+  getLeads: () => api.get('/api/crm/leads'),
+  getPipeline: () => api.get('/api/crm/pipeline'),
+  getDashboard: () => api.get('/api/crm/dashboard'),
   getVisits: (params) => api.get('/api/crm/farm-visits', { params }),
   createVisit: (data) => api.post('/api/crm/farm-visits', data),
   getFollowUps: () => api.get('/api/crm/follow-ups'),
   getOrders: () => api.get('/api/crm/orders'),
+};
+
+export const marketingApi = {
+  getDashboard: () => api.get('/api/marketing/dashboard'),
+  getCampaigns: () => api.get('/api/marketing/campaigns'),
+  createCampaign: (data) => api.post('/api/marketing/campaigns', data),
+  getLeads: () => api.get('/api/marketing/leads'),
+  createLead: (data) => api.post('/api/marketing/leads', data),
+  convertLead: (id) => api.post(`/api/marketing/leads/${id}/convert`),
 };
 
 export const notificationApi = {
@@ -157,6 +185,8 @@ export const dashboardApi = {
   vet: () => api.get('/api/dashboard/vet'),
   pharmacy: () => api.get('/api/dashboard/pharmacy'),
   finance: () => api.get('/api/dashboard/finance'),
+  crm: () => api.get('/api/dashboard/crm'),
+  marketing: () => api.get('/api/dashboard/marketing'),
 };
 
 export const masterDataApi = {

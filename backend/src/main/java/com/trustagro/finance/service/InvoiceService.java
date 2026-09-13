@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -17,8 +18,12 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final FinanceService financeService;
 
+    public List<Invoice> getAllInvoices() {
+        return invoiceRepository.findAll();
+    }
+
     @Transactional
-    public Invoice createPOSInvoice(Long clientId, String clientName, BusinessUnit unit, 
+    public Invoice createPOSInvoice(Long clientId, String clientName, BusinessUnit unit,
                                    BigDecimal subtotal, BigDecimal vatAmount) {
         Invoice invoice = new Invoice();
         invoice.setInvoiceNumber("POS-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
@@ -37,12 +42,14 @@ public class InvoiceService {
 
         // Auto-post to finance
         AccountCode accountCode = getRevenueAccountForUnit(unit);
-        financeService.postRevenue(subtotal, unit, accountCode, 
-                "POS Invoice " + saved.getInvoiceNumber(), "INVOICE", saved.getId());
-        
-        // Post VAT
-        financeService.postTransaction(TransactionType.EXPENSE, vatAmount, unit, 
-                AccountCode.LIABILITY_VAT, "VAT from Invoice " + saved.getInvoiceNumber(), "INVOICE", saved.getId());
+        financeService.postRevenue(subtotal, unit, accountCode.getCode(),
+                "POS Invoice " + saved.getInvoiceNumber(), "INVOICE", "INVOICE", saved.getId());
+
+        if (vatAmount.compareTo(BigDecimal.ZERO) > 0) {
+            financeService.postTransaction(TransactionType.INCOME, vatAmount, unit,
+                    "1000", AccountCode.LIABILITY_VAT.getCode(),
+                    "VAT from Invoice " + saved.getInvoiceNumber(), "INVOICE", "INVOICE", saved.getId());
+        }
 
         return saved;
     }

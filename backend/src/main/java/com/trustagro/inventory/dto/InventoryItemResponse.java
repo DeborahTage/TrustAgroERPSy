@@ -5,6 +5,8 @@ import com.trustagro.inventory.entity.ItemStatus;
 import com.trustagro.inventory.entity.ItemUnit;
 import lombok.Data;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -23,6 +25,19 @@ public class InventoryItemResponse {
     private Double currentStock;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // Pricing (shared inventory ↔ pharmacy ↔ finance)
+    private BigDecimal retailPrice;
+    private BigDecimal wholesalePrice;
+    private BigDecimal partnerPrice;
+    private BigDecimal sellingPrice;
+    private BigDecimal avgUnitCost;
+    private Boolean isControlled;
+
+    // Pharmacy catalog enrichment (nearest FEFO batch)
+    private String batchNumber;
+    private LocalDate expiryDate;
+    private Double inventoryValue;
 
     // Added for frontend compatibility
     private String name;
@@ -48,6 +63,25 @@ public class InventoryItemResponse {
     public void setUnit(String unitString) { this.unitString = unitString; }
     public String getUnitString() { return this.unitString; }
     
-    public Double getReorderPoint() { return reorderPoint; }
-    public void setReorderPoint(Double reorderPoint) { this.reorderPoint = reorderPoint; }
+    public void setRetailPrice(java.math.BigDecimal retailPrice) { this.retailPrice = retailPrice; }
+    public void setWholesalePrice(java.math.BigDecimal wholesalePrice) { this.wholesalePrice = wholesalePrice; }
+    public void setPartnerPrice(java.math.BigDecimal partnerPrice) { this.partnerPrice = partnerPrice; }
+    public void setSellingPrice(java.math.BigDecimal sellingPrice) { this.sellingPrice = sellingPrice; }
+    public void setAvgUnitCost(java.math.BigDecimal avgUnitCost) { this.avgUnitCost = avgUnitCost; }
+    public void setIsControlled(Boolean isControlled) { this.isControlled = isControlled; }
+    public void setBatchNumber(String batchNumber) { this.batchNumber = batchNumber; }
+    public void setExpiryDate(java.time.LocalDate expiryDate) { this.expiryDate = expiryDate; }
+    public void setInventoryValue(Double inventoryValue) { this.inventoryValue = inventoryValue; }
+    public void setMinimumStockLevel(Double minimumStockLevel) { this.minimumStockLevel = minimumStockLevel; }
+    public void setReorderQty(Double reorderQty) { this.reorderQty = reorderQty; }
+    public void setStatus(ItemStatus status) { this.status = status; }
+    public java.math.BigDecimal getRetailPrice() { return retailPrice; }
+    public java.math.BigDecimal getWholesalePrice() { return wholesalePrice; }
+    public java.math.BigDecimal getPartnerPrice() { return partnerPrice; }
+    public java.math.BigDecimal getSellingPrice() { return sellingPrice; }
+    public java.math.BigDecimal getAvgUnitCost() { return avgUnitCost; }
+    public Boolean getIsControlled() { return isControlled; }
+    public String getBatchNumber() { return batchNumber; }
+    public java.time.LocalDate getExpiryDate() { return expiryDate; }
+    public Double getInventoryValue() { return inventoryValue; }
 }

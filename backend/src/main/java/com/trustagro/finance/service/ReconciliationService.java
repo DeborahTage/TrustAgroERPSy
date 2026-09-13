@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,16 +24,17 @@ public class ReconciliationService {
     @Transactional
     public CashReconciliation performReconciliation(BigDecimal systemAmount, BigDecimal countedAmount, String notes) {
         CashReconciliation rec = new CashReconciliation();
-        rec.setSystemAmount(systemAmount);
-        rec.setActualAmount(countedAmount);
+        rec.setExpectedCash(systemAmount);
+        rec.setActualCash(countedAmount);
         BigDecimal difference = countedAmount.subtract(systemAmount);
-        rec.setDifference(difference);
+        rec.setVariance(difference);
         rec.setNotes(notes);
-        rec.setReconciliationDate(LocalDateTime.now());
-        rec.setStatus("COMPLETED");
+        rec.setReconciliationDate(LocalDate.now());
+        rec.setStatus(difference.compareTo(BigDecimal.ZERO) == 0 ? "BALANCED"
+                : difference.compareTo(BigDecimal.ZERO) > 0 ? "OVER" : "SHORT");
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        userRepository.findByEmail(email).ifPresent(rec::setPerformedBy);
+        userRepository.findByEmail(email).ifPresent(rec::setClosedBy);
 
         rec = reconciliationRepository.save(rec);
 

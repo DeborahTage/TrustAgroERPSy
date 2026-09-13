@@ -1,5 +1,6 @@
 package com.trustagro.veterinary.service;
 
+import com.trustagro.finance.service.FinanceService;
 import com.trustagro.inventory.entity.MovementType;
 import com.trustagro.inventory.entity.StockBatch;
 import com.trustagro.inventory.entity.StockMovement;
@@ -7,9 +8,7 @@ import com.trustagro.inventory.repository.StockBatchRepository;
 import com.trustagro.inventory.repository.StockMovementRepository;
 import com.trustagro.inventory.repository.InventoryItemRepository;
 import com.trustagro.inventory.entity.InventoryItem;
-import com.trustagro.finance.entity.FinanceTransaction;
-import com.trustagro.finance.entity.TransactionType;
-import com.trustagro.finance.repository.FinanceTransactionRepository;
+import com.trustagro.finance.service.FinanceService;
 import com.trustagro.notification.entity.Notification;
 import com.trustagro.notification.entity.NotificationType;
 import com.trustagro.notification.repository.NotificationRepository;
@@ -36,7 +35,7 @@ public class PrescriptionService {
     private final InventoryItemRepository itemRepository;
     private final StockBatchRepository batchRepository;
     private final StockMovementRepository movementRepository;
-    private final FinanceTransactionRepository financeTransactionRepository;
+    private final FinanceService financeService;
     private final NotificationRepository notificationRepository;
 
     @Transactional
@@ -49,7 +48,7 @@ public class PrescriptionService {
         notif.setTitle("New Prescription Received");
         notif.setMessage("Vet Order " + rx.getPrescriptionNumber() + " submitted for " + rx.getDrugName());
         notif.setType(NotificationType.SYSTEM);
-        notif.setTargetRole(Role.PHARMACY_SALES);
+        notif.setTargetRole(Role.PHARMACIST);
         notificationRepository.save(notif);
         
         return prescriptionRepository.save(rx);
@@ -128,20 +127,12 @@ public class PrescriptionService {
         itemRepository.save(item);
         movementRepository.saveAll(movements);
 
-        // Internal Expense Integration
-        FinanceTransaction expense = new FinanceTransaction();
-        expense.setTransactionType(TransactionType.EXPENSE);
-        expense.setCategory("Veterinary Medication");
-        expense.setAmount(totalCost);
-        expense.setTransactionDate(LocalDate.now());
-        expense.setReferenceType("PRESCRIPTION");
-        expense.setReferenceId(rx.getId());
-        expense.setFarmId(rx.getFarmId());
-        expense.setFlockId(rx.getFlockId());
-        expense.setDescription("Dispensed Rx " + rx.getPrescriptionNumber() + ": " + item.getItemName() + " x" + quantity);
-        expense.setDepartment("Pharmacy/Vet");
-        expense.setRecordedBy(dispenser);
-        financeTransactionRepository.save(expense);
+        // Internal expense via finance engine
+        if (totalCost.compareTo(BigDecimal.ZERO) > 0) {
+            financeService.postExpense(totalCost, com.trustagro.finance.entity.BusinessUnit.PHARMACY, "5120",
+                    "Dispensed Rx " + rx.getPrescriptionNumber() + ": " + item.getItemName() + " x" + quantity,
+                    "VETERINARY", "PRESCRIPTION", rx.getId());
+        }
 
         rx.setStatus(PrescriptionStatus.DISPENSED);
         

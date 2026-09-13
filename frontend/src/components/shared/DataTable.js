@@ -10,14 +10,13 @@ import {
 import { Card, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
+import { Skeleton } from '../ui/skeleton';
 import {
   Search,
   ChevronLeft,
   ChevronRight,
-  FileX2,
   Inbox,
   ArrowUpDown,
-  Filter
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -59,14 +58,14 @@ const DataTable = ({
   if (loading) {
     return (
       <div className={cn("space-y-4", className)}>
-        <div className="flex justify-between items-center">
-          <div className="h-10 w-64 bg-gray-100 animate-pulse rounded-lg" />
-          <div className="h-10 w-32 bg-gray-100 animate-pulse rounded-lg" />
+        <div className="flex justify-between items-center gap-4">
+          <Skeleton className="h-10 w-full max-w-xs rounded-xl" />
+          <Skeleton className="h-10 w-28 rounded-xl" />
         </div>
-        <Card className="border-none shadow-sm bg-white overflow-hidden">
-          <CardContent className="p-0">
+        <Card className="overflow-hidden">
+          <CardContent className="p-0 space-y-0">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-16 w-full border-b border-gray-50 bg-gray-50/20 animate-pulse" />
+              <Skeleton key={i} className="h-14 w-full rounded-none" />
             ))}
           </CardContent>
         </Card>
@@ -76,38 +75,38 @@ const DataTable = ({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {searchable && (
-          <div className="relative w-full sm:w-80 group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+          <div className="relative w-full sm:max-w-xs group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
-              placeholder="Quick search..."
+              placeholder="Search records..."
               value={globalFilter ?? ''}
               onChange={(e) => setGlobalFilter(e.target.value)}
-              className="pl-10 h-10 bg-white border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
+              className="pl-10 h-10 erp-input"
             />
           </div>
         )}
-        {headerActions && <div className="flex items-center gap-2 ml-auto">{headerActions}</div>}
+        {headerActions && <div className="flex items-center gap-2 ml-auto flex-wrap">{headerActions}</div>}
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white">
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead>
+              <thead className="erp-table-head">
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="bg-gray-50/50 border-b border-gray-100">
+                  <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="py-4 px-6 text-[11px] font-bold text-gray-500 uppercase tracking-wider"
+                        className="py-3.5 px-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
                       >
                         {header.isPlaceholder ? null : (
                           <div
                             className={cn(
-                              "flex items-center gap-2",
-                              header.column.getCanSort() && "cursor-pointer select-none hover:text-indigo-600 transition-colors"
+                              "flex items-center gap-1.5",
+                              header.column.getCanSort() && "cursor-pointer select-none hover:text-primary transition-colors"
                             )}
                             onClick={header.column.getToggleSortingHandler()}
                           >
@@ -115,7 +114,7 @@ const DataTable = ({
                             {header.column.getCanSort() && (
                               <ArrowUpDown className={cn(
                                 "h-3 w-3",
-                                header.column.getIsSorted() ? "text-indigo-600" : "text-gray-300"
+                                header.column.getIsSorted() ? "text-primary" : "text-muted-foreground/40"
                               )} />
                             )}
                           </div>
@@ -125,12 +124,12 @@ const DataTable = ({
                   </tr>
                 ))}
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border/50">
                 {table.getRowModel().rows.length > 0 ? (
                   table.getRowModel().rows.map((row) => (
-                    <tr key={row.id} className="hover:bg-gray-50/40 transition-all group">
+                    <tr key={row.id} className="hover:bg-muted/30 transition-colors group">
                       {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className="py-4 px-6 text-sm text-gray-600 font-medium">
+                        <td key={cell.id} className="py-3.5 px-4 text-sm text-foreground/80">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}
@@ -138,13 +137,13 @@ const DataTable = ({
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={columns.length} className="py-24">
+                    <td colSpan={columns.length} className="py-20">
                       <div className="flex flex-col items-center justify-center text-center">
-                        <div className="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                          <Inbox className="h-8 w-8 text-gray-300" />
+                        <div className="h-14 w-14 bg-muted rounded-2xl flex items-center justify-center mb-3">
+                          <Inbox className="h-7 w-7 text-muted-foreground/50" />
                         </div>
-                        <h3 className="text-base font-bold text-gray-900">{emptyMessage}</h3>
-                        <p className="text-sm text-gray-500 max-w-xs mt-1">{emptySubtitle}</p>
+                        <h3 className="text-sm font-semibold text-foreground">{emptyMessage}</h3>
+                        <p className="text-xs text-muted-foreground max-w-xs mt-1">{emptySubtitle}</p>
                       </div>
                     </td>
                   </tr>
@@ -156,25 +155,24 @@ const DataTable = ({
       </Card>
 
       {pagination && table.getPageCount() > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
-          <p className="text-xs font-bold text-gray-400 order-2 sm:order-1 capitalize">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
+          <p className="text-xs text-muted-foreground order-2 sm:order-1">
             Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
           </p>
-          <div className="flex items-center gap-1.5 order-1 sm:order-2">
+          <div className="flex items-center gap-1 order-1 sm:order-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
-              className="h-8 w-8 p-0 rounded-lg border-gray-100"
+              className="h-8 w-8 p-0 rounded-lg"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="flex gap-1">
               {[...Array(table.getPageCount())].map((_, i) => {
-                // Simple page numbers
                 if (table.getPageCount() > 5 && (i > 0 && i < table.getPageCount() - 1 && Math.abs(i - table.getState().pagination.pageIndex) > 1)) {
-                  if (Math.abs(i - table.getState().pagination.pageIndex) === 2) return <span key={i} className="text-gray-300">...</span>;
+                  if (Math.abs(i - table.getState().pagination.pageIndex) === 2) return <span key={i} className="text-muted-foreground px-1">…</span>;
                   return null;
                 }
                 return (
@@ -182,12 +180,12 @@ const DataTable = ({
                     key={i}
                     variant={table.getState().pagination.pageIndex === i ? "default" : "ghost"}
                     size="sm"
-                    className={cn("h-8 w-8 p-0 rounded-lg text-xs font-bold", table.getState().pagination.pageIndex === i && "bg-indigo-600")}
+                    className="h-8 w-8 p-0 rounded-lg text-xs"
                     onClick={() => table.setPageIndex(i)}
                   >
                     {i + 1}
                   </Button>
-                )
+                );
               })}
             </div>
             <Button
@@ -195,7 +193,7 @@ const DataTable = ({
               size="sm"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
-              className="h-8 w-8 p-0 rounded-lg border-gray-100"
+              className="h-8 w-8 p-0 rounded-lg"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

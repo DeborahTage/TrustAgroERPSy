@@ -273,12 +273,12 @@ const DiseaseCaseForm = () => {
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-indigo-900 text-white overflow-hidden p-8">
+          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-emerald-900 text-white overflow-hidden p-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-indigo-800 rounded-xl">
-                <Info className="h-5 w-5 text-indigo-300" />
+              <div className="p-2 bg-emerald-800 rounded-xl">
+                <Info className="h-5 w-5 text-emerald-300" />
               </div>
-              <span className="text-xs font-black uppercase tracking-widest text-indigo-200">Clinical Notice</span>
+              <span className="text-xs font-black uppercase tracking-widest text-emerald-200">Clinical Notice</span>
             </div>
             <div className="space-y-6">
               <div className="space-y-3">
@@ -286,18 +286,18 @@ const DiseaseCaseForm = () => {
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                   Biosecurity Mandatory
                 </h4>
-                <p className="text-xs text-indigo-200/70 font-medium leading-relaxed italic">
+                <p className="text-xs text-emerald-200/70 font-medium leading-relaxed italic">
                   Registering an outbreak immediately flags this batch for isolation. Ensure bio-security protocols are active prior to record commitment.
                 </p>
               </div>
-              <div className="h-px bg-indigo-800" />
+              <div className="h-px bg-emerald-800" />
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">Target Resolution</p>
-                <div className="flex justify-between items-center bg-indigo-950/30 p-4 rounded-2xl border border-indigo-800/50">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">Target Resolution</p>
+                <div className="flex justify-between items-center bg-emerald-950/30 p-4 rounded-2xl border border-emerald-800/50">
                   <span className="text-xs font-bold">Lab Results</span>
-                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Awaiting...</span>
+                  <span className="text-[10px] font-black text-primary/70 uppercase tracking-widest">Awaiting...</span>
                 </div>
-                <div className="flex justify-between items-center bg-indigo-950/30 p-4 rounded-2xl border border-indigo-800/50">
+                <div className="flex justify-between items-center bg-emerald-950/30 p-4 rounded-2xl border border-emerald-800/50">
                   <span className="text-xs font-bold">Quarantine Status</span>
                   <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Active</span>
                 </div>

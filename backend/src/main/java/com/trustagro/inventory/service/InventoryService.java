@@ -215,6 +215,9 @@ public class InventoryService {
         itemRepository.save(item);
         movementRepository.saveAll(movements);
 
+        String firstBatch = movements.isEmpty() ? null
+                : (movements.get(0).getBatch() != null ? movements.get(0).getBatch().getBatchNumber() : null);
+
         // Auto-create COGS finance entry for sales
         if ("SALE".equals(reason)) {
             try {
@@ -241,6 +244,9 @@ public class InventoryService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("deducted", quantity);
         result.put("newStock", newStock);
+        if (firstBatch != null) {
+            result.put("batchNumber", firstBatch);
+        }
         return result;
     }
 
@@ -331,7 +337,7 @@ public class InventoryService {
             notif.setTitle("Auto Reorder Generated");
             notif.setMessage(item.getItemName() + " hit reorder point. PO " + po.getPoNumber() + " created.");
             notif.setType(NotificationType.SYSTEM);
-            notif.setTargetRole(Role.STORE_KEEPER);
+            notif.setTargetRole(Role.INVENTORY_MANAGER);
             notificationRepository.save(notif);
 
             log.info("Auto-reorder PO {} created for item {}", po.getPoNumber(), item.getItemName());
@@ -411,6 +417,20 @@ public class InventoryService {
     // STATS FOR DASHBOARD
     // ============================================================
 
+    private List<Object[]> getDailyMovements(MovementType type, LocalDateTime since) {
+        Map<LocalDate, Double> totals = new TreeMap<>();
+        movementRepository.findAll().forEach(m -> {
+            if (m.getMovementType() == type && m.getCreatedAt() != null && !m.getCreatedAt().isBefore(since)) {
+                LocalDate day = m.getCreatedAt().toLocalDate();
+                double qty = m.getQuantity() != null ? m.getQuantity() : 0.0;
+                totals.merge(day, qty, Double::sum);
+            }
+        });
+        List<Object[]> result = new ArrayList<>();
+        totals.forEach((day, qty) -> result.add(new Object[]{day, qty}));
+        return result;
+    }
+
     public Map<String, Object> getDashboardStats() {
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
         LocalDateTime weekAgo = LocalDate.now().minusDays(7).atStartOfDay();
@@ -466,9 +486,9 @@ public class InventoryService {
                     return map;
                 }).toList();
 
-        // Movement Trend Data (Last 7 days)
-        List<Object[]> inTrend = movementRepository.findDailyMovements(MovementType.RECEIPT, weekAgo);
-        List<Object[]> outTrend = movementRepository.findDailyMovements(MovementType.SALE, weekAgo); // Simplification: Sales only for trend or combined
+        // Movement Trend Data (Last 7 days) — computed in Java for H2/PostgreSQL compatibility
+        List<Object[]> inTrend = getDailyMovements(MovementType.RECEIPT, weekAgo);
+        List<Object[]> outTrend = getDailyMovements(MovementType.SALE, weekAgo);
 
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("total_skus", totalSkus);
@@ -544,13 +564,40 @@ public class InventoryService {
         InventoryItemResponse r = new InventoryItemResponse();
         r.setId(item.getId());
         r.setItemName(item.getItemName());
-        // Map as "name" for the frontend
         r.setName(item.getItemName());
         r.setSku(item.getSku());
         r.setCategory(item.getCategory());
         r.setCurrentStock(item.getCurrentStock());
         r.setReorderPoint(item.getReorderPoint());
+        r.setMinimumStockLevel(item.getMinimumStockLevel());
+        r.setReorderQty(item.getReorderQty());
+        r.setStatus(item.getStatus());
         r.setUnit(item.getUnit() != null ? item.getUnit().name() : "");
+        r.setRetailPrice(item.getRetailPrice());
+        r.setWholesalePrice(item.getWholesalePrice());
+        r.setPartnerPrice(item.getPartnerPrice());
+        r.setSellingPrice(item.getSellingPrice());
+        r.setAvgUnitCost(item.getAvgUnitCost());
+        r.setIsControlled(item.getIsControlled());
+        BigDecimal unitPrice = item.getRetailPrice() != null ? item.getRetailPrice() : BigDecimal.ZERO;
+        double stock = item.getCurrentStock() != null ? item.getCurrentStock() : 0.0;
+        r.setInventoryValue(unitPrice.multiply(BigDecimal.valueOf(stock)).doubleValue());
         return r;
+    }
+
+    public List<InventoryItemResponse> getPharmacyCatalog() {
+        return itemRepository.findAll().stream()
+                .filter(i -> i.getStatus() == ItemStatus.ACTIVE)
+                .map(item -> {
+                    InventoryItemResponse r = mapToResponse(item);
+                    List<StockBatch> batches = batchRepository.findAvailableBatchesFEFO(item.getId(), LocalDate.now());
+                    if (!batches.isEmpty()) {
+                        StockBatch batch = batches.get(0);
+                        r.setBatchNumber(batch.getBatchNumber());
+                        r.setExpiryDate(batch.getExpiryDate());
+                    }
+                    return r;
+                })
+                .toList();
     }
 }

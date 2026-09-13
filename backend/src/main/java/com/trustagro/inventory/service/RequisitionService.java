@@ -8,6 +8,7 @@ import com.trustagro.inventory.entity.RequisitionItem;
 import com.trustagro.inventory.entity.RequisitionStatus;
 import com.trustagro.inventory.repository.InternalRequisitionRepository;
 import com.trustagro.inventory.repository.InventoryItemRepository;
+import com.trustagro.finance.service.FinanceService;
 import com.trustagro.user.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,19 +29,22 @@ public class RequisitionService {
     private final BarnRepository barnRepository;
     private final FlockRepository flockRepository;
     private final InventoryService inventoryService;
+    private final FinanceService financeService;
 
     public RequisitionService(InternalRequisitionRepository requisitionRepository,
                               InventoryItemRepository itemRepository,
                               FarmRepository farmRepository,
                               BarnRepository barnRepository,
                               FlockRepository flockRepository,
-                              InventoryService inventoryService) {
+                              InventoryService inventoryService,
+                              FinanceService financeService) {
         this.requisitionRepository = requisitionRepository;
         this.itemRepository = itemRepository;
         this.farmRepository = farmRepository;
         this.barnRepository = barnRepository;
         this.flockRepository = flockRepository;
         this.inventoryService = inventoryService;
+        this.financeService = financeService;
     }
 
     public List<InternalRequisition> getAllRequisitions() {
@@ -117,27 +121,19 @@ public class RequisitionService {
             // Automated Finance Logging for internal consumption
             if (ri.getUnitCost() != null && ri.getUnitCost().compareTo(java.math.BigDecimal.ZERO) > 0) {
                 try {
-                    com.trustagro.finance.entity.FinanceTransaction expense = new com.trustagro.finance.entity.FinanceTransaction();
-                    expense.setTransactionType(com.trustagro.finance.entity.TransactionType.EXPENSE);
-                    expense.setCategory("Internal Consumption");
-                    expense.setAmount(ri.getUnitCost().multiply(java.math.BigDecimal.valueOf(ri.getQuantityIssued())));
-                    expense.setTransactionDate(java.time.LocalDate.now());
-                    expense.setReferenceType("REQUISITION");
-                    expense.setReferenceId(req.getId());
-                    
                     String desc = "Requisition fulfillment: " + ri.getItem().getItemName() + " x" + ri.getQuantityIssued();
                     if (req.getFlock() != null) desc += " for Flock " + req.getFlock().getBatchCode();
                     else if (req.getFarm() != null) desc += " for Farm " + req.getFarm().getFarmName();
-                    
-                    expense.setDescription(desc);
-                    expense.setDepartment("Operations");
-                    expense.setRecordedBy(user);
-                    
-                    // Link to farm/flock context for COGS/expense tracking
-                    if (req.getFarm() != null) expense.setFarmId(req.getFarm().getId());
-                    if (req.getFlock() != null) expense.setFlockId(req.getFlock().getId());
-                    
-                    inventoryService.saveFinanceTransaction(expense);
+
+                    financeService.postExpense(
+                            ri.getUnitCost().multiply(java.math.BigDecimal.valueOf(ri.getQuantityIssued())),
+                            com.trustagro.finance.entity.BusinessUnit.GENERAL,
+                            "5120",
+                            desc,
+                            "INVENTORY",
+                            "REQUISITION",
+                            req.getId()
+                    );
                 } catch (Exception ex) {
                     log.warn("Finance logging for requisition {} failed: {}", req.getRequisitionNumber(), ex.getMessage());
                 }

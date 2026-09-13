@@ -52,13 +52,13 @@ public class FarmController {
     }
 
     @GetMapping("/{id}/biosecurity")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','FARM_MANAGER','VETERINARY_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','FARM_MANAGER','VETERINARIAN')")
     public ResponseEntity<ApiResponse<List<BiosecurityProtocolResponse>>> getBiosecurityLogs(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(farmService.getBiosecurityLogs(id)));
     }
 
     @PostMapping("/{id}/biosecurity")
-    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER','VETERINARY_OFFICER','SECURITY_GUARD')")
+    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER','VETERINARIAN','SECURITY_GUARD')")
     public ResponseEntity<ApiResponse<BiosecurityProtocolResponse>> logBiosecurity(@PathVariable Long id, @Valid @RequestBody BiosecurityProtocolRequest req) {
         req.setFarmId(id);
         return ResponseEntity.ok(ApiResponse.success("Biosecurity log created", farmService.logBiosecurity(req)));

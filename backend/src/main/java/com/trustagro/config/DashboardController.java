@@ -22,6 +22,9 @@ import com.trustagro.veterinary.repository.DiseaseCaseRepository;
 import com.trustagro.veterinary.repository.HealthIssueReportRepository;
 import com.trustagro.veterinary.repository.PrescriptionRepository;
 
+import com.trustagro.crm.service.CrmService;
+import com.trustagro.marketing.service.MarketingService;
+import com.trustagro.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,7 +45,9 @@ public class DashboardController {
             StockBatchRepository stockBatchRepository, com.trustagro.pharmacy.repository.PharmacySaleRepository saleRepository,
             FinanceService financeService, FinanceReportService reportService, NotificationRepository notificationRepository,
             VaccinationScheduleRepository vaccinationRepository, DiseaseCaseRepository diseaseCaseRepository,
-            HealthIssueReportRepository healthIssueReportRepository, PrescriptionRepository prescriptionRepository) {
+            HealthIssueReportRepository healthIssueReportRepository, PrescriptionRepository prescriptionRepository,
+            UserRepository userRepository, com.trustagro.crm.repository.CrmClientRepository crmClientRepository,
+            CrmService crmService, MarketingService marketingService) {
         this.farmRepository = farmRepository;
         this.flockRepository = flockRepository;
         this.dailyRecordRepository = dailyRecordRepository;
@@ -55,6 +61,10 @@ public class DashboardController {
         this.diseaseCaseRepository = diseaseCaseRepository;
         this.healthIssueReportRepository = healthIssueReportRepository;
         this.prescriptionRepository = prescriptionRepository;
+        this.userRepository = userRepository;
+        this.crmClientRepository = crmClientRepository;
+        this.crmService = crmService;
+        this.marketingService = marketingService;
     }
 
     private final FarmRepository farmRepository;
@@ -71,27 +81,58 @@ public class DashboardController {
     private final DiseaseCaseRepository diseaseCaseRepository;
     private final HealthIssueReportRepository healthIssueReportRepository;
     private final PrescriptionRepository prescriptionRepository;
+    private final UserRepository userRepository;
+    private final com.trustagro.crm.repository.CrmClientRepository crmClientRepository;
+    private final CrmService crmService;
+    private final MarketingService marketingService;
 
     @GetMapping("/admin")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> adminDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("totalFarms", farmRepository.countByStatus(FarmStatus.ACTIVE));
         data.put("totalActiveFlocks", flockRepository.countByStatus(FlockStatus.ACTIVE));
         data.put("todayMortality", dailyRecordRepository.sumMortalityByDate(LocalDate.now()));
-        var pl = reportService.getProfitAndLoss(null, null, null);
-        data.put("totalRevenue", pl.getTotalIncome());
-        data.put("totalExpenses", pl.getTotalExpenses());
-        data.put("netProfitLoss", pl.getNetProfitLoss());
+        LocalDate ytdStart = LocalDate.now().withDayOfYear(1);
+        LocalDate today = LocalDate.now();
+        var pl = reportService.getProfitAndLoss(ytdStart, today);
+        data.put("totalRevenue", pl.get("totalRevenue"));
+        data.put("totalExpenses", pl.get("totalExpenses"));
+        data.put("netProfitLoss", pl.get("netProfit"));
         data.put("pendingAlerts", notificationRepository.count());
         data.put("activeDiseaseCases", diseaseCaseRepository.count());
         data.put("openHealthReports", healthIssueReportRepository.countByStatus(HealthIssueReportStatus.OPEN));
         data.put("pendingPrescriptions", prescriptionRepository.countByStatus(PrescriptionStatus.PENDING));
+
+        Map<String, Object> financeSummary = financeService.getDashboardSummary();
+        data.put("cashInHand", financeSummary.get("cashInHand"));
+        data.put("accountsReceivable", financeSummary.get("accountsReceivable"));
+        data.put("accountsPayable", financeSummary.get("accountsPayable"));
+        data.put("inventoryValue", inventoryItemRepository.findAll().stream()
+                .mapToDouble(i -> (i.getCurrentStock() != null ? i.getCurrentStock() : 0.0)
+                        * (i.getAvgUnitCost() != null ? i.getAvgUnitCost().doubleValue() : 0.0))
+                .sum());
+        data.put("lowStockCount", inventoryItemRepository.findAll().stream()
+                .filter(i -> i.getReorderPoint() != null && i.getCurrentStock() != null
+                        && i.getCurrentStock() <= i.getReorderPoint())
+                .count());
+        data.put("expiringItems", stockBatchRepository
+                .findExpiringBatches(LocalDate.now(), LocalDate.now().plusDays(30)).size());
+        data.put("totalUsers", userRepository.count());
+        data.put("activeClients", crmClientRepository.count());
+        data.put("inventoryAlerts", data.get("lowStockCount"));
+        data.put("totalSalesCount", saleRepository.count());
+
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        data.put("pharmacySalesToday", saleRepository.findSalesBetweenDates(startOfDay, LocalDateTime.now()).stream()
+                .map(s -> s.getTotalAmount() != null ? s.getTotalAmount() : java.math.BigDecimal.ZERO)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
+
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @GetMapping("/farm-manager")
-    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER','OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> farmManagerDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("totalFarms", farmRepository.countByStatus(FarmStatus.ACTIVE));
@@ -104,7 +145,7 @@ public class DashboardController {
     }
 
     @GetMapping("/store")
-    @PreAuthorize("hasAnyRole('ADMIN','STORE_KEEPER','OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','INVENTORY_MANAGER')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> storeDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("totalItems", inventoryItemRepository.count());
@@ -114,7 +155,7 @@ public class DashboardController {
     }
 
     @GetMapping("/vet")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> vetDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("upcomingVaccinations", vaccinationRepository
@@ -128,7 +169,7 @@ public class DashboardController {
     }
 
     @GetMapping("/pharmacy")
-    @PreAuthorize("hasAnyRole('ADMIN','PHARMACY_SALES')")
+    @PreAuthorize("hasAnyRole('ADMIN','PHARMACIST')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> pharmacyDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("totalSalesCount", saleRepository.count());
@@ -137,13 +178,27 @@ public class DashboardController {
     }
 
     @GetMapping("/finance")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE_OFFICER','GENERAL_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','FINANCE')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> financeDashboard() {
-        var pl = reportService.getProfitAndLoss(null, null, null);
+        LocalDate ytdStart = LocalDate.now().withDayOfYear(1);
+        LocalDate today = LocalDate.now();
+        var pl = reportService.getProfitAndLoss(ytdStart, today);
         Map<String, Object> data = new HashMap<>();
-        data.put("totalIncome", pl.getTotalIncome());
-        data.put("totalExpenses", pl.getTotalExpenses());
-        data.put("netProfitLoss", pl.getNetProfitLoss());
+        data.put("totalIncome", pl.get("totalRevenue"));
+        data.put("totalExpenses", pl.get("totalExpenses"));
+        data.put("netProfitLoss", pl.get("netProfit"));
         return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
+    @GetMapping("/crm")
+    @PreAuthorize("hasAnyRole('ADMIN','CRM_MANAGER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> crmDashboard() {
+        return ResponseEntity.ok(ApiResponse.success(crmService.getDashboardStats()));
+    }
+
+    @GetMapping("/marketing")
+    @PreAuthorize("hasAnyRole('ADMIN','MARKETING')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> marketingDashboard() {
+        return ResponseEntity.ok(ApiResponse.success(marketingService.getDashboard()));
     }
 }

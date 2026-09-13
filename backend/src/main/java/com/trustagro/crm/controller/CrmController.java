@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/crm")
@@ -29,15 +30,33 @@ public class CrmController {
     }
 
     @PostMapping("/clients")
-    @PreAuthorize("hasAnyRole('ADMIN','EXTENSION_WORKER','OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','CRM_MANAGER','MARKETING')")
     public ResponseEntity<ApiResponse<CrmClientResponse>> createClient(@Valid @RequestBody CrmClientRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Client created", crmService.createClient(req)));
     }
 
     @PutMapping("/clients/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','EXTENSION_WORKER','OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','CRM_MANAGER')")
     public ResponseEntity<ApiResponse<CrmClientResponse>> updateClient(@PathVariable Long id, @Valid @RequestBody CrmClientRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Client updated", crmService.updateClient(id, req)));
+    }
+
+    @GetMapping("/leads")
+    @PreAuthorize("hasAnyRole('ADMIN','CRM_MANAGER','MARKETING')")
+    public ResponseEntity<ApiResponse<List<CrmClientResponse>>> getLeads() {
+        return ResponseEntity.ok(ApiResponse.success(crmService.getLeads()));
+    }
+
+    @GetMapping("/pipeline")
+    @PreAuthorize("hasAnyRole('ADMIN','CRM_MANAGER')")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getPipeline() {
+        return ResponseEntity.ok(ApiResponse.success(crmService.getPipelineSummary()));
+    }
+
+    @GetMapping("/dashboard")
+    @PreAuthorize("hasAnyRole('ADMIN','CRM_MANAGER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboard() {
+        return ResponseEntity.ok(ApiResponse.success(crmService.getDashboardStats()));
     }
 
     @GetMapping("/farm-visits")
@@ -47,7 +66,7 @@ public class CrmController {
     }
 
     @PostMapping("/farm-visits")
-    @PreAuthorize("hasAnyRole('ADMIN','EXTENSION_WORKER')")
+    @PreAuthorize("hasAnyRole('ADMIN','CRM_MANAGER')")
     public ResponseEntity<ApiResponse<FarmVisitResponse>> createVisit(@Valid @RequestBody FarmVisitRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Visit recorded", crmService.createVisit(req)));
     }

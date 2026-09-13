@@ -22,25 +22,25 @@ public class PrescriptionController {
     private final UserRepository userRepository;
 
     @GetMapping("/pending")
-    @PreAuthorize("hasAnyRole('ADMIN','PHARMACY_SALES')")
+    @PreAuthorize("hasAnyRole('ADMIN','PHARMACIST')")
     public ResponseEntity<ApiResponse<List<Prescription>>> getPending() {
         return ResponseEntity.ok(ApiResponse.success(prescriptionService.getPendingPrescriptions()));
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY_OFFICER')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN')")
     public ResponseEntity<ApiResponse<Prescription>> submit(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(prescriptionService.submitPrescription(id)));
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('ADMIN','PHARMACY_SALES')")
+    @PreAuthorize("hasAnyRole('ADMIN','PHARMACIST')")
     public ResponseEntity<ApiResponse<Prescription>> approve(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(prescriptionService.approvePrescription(id)));
     }
 
     @PostMapping("/{id}/dispense")
-    @PreAuthorize("hasAnyRole('ADMIN','PHARMACY_SALES')")
+    @PreAuthorize("hasAnyRole('ADMIN','PHARMACIST')")
     public ResponseEntity<ApiResponse<Prescription>> dispense(@PathVariable Long id) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow();

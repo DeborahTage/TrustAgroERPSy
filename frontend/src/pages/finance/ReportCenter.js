@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { financeApi } from '../../api';
-import PageHeader from '../../components/shared/PageHeader';
+import EnterprisePage from '../../components/layout/EnterprisePage';
+import { exportToPdf } from '../../lib/exportTable';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -38,23 +39,20 @@ const ReportCenter = () => {
     }, [fromDate, toDate]);
 
     return (
-        <div className="flex flex-col gap-6 p-4 md:p-8 bg-slate-50 min-h-screen">
-            <div className="flex justify-between items-center">
-                <PageHeader
-                    title="Financial Report Center"
-                    subtitle="Generate and analyze professional financial statements"
-                />
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => window.print()}>
-                        <Printer className="mr-2 h-4 w-4" /> Print
-                    </Button>
-                    <Button size="sm" className="bg-indigo-600">
-                        <Download className="mr-2 h-4 w-4" /> Export PDF
-                    </Button>
-                </div>
-            </div>
-
-            <Card className="border-none shadow-sm">
+        <EnterprisePage
+            title="Financial Report Center"
+            subtitle="Generate and analyze professional financial statements"
+            breadcrumbs={['Finance', 'Reports']}
+            loading={loading}
+            onRefresh={fetchReports}
+            actions={
+                <Button variant="outline" size="sm" onClick={() => exportToPdf('Financial Reports', 'finance-reports')}>
+                    <Printer className="mr-2 h-4 w-4" /> Print
+                </Button>
+            }
+        >
+            <div id="finance-reports" className="space-y-6">
+            <Card className="rounded-2xl border-none shadow-sm print:hidden">
                 <CardContent className="pt-6">
                     <div className="flex flex-wrap gap-4 items-end">
                         <div className="space-y-2">
@@ -90,8 +88,8 @@ const ReportCenter = () => {
                         <CardContent className="max-w-4xl mx-auto space-y-8">
                             {/* Revenue Section */}
                             <section>
-                                <h3 className="text-xs font-bold uppercase text-indigo-600 tracking-wider mb-3 flex items-center gap-2">
-                                    <div className="h-1 w-4 bg-indigo-600 rounded-full" />
+                                <h3 className="text-xs font-bold uppercase text-primary tracking-wider mb-3 flex items-center gap-2">
+                                    <div className="h-1 w-4 bg-primary rounded-full" />
                                     Revenue
                                 </h3>
                                 <Table>
@@ -134,8 +132,8 @@ const ReportCenter = () => {
 
                             {/* Net Profit Section */}
                             <div className="pt-6 border-t-4 border-double border-slate-300">
-                                <div className="flex justify-between items-center px-4 py-4 bg-indigo-50 rounded-lg">
-                                    <span className="text-base font-bold text-indigo-900 uppercase tracking-tighter italic">Net Operating Income / (Loss)</span>
+                                <div className="flex justify-between items-center px-4 py-4 bg-primary/10 rounded-lg">
+                                    <span className="text-base font-bold text-emerald-900 uppercase tracking-tighter italic">Net Operating Income / (Loss)</span>
                                     <span className={`text-xl font-bold font-mono ${pnL?.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                                         {formatCurrency(pnL?.netProfit || 0)}
                                     </span>
@@ -166,7 +164,7 @@ const ReportCenter = () => {
                                             <span className="font-mono">{formatCurrency(val)}</span>
                                         </div>
                                     ))}
-                                    <div className="flex justify-between font-bold pt-4 text-indigo-900">
+                                    <div className="flex justify-between font-bold pt-4 text-emerald-900">
                                         <span>Total Assets</span>
                                         <span className="font-mono">{formatCurrency(balanceSheet?.totalAssets || 0)}</span>
                                     </div>
@@ -229,7 +227,8 @@ const ReportCenter = () => {
                     </Card>
                 </TabsContent>
             </Tabs>
-        </div>
+            </div>
+        </EnterprisePage>
     );
 };
 

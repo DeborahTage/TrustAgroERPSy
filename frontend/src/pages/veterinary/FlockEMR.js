@@ -11,7 +11,8 @@ import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import { Progress } from '../../components/ui/progress';
-import { vetApi, flockApi } from '../../api';
+import { vetApi } from '../../api';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 import { useParams } from 'react-router-dom';
 import { formatCurrency, formatDate } from '../../utils';
 import { toast } from 'react-toastify';
@@ -25,39 +26,34 @@ const FlockEMR = () => {
         fetchEMR();
     }, [id]);
 
+    const [error, setError] = useState(null);
+
     const fetchEMR = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const res = await vetApi.getFlockEMR(id);
             setEmr(res.data);
-        } catch (e) {
-            toast.error("Failed to load Flock EMR");
+        } catch {
+            setError('Failed to load flock medical records.');
+            toast.error('Failed to load Flock EMR');
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-indigo-600 animate-pulse">Synchronizing Biological Data...</div>;
-    if (!emr) return <div className="p-8 text-center text-gray-500">No medical records found for this flock.</div>;
-
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 pb-20">
-
-            {/* HEADER SECTION */}
-            <div className="flex flex-col md:flex-row justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <div className="flex gap-4 items-center">
-                    <div className="bg-indigo-600 p-4 rounded-xl text-white">
-                        <HeartPulse className="h-8 w-8" />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-black text-gray-900">{emr.batchCode}</h1>
-                            <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border-indigo-100">{emr.breed}</Badge>
-                        </div>
-                        <p className="text-gray-500 text-sm font-medium">Age: {emr.ageDays} Days | Population: {emr.currentBirdCount || '---'}</p>
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 items-center">
+        <EnterprisePage
+            title={emr ? `Flock EMR — ${emr.batchCode}` : 'Flock EMR'}
+            subtitle={emr ? `${emr.breed || 'Flock'} · ${emr.ageDays ?? '—'} days · ${emr.currentBirdCount ?? '—'} birds` : 'Electronic medical record'}
+            breadcrumbs={['Veterinary', 'EMR', emr?.batchCode || id]}
+            loading={loading}
+            error={error || (!loading && !emr ? 'No medical records found for this flock.' : null)}
+            onRetry={fetchEMR}
+        >
+        {emr && (
+        <div className="space-y-6">
+            <div className="flex flex-wrap gap-3 items-center justify-between">
                     {emr.isUnderWithdrawal ? (
                         <div className="bg-rose-50 border border-rose-200 p-3 rounded-lg flex items-center gap-3">
                             <ShieldAlert className="h-6 w-6 text-rose-600" />
@@ -71,10 +67,9 @@ const FlockEMR = () => {
                             <CheckCircle2 className="w-4 h-4 mr-2" /> Market Ready
                         </Badge>
                     )}
-                    <Button className="bg-indigo-600 shadow-indigo-100 shadow-lg">
+                    <Button className="bg-primary shadow-primary/10 shadow-lg">
                         <Plus className="w-4 h-4 mr-2" /> New Entry
                     </Button>
-                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -123,16 +118,16 @@ const FlockEMR = () => {
                 <div className="lg:col-span-3">
                     <Tabs defaultValue="timeline" className="w-full">
                         <TabsList className="bg-white p-1 border rounded-lg shadow-sm mb-6 w-full justify-start overflow-x-auto h-12">
-                            <TabsTrigger value="timeline" className="px-6 data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-md flex items-center gap-2">
+                            <TabsTrigger value="timeline" className="px-6 data-[state=active]:bg-primary data-[state=active]:text-white rounded-md flex items-center gap-2">
                                 <History className="h-4 w-4" /> Medical Timeline
                             </TabsTrigger>
-                            <TabsTrigger value="treatments" className="px-6 data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-md flex items-center gap-2">
+                            <TabsTrigger value="treatments" className="px-6 data-[state=active]:bg-primary data-[state=active]:text-white rounded-md flex items-center gap-2">
                                 <Beaker className="h-4 w-4" /> Treatments
                             </TabsTrigger>
-                            <TabsTrigger value="vaccinations" className="px-6 data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-md flex items-center gap-2">
+                            <TabsTrigger value="vaccinations" className="px-6 data-[state=active]:bg-primary data-[state=active]:text-white rounded-md flex items-center gap-2">
                                 <Zap className="h-4 w-4" /> Vaccinations
                             </TabsTrigger>
-                            <TabsTrigger value="necropsies" className="px-6 data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-md flex items-center gap-2">
+                            <TabsTrigger value="necropsies" className="px-6 data-[state=active]:bg-primary data-[state=active]:text-white rounded-md flex items-center gap-2">
                                 <Microscope className="h-4 w-4" /> Necropsies
                             </TabsTrigger>
                         </TabsList>
@@ -141,14 +136,14 @@ const FlockEMR = () => {
                             <div className="absolute left-[19px] top-0 bottom-0 w-0.5 bg-gray-100"></div>
                             <div className="space-y-8">
                                 {/* Aggregated Timeline Logic (Simplified for Demo) */}
-                                {[...emr.diseaseHistory, ...emr.treatments, ...emr.vaccinations].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((item, idx) => (
+                                {[...(emr.diseaseHistory || []), ...(emr.treatments || []), ...(emr.vaccinations || [])].sort((a, b) => new Date(b.createdAt || b.startDate || 0) - new Date(a.createdAt || a.startDate || 0)).map((item, idx) => (
                                     <div key={idx} className="relative pl-12 group">
-                                        <div className="absolute left-0 bg-white border-2 border-indigo-600 rounded-full h-10 w-10 flex items-center justify-center z-10 group-hover:scale-110 transition-transform">
-                                            {item.vaccineName ? <Zap className="h-5 w-5 text-indigo-600" /> :
-                                                item.drugName ? <Beaker className="h-5 w-5 text-indigo-600" /> :
+                                        <div className="absolute left-0 bg-white border-2 border-primary rounded-full h-10 w-10 flex items-center justify-center z-10 group-hover:scale-110 transition-transform">
+                                            {item.vaccineName ? <Zap className="h-5 w-5 text-primary" /> :
+                                                item.drugName ? <Beaker className="h-5 w-5 text-primary" /> :
                                                     <AlertTriangle className="h-5 w-5 text-rose-600" />}
                                         </div>
-                                        <Card className="shadow-none border-gray-100 hover:border-indigo-200 transition-colors">
+                                        <Card className="shadow-none border-gray-100 hover:border-primary/20 transition-colors">
                                             <CardHeader className="p-4 py-3">
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -189,7 +184,7 @@ const FlockEMR = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y">
-                                            {emr.treatments.map(t => (
+                                            {emr.treatments?.map(t => (
                                                 <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
                                                     <td className="p-4 font-bold text-gray-800">{t.drugName}</td>
                                                     <td className="p-4 text-gray-600">{t.dosage} ({t.route})</td>
@@ -206,7 +201,7 @@ const FlockEMR = () => {
 
                         <TabsContent value="necropsies">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {emr.necropsies.map(n => (
+                                {(emr.necropsies || []).map(n => (
                                     <Card key={n.id} className="hover:border-rose-200 transition-all cursor-pointer">
                                         <CardHeader className="p-4 pb-2">
                                             <CardTitle className="text-gray-800 text-lg">{n.finalDiagnosis || 'Inconclusive'}</CardTitle>
@@ -222,13 +217,15 @@ const FlockEMR = () => {
                                         </CardContent>
                                     </Card>
                                 ))}
-                                {emr.necropsies.length === 0 && <div className="col-span-full py-10 text-center text-gray-400 italic">No necropsy records filed.</div>}
+                                {(emr.necropsies || []).length === 0 && <div className="col-span-full py-10 text-center text-gray-400 italic">No necropsy records filed.</div>}
                             </div>
                         </TabsContent>
                     </Tabs>
                 </div>
             </div>
         </div>
+        )}
+        </EnterprisePage>
     );
 };
 

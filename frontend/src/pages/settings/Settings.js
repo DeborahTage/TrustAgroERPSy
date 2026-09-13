@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Button } from '../../components/ui/button';
@@ -53,15 +54,11 @@ const Settings = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Settings</h1>
-        <p className="text-gray-500 mt-1">
-          Manage your account settings, preferences, and notifications.
-        </p>
-      </div>
-
+    <EnterprisePage
+      title="Settings"
+      subtitle="Manage your account settings, preferences, and notifications"
+      breadcrumbs={['Settings']}
+    >
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList>
           <TabsTrigger value="profile">
@@ -309,7 +306,7 @@ const Settings = () => {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+    </EnterprisePage>
   );
 };
 

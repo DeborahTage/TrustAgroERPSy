@@ -24,40 +24,40 @@ public class NotificationService {
     public void createMortalityAlert(String farmName, String batchCode, double rate) {
         create("High Mortality Alert",
                 String.format("Farm: %s, Batch: %s - Mortality rate %.1f%% exceeds threshold", farmName, batchCode, rate),
-                NotificationType.URGENT, Role.VETERINARY_OFFICER, "FARM", null);
+                NotificationType.URGENT, Role.VETERINARIAN, "FARM", null);
         create("High Mortality Alert",
                 String.format("Farm: %s, Batch: %s - Mortality rate %.1f%% exceeds threshold", farmName, batchCode, rate),
-                NotificationType.URGENT, Role.OPERATIONS_MANAGER, "FARM", null);
+                NotificationType.URGENT, Role.ADMIN, "FARM", null);
     }
 
     public void createLowStockAlert(String itemName, double currentStock, String unit) {
         create("Low Stock Alert",
                 String.format("Item: %s - Current stock %.1f %s is below minimum level", itemName, currentStock, unit),
-                NotificationType.WARNING, Role.STORE_KEEPER, "INVENTORY", null);
+                NotificationType.WARNING, Role.INVENTORY_MANAGER, "INVENTORY", null);
     }
 
     public void createReorderAlert(String itemName, double currentStock, double reorderPoint, String unit) {
         create("Reorder Suggestion",
                 String.format("Item: %s - Current stock %.1f %s hit reorder point (%.1f). Draft PR suggested.", itemName, currentStock, unit, reorderPoint),
-                NotificationType.INFO, Role.STORE_KEEPER, "INVENTORY", null);
+                NotificationType.INFO, Role.INVENTORY_MANAGER, "INVENTORY", null);
     }
 
     public void createExpiryAlert(String itemName, String expiryDate) {
         create("Expiry Alert",
                 String.format("Item: %s expires on %s (within 30 days)", itemName, expiryDate),
-                NotificationType.WARNING, Role.STORE_KEEPER, "INVENTORY", null);
+                NotificationType.WARNING, Role.INVENTORY_MANAGER, "INVENTORY", null);
     }
 
     public void createMissedVaccinationAlert(String farmName, String vaccineName) {
         create("Missed Vaccination",
                 String.format("Farm: %s - Vaccination '%s' was missed", farmName, vaccineName),
-                NotificationType.WARNING, Role.VETERINARY_OFFICER, "VETERINARY", null);
+                NotificationType.WARNING, Role.VETERINARIAN, "VETERINARY", null);
     }
 
     public void createFollowUpAlert(String clientName, Long clientId) {
         create("CRM Follow-up Due",
                 String.format("Follow-up due for client: %s", clientName),
-                NotificationType.INFO, Role.EXTENSION_WORKER, "CRM", clientId);
+                NotificationType.INFO, Role.CRM_MANAGER, "CRM", clientId);
     }
 
     public void createRoleNotification(String title, String message, Role role) {

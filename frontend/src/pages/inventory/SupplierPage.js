@@ -17,7 +17,7 @@ import { Label } from '../../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Plus, Users, Mail, Phone, MapPin, Star, Trash2, Edit } from 'lucide-react';
 import { toast } from 'react-toastify';
-import PageHeader from '../../components/shared/PageHeader';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 
 const SupplierPage = () => {
     const [suppliers, setSuppliers] = useState([]);
@@ -30,11 +30,16 @@ const SupplierPage = () => {
         fetchSuppliers();
     }, []);
 
+    const [error, setError] = useState(null);
+
     const fetchSuppliers = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const r = await supplierApi.getAll();
             setSuppliers(r.data.data || []);
         } catch (err) {
+            setError('Failed to load suppliers.');
             toast.error('Failed to load suppliers');
         } finally {
             setLoading(false);
@@ -78,68 +83,69 @@ const SupplierPage = () => {
     };
 
     return (
-        <div className="space-y-6 pb-12 animate-in fade-in duration-500">
-            <PageHeader
-                title="Supplier Management"
-                subtitle="Manage vendors, contact details and performance ratings for streamlined procurement."
-            >
+        <EnterprisePage
+            title="Supplier Management"
+            subtitle="Manage vendors, contact details and performance ratings for streamlined procurement"
+            breadcrumbs={['Inventory', 'Suppliers']}
+            loading={loading}
+            error={error}
+            onRetry={fetchSuppliers}
+            onRefresh={fetchSuppliers}
+            stats={[
+                { title: 'Total Suppliers', value: suppliers.length, icon: Users, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+                { title: 'Rated 4+ Stars', value: suppliers.filter(s => (s.rating || 0) >= 4).length, icon: Star, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+            ]}
+            actions={
                 <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
                     <DialogTrigger asChild>
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 rounded-xl px-6">
-                            <Plus className="mr-2 h-4 w-4" /> Add New Supplier
+                        <Button className="bg-primary hover:bg-primary/90 rounded-xl">
+                            <Plus className="mr-2 h-4 w-4" /> Add Supplier
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
-                        <DialogHeader className="bg-gray-50/80 p-6 border-b">
-                            <DialogTitle className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-                                <Users className="h-5 w-5 text-indigo-600" />
-                                {editingId ? 'Update Supplier Profile' : 'Register New Vendor'}
-                            </DialogTitle>
+                    <DialogContent className="sm:max-w-[500px] rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle>{editingId ? 'Update Supplier' : 'Register New Vendor'}</DialogTitle>
                         </DialogHeader>
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6 bg-white">
-                            <div className="grid grid-cols-1 gap-5">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Supplier Name *</Label>
+                                <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Supplier Name *</Label>
-                                    <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required className="rounded-xl h-11 border-gray-100 focus:border-indigo-500" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Contact Person</Label>
-                                        <Input value={form.contactPerson} onChange={e => setForm({ ...form, contactPerson: e.target.value })} className="rounded-xl h-11 border-gray-100" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Phone</Label>
-                                        <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="rounded-xl h-11 border-gray-100" />
-                                    </div>
+                                    <Label>Contact Person</Label>
+                                    <Input value={form.contactPerson} onChange={e => setForm({ ...form, contactPerson: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Email Address</Label>
-                                    <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="rounded-xl h-11 border-gray-100" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Category</Label>
-                                        <Input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="FEED, DRUGS..." className="rounded-xl h-11 border-gray-100" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Rating (1-5)</Label>
-                                        <Input type="number" min="1" max="5" value={form.rating} onChange={e => setForm({ ...form, rating: Number(e.target.value) })} className="rounded-xl h-11 border-gray-100" />
-                                    </div>
+                                    <Label>Phone</Label>
+                                    <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
                                 </div>
                             </div>
-                            <div className="flex gap-3 pt-4 border-t">
-                                <Button type="button" variant="ghost" className="flex-1 rounded-xl font-bold" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                                <Button type="submit" className="flex-2 bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100 shadow-xl rounded-xl px-12 font-bold tracking-tight">
-                                    {editingId ? 'Save Changes' : 'Register Vendor'}
-                                </Button>
+                            <div className="space-y-2">
+                                <Label>Email</Label>
+                                <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Category</Label>
+                                    <Input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="FEED, DRUGS..." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Rating (1-5)</Label>
+                                    <Input type="number" min="1" max="5" value={form.rating} onChange={e => setForm({ ...form, rating: Number(e.target.value) })} />
+                                </div>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <Button type="button" variant="outline" className="flex-1" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                                <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">{editingId ? 'Save' : 'Register'}</Button>
                             </div>
                         </form>
                     </DialogContent>
                 </Dialog>
-            </PageHeader>
-
-            <div className="grid grid-cols-1 gap-6">
-                <Card className="border-none shadow-xl shadow-gray-200/50 rounded-3xl overflow-hidden bg-white">
+            }
+            empty={!suppliers.length ? { title: 'No suppliers registered', description: 'Add your first vendor to enable purchase orders.' } : null}
+        >
+            <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader className="bg-gray-50/50">
@@ -163,7 +169,7 @@ const SupplierPage = () => {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className="rounded-lg bg-indigo-50/50 text-indigo-600 border-indigo-100 font-bold px-3 py-1 text-[10px] uppercase tracking-wider">{s.category || 'GENERAL'}</Badge>
+                                            <Badge variant="outline" className="rounded-lg bg-primary/10/50 text-primary border-primary/20 font-bold px-3 py-1 text-[10px] uppercase tracking-wider">{s.category || 'GENERAL'}</Badge>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1">
@@ -184,8 +190,7 @@ const SupplierPage = () => {
                         </Table>
                     </CardContent>
                 </Card>
-            </div>
-        </div>
+        </EnterprisePage>
     );
 };
 

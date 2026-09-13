@@ -89,13 +89,13 @@ public class InventoryController {
     }
 
     @PostMapping("/items")
-    @PreAuthorize("hasAnyRole('ADMIN','STORE_KEEPER')")
+    @PreAuthorize("hasAnyRole('ADMIN','INVENTORY_MANAGER')")
     public ResponseEntity<InventoryItem> createItem(@RequestBody InventoryItem item) {
         return ResponseEntity.ok(itemRepository.save(item));
     }
 
     @PutMapping("/items/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','STORE_KEEPER')")
+    @PreAuthorize("hasAnyRole('ADMIN','INVENTORY_MANAGER')")
     public ResponseEntity<InventoryItem> updateItem(@PathVariable Long id, @RequestBody InventoryItem item) {
         item.setId(id);
         return ResponseEntity.ok(itemRepository.save(item));
@@ -132,7 +132,7 @@ public class InventoryController {
     // ─── Stock In (FIXED) ─────────────────────────────────────────────────────
 
     @PostMapping("/stock-in")
-    @PreAuthorize("hasRole('STORE_KEEPER')")
+    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
     public ResponseEntity<Map<String, Object>> stockIn(@RequestBody Map<String, Object> data, Authentication auth) {
         try {
             // Null-safe field extraction
@@ -172,7 +172,7 @@ public class InventoryController {
     // ─── Stock Out (FIXED) ────────────────────────────────────────────────────
 
     @PostMapping("/stock-out")
-    @PreAuthorize("hasRole('STORE_KEEPER')")
+    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
     public ResponseEntity<Map<String, Object>> stockOut(@RequestBody Map<String, Object> data, Authentication auth) {
         try {
             // Null-safe field extraction
@@ -259,7 +259,7 @@ public class InventoryController {
     // ─── Cycle Count ──────────────────────────────────────────────────────────
 
     @PostMapping("/count")
-    @PreAuthorize("hasRole('STORE_KEEPER')")
+    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
     public ResponseEntity<Map<String, Object>> recordCount(@RequestBody Map<String, Object> data, Authentication auth) {
         try {
             if (data.get("itemId") == null || data.get("countedQty") == null) {
@@ -302,26 +302,10 @@ public class InventoryController {
      * Returns only drug/vaccine items with stock > 0 for the pharmacy POS.
      */
     @GetMapping("/pharmacy-items")
-    public ResponseEntity<List<Map<String, Object>>> getPharmacyItems() {
-        List<Map<String, Object>> items = itemRepository.findAll().stream()
-                .filter(i -> i.getStatus() == ItemStatus.ACTIVE
-                        && PHARMACY_CATEGORIES.contains(i.getCategory())
-                        && i.getCurrentStock() != null
-                        && i.getCurrentStock() > 0)
-                .map(i -> {
-                    java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
-                    m.put("id", i.getId());
-                    m.put("itemName", i.getItemName());
-                    m.put("sku", i.getSku());
-                    m.put("currentStock", i.getCurrentStock());
-                    m.put("unit", i.getUnit() != null ? i.getUnit().name() : "");
-                    m.put("sellingPrice", i.getSellingPrice());
-                    m.put("avgUnitCost", i.getAvgUnitCost());
-                    m.put("category", i.getCategory() != null ? i.getCategory().name() : "");
-                    return m;
-                })
-                .toList();
-        return ResponseEntity.ok(items);
+    public ResponseEntity<List<InventoryItemResponse>> getPharmacyItems() {
+        return ResponseEntity.ok(inventoryService.getPharmacyCatalog().stream()
+                .filter(i -> i.getCurrentStock() != null && i.getCurrentStock() > 0)
+                .toList());
     }
 
     /**
@@ -350,7 +334,7 @@ public class InventoryController {
     }
 
     @PostMapping("/transfer")
-    @PreAuthorize("hasRole('STORE_KEEPER')")
+    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
     public ResponseEntity<Map<String, Object>> transferStock(@RequestBody Map<String, Object> data, Authentication auth) {
         Long itemId = Long.valueOf(data.get("itemId").toString());
         String fromZone = data.get("fromZone").toString();

@@ -11,8 +11,7 @@ import { toast } from 'react-toastify';
 import { useLanguage } from '../../context/LanguageContext';
 import { ArrowLeft, FileSignature, Hash, User, Package, Clipboard, Info, CheckCircle2, FlaskConical, AlertCircle, Clock, ShieldCheck, Activity, Pill, Syringe, ClipboardList } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import PageContainer from '../../components/layout/PageContainer';
-import PageHeader from '../../components/shared/PageHeader';
+import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
 
 const PrescriptionForm = () => {
   const navigate = useNavigate();
@@ -91,29 +90,20 @@ const PrescriptionForm = () => {
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Clinical Authorization"
-        subtitle="Issue medical directives and pharmacological interventions with automated inventory tracking."
-        breadcrumbs={['Veterinary', 'Prescription', 'New']}
-      >
-        <Button
-          variant="ghost"
-          className="rounded-2xl font-bold hover:bg-gray-100"
-          onClick={() => navigate('/veterinary')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Terminal
-        </Button>
-      </PageHeader>
-
+    <EnterpriseFormPage
+      title="Clinical Authorization"
+      subtitle="Issue medical directives with automated pharmacy and inventory tracking"
+      breadcrumbs={['Veterinary', 'Prescription', 'New']}
+      backTo="/veterinary"
+      error={error}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-8">
           <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-10">
               <div className="flex items-center gap-4 mb-2">
-                <div className="h-12 w-12 bg-indigo-900 rounded-2xl flex items-center justify-center">
-                  <FlaskConical className="h-6 w-6 text-indigo-300" />
+                <div className="h-12 w-12 bg-emerald-900 rounded-2xl flex items-center justify-center">
+                  <FlaskConical className="h-6 w-6 text-emerald-300" />
                 </div>
                 <div>
                   <CardTitle className="text-xl font-black text-gray-900 tracking-tight uppercase">Medical Order Instruction</CardTitle>
@@ -149,7 +139,7 @@ const PrescriptionForm = () => {
                     <div className="relative">
                       <Hash className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                       <Input
-                        className="h-14 pl-14 bg-gray-50 border-2 border-transparent rounded-[1.25rem] font-mono font-black text-indigo-600 cursor-not-allowed"
+                        className="h-14 pl-14 bg-gray-50 border-2 border-transparent rounded-[1.25rem] font-mono font-black text-primary cursor-not-allowed"
                         value={form.prescriptionNumber}
                         readOnly
                       />
@@ -218,7 +208,7 @@ const PrescriptionForm = () => {
                           <SelectItem key={item.id} value={String(item.id)} className="rounded-xl my-1 font-bold">
                             <div className="flex justify-between w-full gap-4">
                               <span>{item.itemName}</span>
-                              <span className="text-[10px] text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">BAL: {item.currentStock} {item.unit}</span>
+                              <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-tighter">BAL: {item.currentStock} {item.unit}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -261,7 +251,7 @@ const PrescriptionForm = () => {
                       type="number"
                       min="0.01"
                       step="0.01"
-                      className="h-14 bg-white border-2 border-gray-100 rounded-[1.25rem] font-black focus:ring-[#0f172a] transition-all text-indigo-700 text-lg"
+                      className="h-14 bg-white border-2 border-gray-100 rounded-[1.25rem] font-black focus:ring-[#0f172a] transition-all text-primary text-lg"
                       value={form.quantity}
                       onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                       placeholder="0.00"
@@ -333,9 +323,9 @@ const PrescriptionForm = () => {
             </div>
             <div className="flex items-center gap-3 mb-8">
               <div className="p-3 bg-white/10 rounded-2xl">
-                <ShieldCheck className="h-6 w-6 text-indigo-400" />
+                <ShieldCheck className="h-6 w-6 text-primary/70" />
               </div>
-              <span className="text-sm font-black uppercase tracking-[0.2em] text-indigo-300">Compliance Audit</span>
+              <span className="text-sm font-black uppercase tracking-[0.2em] text-emerald-300">Compliance Audit</span>
             </div>
             <div className="space-y-8 relative z-10">
               <div className="space-y-3">
@@ -343,20 +333,20 @@ const PrescriptionForm = () => {
                   <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                   Medical Lifecycle
                 </h4>
-                <p className="text-xs text-indigo-200/70 font-medium leading-relaxed italic">
+                <p className="text-xs text-emerald-200/70 font-medium leading-relaxed italic">
                   Prescriptions are automatically queued for Pharmacist verification. Inventory deduction occurs only upon final fulfillment validation.
                 </p>
               </div>
               <div className="h-px bg-white/10" />
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300 opacity-50">Authorized Effects</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300 opacity-50">Authorized Effects</p>
                 {[
                   { icon: Pill, text: "Fulfillment Queue Sync" },
                   { icon: Syringe, text: "COGS Expense Mapping" },
                   { icon: Clipboard, text: "Withdrawal Period Tracking" }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
-                    <item.icon className="h-4 w-4 text-indigo-400" />
+                    <item.icon className="h-4 w-4 text-primary/70" />
                     <span className="text-xs font-bold">{item.text}</span>
                   </div>
                 ))}
@@ -364,19 +354,19 @@ const PrescriptionForm = () => {
             </div>
           </Card>
 
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-indigo-50 p-10 border border-indigo-100 group hover:bg-indigo-100 transition-all">
+          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-primary/10 p-10 border border-primary/20 group hover:bg-primary/10 transition-all">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Inventory Status</span>
-                <Activity className="h-5 w-5 text-indigo-400 group-hover:animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">Inventory Status</span>
+                <Activity className="h-5 w-5 text-primary/70 group-hover:animate-pulse" />
               </div>
               <p className="text-4xl font-black text-[#0f172a]">Live</p>
-              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Medical SSOT Active</p>
+              <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest">Medical SSOT Active</p>
             </div>
           </Card>
         </div>
       </div>
-    </PageContainer>
+    </EnterpriseFormPage>
   );
 };
 

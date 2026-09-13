@@ -37,4 +37,6 @@ public class OrderItem {
     public BigDecimal getUnitPrice() { return unitPrice; }
     public Double getQuantity() { return quantity; }
     public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+    public Long getFlockId() { return flockId; }
+    public String getCategory() { return category; }
 }

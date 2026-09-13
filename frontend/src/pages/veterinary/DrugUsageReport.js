@@ -7,8 +7,10 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { useLanguage } from '../../context/LanguageContext';
-import { ArrowLeft, PieChart, Download, FileText, Activity, Layers, ActivitySquare, AlertCircle } from 'lucide-react';
+import EnterprisePage from '../../components/layout/EnterprisePage';
+import { exportToPdf } from '../../lib/exportTable';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell } from 'recharts';
+import { Activity, ActivitySquare, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { formatCurrency } from '../../utils';
 
@@ -64,49 +66,35 @@ const DrugUsageReport = () => {
     };
 
     const handleExportPDF = () => {
-        window.print();
+        exportToPdf('Drug Usage Report', 'drug-usage-report');
     };
 
-    if (!reportData) return <div className="p-8 text-center animate-pulse text-indigo-400 font-bold uppercase tracking-widest">Loading Analytics...</div>;
-
-    const chartData = Object.keys(reportData.costByDrug).map(name => ({
+    const chartData = reportData ? Object.keys(reportData.costByDrug || {}).map(name => ({
         name,
         cost: reportData.costByDrug[name],
         quantity: reportData.quantityByDrug[name]
-    })).sort((a, b) => b.cost - a.cost);
+    })).sort((a, b) => b.cost - a.cost) : [];
+
+    const stats = reportData ? [
+        { title: 'Total Drug Spend', value: formatCurrency(reportData.totalCost), icon: Activity, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+        { title: 'Prescriptions Issued', value: reportData.totalPrescriptions || 0, icon: ActivitySquare, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
+    ] : [];
 
     return (
-        <div className="space-y-10 max-w-7xl mx-auto pb-16 animate-in fade-in duration-700">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 print:hidden">
-                <div className="flex items-center gap-6">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-12 w-12 rounded-2xl bg-white shadow-sm border border-gray-100 hover:bg-gray-50 group transition-all"
-                        onClick={() => navigate('/veterinary')}
-                    >
-                        <ArrowLeft className="h-5 w-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
-                    </Button>
-                    <div>
-                        <h1 className="text-3xl font-black tracking-tight text-gray-900 flex items-center gap-3">
-                            Drug Usage Analytics
-                            <div className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-indigo-100 flex items-center gap-1.5">
-                                <ActivitySquare className="h-3 w-3" />
-                                Live Metrics
-                            </div>
-                        </h1>
-                        <p className="text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest">Therapeutic consumption & financial analysis</p>
-                    </div>
-                </div>
-                <div className="flex gap-3">
-                    <Button variant="outline" className="h-12 rounded-2xl font-bold border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50" onClick={handleExportPDF}>
-                        <Download className="mr-2 h-4 w-4" /> Export Report
-                    </Button>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <Card className="border-none shadow-xl shadow-gray-200/40 rounded-[2rem] bg-white print:hidden">
+        <EnterprisePage
+            title="Drug Usage Analytics"
+            subtitle="Therapeutic consumption and financial analysis"
+            breadcrumbs={['Veterinary', 'Reports']}
+            loading={loading && !reportData}
+            stats={stats}
+            onRefresh={fetchReport}
+            actions={
+                <Button variant="outline" onClick={handleExportPDF}>
+                    <Download className="mr-2 h-4 w-4" /> Export
+                </Button>
+            }
+        >
+            <Card className="border-none shadow-sm rounded-2xl print:hidden">
                 <CardContent className="p-6">
                     <div className="flex items-end gap-6 flex-wrap">
                         <div className="space-y-2 flex-col">
@@ -148,19 +136,8 @@ const DrugUsageReport = () => {
                 </CardContent>
             </Card>
 
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-1">
-                <Card className="border-none shadow-xl shadow-gray-200/50 rounded-3xl bg-indigo-600 text-white p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-20"><Activity className="h-20 w-20" /></div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200 mb-2">Total Drug Spend</p>
-                    <h3 className="text-3xl font-black">{formatCurrency(reportData.totalCost)}</h3>
-                </Card>
-                <Card className="border-none shadow-xl shadow-gray-200/50 rounded-3xl bg-rose-50 p-6">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-2">Total Prescriptions</p>
-                    <h3 className="text-3xl font-black text-rose-700">{reportData.totalPrescriptions} <span className="text-sm font-bold text-rose-400">Issued</span></h3>
-                </Card>
-            </div>
-
+            {reportData && (
+            <div id="drug-usage-report" className="space-y-6">
             {/* Charts Area */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-1">
                 <Card className="border-none shadow-xl shadow-gray-200/40 rounded-[2.5rem] bg-white overflow-hidden p-8">
@@ -192,7 +169,9 @@ const DrugUsageReport = () => {
                     </div>
                 </Card>
             </div>
-        </div>
+            </div>
+            )}
+        </EnterprisePage>
     );
 };
 

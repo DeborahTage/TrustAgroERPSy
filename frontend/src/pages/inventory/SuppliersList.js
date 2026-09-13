@@ -51,8 +51,8 @@ const SuppliersList = () => {
             header: 'Supplier',
             cell: ({ row }) => (
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100">
-                        <Truck className="h-5 w-5 text-indigo-600" />
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                        <Truck className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex flex-col">
                         <span className="font-bold text-gray-900">{row.original.name}</span>
@@ -110,12 +110,12 @@ const SuppliersList = () => {
             </PageHeader>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-indigo-600 border-none">
+                <Card className="bg-primary border-none">
                     <CardContent className="pt-6">
-                        <p className="text-indigo-100 text-sm font-medium uppercase tracking-wider">Total Partners</p>
+                        <p className="text-emerald-100 text-sm font-medium uppercase tracking-wider">Total Partners</p>
                         <p className="text-3xl font-bold text-white mt-1">{suppliers.length}</p>
                         <div className="mt-4 flex items-center gap-2">
-                            <Badge className="bg-indigo-500 text-white border-none">+2 this month</Badge>
+                            <Badge className="bg-primary/100 text-white border-none">+2 this month</Badge>
                         </div>
                     </CardContent>
                 </Card>

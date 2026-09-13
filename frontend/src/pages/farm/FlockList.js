@@ -1,154 +1,115 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { flockApi } from '../../api';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 import DataTable from '../../components/shared/DataTable';
 import StatusBadge from '../../components/shared/StatusBadge';
-import PageHeader from '../../components/shared/PageHeader';
-import StatsCard from '../../components/shared/StatsCard';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Layers, TrendingDown, Activity, Plus, Download, FileText } from 'lucide-react';
+import { Layers, TrendingDown, Activity, Plus } from 'lucide-react';
 import { formatDate } from '../../utils';
+import { toast } from 'react-toastify';
 
 const FlockList = () => {
   const { t } = useLanguage();
   const { canPerformAction } = useAuth();
   const [flocks, setFlocks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    flockApi.getAll().then(r => setFlocks(r.data.data)).finally(() => setLoading(false));
+  const fetchFlocks = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await flockApi.getAll();
+      setFlocks(r.data.data || []);
+    } catch (e) {
+      setError('Failed to load flocks.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Calculate analytics
-  const totalFlocks = flocks.length;
-  const activeFlocks = flocks.filter(f => f.status === 'ACTIVE').length;
-  const totalBirds = flocks.reduce((sum, f) => sum + (Number(f.currentBirdCount) || 0), 0);
-  const closedFlocks = flocks.filter(f => f.status === 'CLOSED').length;
+  useEffect(() => { fetchFlocks(); }, [fetchFlocks]);
 
-  const kpiCards = [
-    {
-      title: 'Total Flocks',
-      value: totalFlocks,
-      icon: Layers,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      title: 'Active Flocks',
-      value: activeFlocks,
-      icon: Activity,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-50'
-    },
-    {
-      title: 'Total Birds',
-      value: totalBirds.toLocaleString(),
-      icon: Activity,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    },
-    {
-      title: 'Closed Flocks',
-      value: closedFlocks,
-      icon: TrendingDown,
-      iconColor: 'text-gray-600',
-      bgColor: 'bg-gray-50'
+  const handleClose = async (id) => {
+    try {
+      await flockApi.close(id);
+      setFlocks((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'CLOSED' } : x)));
+      toast.success('Flock closed');
+    } catch {
+      toast.error('Failed to close flock');
     }
-  ];
+  };
 
-  const columns = [
+  const stats = useMemo(() => [
+    { title: 'Total Flocks', value: flocks.length, icon: Layers, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
+    { title: 'Active', value: flocks.filter((f) => f.status === 'ACTIVE').length, icon: Activity, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: 'Total Birds', value: flocks.reduce((s, f) => s + (Number(f.currentBirdCount) || 0), 0).toLocaleString(), icon: Activity, iconColor: 'text-purple-600', bgColor: 'bg-purple-50' },
+    { title: 'Closed', value: flocks.filter((f) => f.status === 'CLOSED').length, icon: TrendingDown, iconColor: 'text-gray-600', bgColor: 'bg-gray-50' },
+  ], [flocks]);
+
+  const columns = useMemo(() => [
     { accessorKey: 'batchCode', header: t('flocks.batchCode') },
     { accessorKey: 'farmName', header: t('flocks.farm') },
     { accessorKey: 'birdType', header: t('flocks.birdType') },
-    { accessorKey: 'initialBirdCount', header: t('flocks.initialCount'), cell: ({ row }) => Number(row.original.initialBirdCount).toLocaleString() },
-    { accessorKey: 'currentBirdCount', header: t('flocks.currentCount'), cell: ({ row }) => Number(row.original.currentBirdCount).toLocaleString() },
+    { accessorKey: 'breed', header: 'Breed', cell: ({ row }) => row.original.breed || '—' },
+    { accessorKey: 'initialBirdCount', header: t('flocks.initialCount'), cell: ({ row }) => Number(row.original.initialBirdCount || 0).toLocaleString() },
+    { accessorKey: 'currentBirdCount', header: t('flocks.currentCount'), cell: ({ row }) => Number(row.original.currentBirdCount || 0).toLocaleString() },
     { accessorKey: 'startDate', header: t('flocks.startDate'), cell: ({ row }) => formatDate(row.original.startDate) },
     { accessorKey: 'status', header: t('flocks.status'), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
     {
       id: 'actions',
       cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigate(`/flocks/${row.original.id}`)}
-          >
-            View
-          </Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button size="sm" variant="outline" onClick={() => navigate(`/vet/flock-emr/${row.original.id}`)}>EMR</Button>
           {canPerformAction('edit', 'flocks') && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate(`/flocks/${row.original.id}/edit`)}
-            >
-              Edit
-            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate(`/flocks/${row.original.id}/edit`)}>Edit</Button>
           )}
           {row.original.status === 'ACTIVE' && canPerformAction('edit', 'flocks') && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => flockApi.close(row.original.id).then(() => setFlocks(f => f.map(x => x.id === row.original.id ? { ...x, status: 'CLOSED' } : x)))}
-            >
-              Close
-            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleClose(row.original.id)}>Close</Button>
           )}
         </div>
-      )
+      ),
     },
+  ], [t, navigate, canPerformAction]);
+
+  const exportColumns = [
+    { header: 'Batch', accessorKey: 'batchCode' },
+    { header: 'Farm', accessorKey: 'farmName' },
+    { header: 'Bird Type', accessorKey: 'birdType' },
+    { header: 'Current Count', accessorKey: 'currentBirdCount' },
+    { header: 'Status', accessorKey: 'status' },
   ];
 
-  const actions = [
-    {
-      label: 'Add Flock',
-      icon: Plus,
-      onClick: () => navigate('/flocks/new'),
-      show: canPerformAction('create', 'flocks')
-    },
-    {
-      label: 'Export',
-      icon: Download,
-      onClick: () => console.log('Export flocks'),
-      show: true
-    },
-    {
-      label: 'Generate Report',
-      icon: FileText,
-      onClick: () => console.log('Generate report'),
-      show: true
-    }
-  ].filter(a => a.show);
-
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <PageHeader
-        title="Flock Management"
-        description="Monitor flock performance, mortality trends, and growth analytics."
-        actions={actions}
-      />
-
-      {/* KPI Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {kpiCards.map((card, index) => (
-          <StatsCard key={index} {...card} />
-        ))}
+    <EnterprisePage
+      title="Flock Management"
+      subtitle="Batch tracking, bird counts, breeds, and clinical EMR access"
+      breadcrumbs={['Farm', 'Flocks']}
+      loading={loading}
+      error={error}
+      onRetry={fetchFlocks}
+      stats={stats}
+      onRefresh={fetchFlocks}
+      exportData={flocks}
+      exportColumns={exportColumns}
+      exportFilename="flocks"
+      exportElementId="flocks-table"
+      exportTitle="Flock Registry"
+      empty={!flocks.length ? { title: 'No flocks', description: 'Create a flock batch to start health and production tracking.' } : null}
+      actions={canPerformAction('create', 'flocks') && (
+        <Button onClick={() => navigate('/flocks/new')} className="h-11 bg-primary hover:bg-primary/90 rounded-xl">
+          <Plus className="mr-2 h-4 w-4" /> Add Flock
+        </Button>
+      )}
+    >
+      <div id="flocks-table">
+        <DataTable columns={columns} data={flocks} searchable pagination pageSize={15} />
       </div>
-
-      {/* Main Content */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Flocks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable columns={columns} data={flocks} loading={loading} />
-        </CardContent>
-      </Card>
-    </div>
+    </EnterprisePage>
   );
 };
 

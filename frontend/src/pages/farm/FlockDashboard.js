@@ -258,7 +258,7 @@ const FlockDashboard = () => {
         <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
           <CardHeader>
             <CardTitle className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
-              <Scale className="h-5 w-5 text-indigo-500" />
+              <Scale className="h-5 w-5 text-primary" />
               Feed Efficiency (FCR)
             </CardTitle>
             <p className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Feed Conversion Ratio Trend</p>

@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import trustLogo from '../../assets/trust-logo.jpg';
 import loginSlide1 from '../../assets/login-slide-1.webp';
 import loginSlide2 from '../../assets/login-slide-2.jpg';
@@ -56,7 +60,7 @@ const Login = () => {
       <div className="login-card-container">
         <div className="login-box">
           <div className="flex justify-center mb-6">
-            <img src={trustLogo} alt="Logo" className="w-20 h-20 rounded-2xl shadow-xl border-2 border-white" />
+            <img src={trustLogo} alt="Trust Agro" className="w-20 h-20 rounded-2xl shadow-xl border-2 border-white object-cover" />
           </div>
 
           <div className="text-center mb-8">
@@ -65,56 +69,70 @@ const Login = () => {
           </div>
 
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm flex items-center">
+            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm" role="alert">
               <span className="text-sm font-semibold">{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">{t('login.email')}</label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                {t('login.email')}
+              </Label>
+              <Input
+                id="email"
                 type="email"
                 placeholder={t('login.emailPlaceholder')}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-green-500/10 focus:border-green-600 focus:bg-white transition-all outline-none text-gray-900 font-medium"
+                className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white"
+                autoComplete="email"
                 required
               />
             </div>
 
-            <div className="space-y-1.5 relative">
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">{t('login.password')}</label>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                {t('login.password')}
+              </Label>
               <div className="relative">
-                <input
+                <Input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder={t('login.passwordPlaceholder')}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-green-500/10 focus:border-green-600 focus:bg-white transition-all outline-none text-gray-900 font-medium pr-12"
+                  className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white pr-12"
+                  autoComplete="current-password"
                   required
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 p-0 text-gray-400 hover:text-green-700"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-green-600 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? '🙈' : '👁️'}
-                </button>
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <a href="#forgot" className="text-xs font-bold text-green-700 hover:text-green-800 hover:underline">{t('login.forgotPassword')}</a>
-            </div>
-
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-green-700 to-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-900/20 hover:shadow-green-900/40 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 active:scale-95"
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-green-700 to-green-600 hover:from-green-800 hover:to-green-700 font-bold shadow-lg shadow-green-900/20"
             >
-              {loading ? t('login.signingIn') : t('login.signIn')}
-            </button>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('login.signingIn')}
+                </>
+              ) : (
+                t('login.signIn')
+              )}
+            </Button>
           </form>
 
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +30,32 @@ public class CrmService {
 
     public CrmClientResponse getClientById(Long id) {
         return toClientResponse(findClientById(id));
+    }
+
+    public CrmClient getClientEntity(Long id) {
+        return findClientById(id);
+    }
+
+    public List<CrmClientResponse> getLeads() {
+        return clientRepository.findAll().stream()
+                .filter(c -> c.getStatus() == com.trustagro.crm.entity.ClientStatus.LEAD)
+                .map(this::toClientResponse).collect(Collectors.toList());
+    }
+
+    public Map<String, Long> getPipelineSummary() {
+        return clientRepository.findAll().stream()
+                .collect(Collectors.groupingBy(c -> c.getStatus().name(), Collectors.counting()));
+    }
+
+    public Map<String, Object> getDashboardStats() {
+        Map<String, Object> stats = new java.util.HashMap<>();
+        var all = clientRepository.findAll();
+        stats.put("totalClients", all.size());
+        stats.put("leads", all.stream().filter(c -> c.getStatus() == com.trustagro.crm.entity.ClientStatus.LEAD).count());
+        stats.put("activeClients", all.stream().filter(c -> c.getStatus() == com.trustagro.crm.entity.ClientStatus.ACTIVE).count());
+        stats.put("totalVisits", visitRepository.count());
+        stats.put("dueFollowUps", visitRepository.findByNextFollowUpDateLessThanEqual(LocalDate.now()).size());
+        return stats;
     }
 
     public CrmClientResponse createClient(CrmClientRequest req) {

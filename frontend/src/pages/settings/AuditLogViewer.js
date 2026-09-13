@@ -142,7 +142,7 @@ const AuditLogViewer = () => {
 
                                     return (
                                         <React.Fragment key={log.id}>
-                                            <tr className={`${isExpanded ? 'bg-indigo-50/30' : 'hover:bg-gray-50'}`}>
+                                            <tr className={`${isExpanded ? 'bg-primary/10/30' : 'hover:bg-gray-50'}`}>
                                                 <td className="px-4 py-3 whitespace-nowrap text-gray-500">
                                                     {new Date(log.createdAt).toLocaleString()}
                                                 </td>

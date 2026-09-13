@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -131,6 +132,27 @@ public class FinanceService {
             unitRevenue.put(unit.name(), val != null ? val : BigDecimal.ZERO);
         }
         summary.put("unitRevenue", unitRevenue);
+
+        Map<String, BigDecimal> unitExpenses = new HashMap<>();
+        for (BusinessUnit unit : BusinessUnit.values()) {
+            BigDecimal val = transactionRepository.sumByBusinessUnitAndType(unit, TransactionType.EXPENSE);
+            unitExpenses.put(unit.name(), val != null ? val : BigDecimal.ZERO);
+        }
+        summary.put("unitExpenses", unitExpenses);
+
+        List<FinanceTransaction> allTx = transactionRepository.findAll();
+        Map<String, BigDecimal> revenueByModule = allTx.stream()
+                .filter(t -> t.getTransactionType() == TransactionType.INCOME)
+                .collect(Collectors.groupingBy(
+                        t -> t.getSourceModule() != null ? t.getSourceModule() : "MANUAL",
+                        Collectors.reducing(BigDecimal.ZERO, FinanceTransaction::getAmount, BigDecimal::add)));
+        Map<String, BigDecimal> expenseByModule = allTx.stream()
+                .filter(t -> t.getTransactionType() == TransactionType.EXPENSE)
+                .collect(Collectors.groupingBy(
+                        t -> t.getSourceModule() != null ? t.getSourceModule() : "MANUAL",
+                        Collectors.reducing(BigDecimal.ZERO, FinanceTransaction::getAmount, BigDecimal::add)));
+        summary.put("revenueByModule", revenueByModule);
+        summary.put("expenseByModule", expenseByModule);
 
         // Real Metrics required for Dashboard
         summary.put("accountsReceivable", chartOfAccountRepository.findByAccountCode("1200")

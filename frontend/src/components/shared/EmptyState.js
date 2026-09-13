@@ -12,17 +12,17 @@ const EmptyState = ({
   className 
 }) => {
   return (
-    <Card className={cn("border-dashed", className)}>
-      <CardContent className="flex flex-col items-center justify-center py-12">
-        <div className="p-4 bg-gray-50 rounded-full mb-4">
-          <Icon className="h-8 w-8 text-gray-400" />
+    <Card className={cn("border-dashed border-border/60 bg-muted/20", className)}>
+      <CardContent className="flex flex-col items-center justify-center py-14">
+        <div className="p-4 bg-muted rounded-2xl mb-4">
+          <Icon className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-sm text-gray-500 text-center max-w-sm mb-4">{description}</p>
+        <h3 className="text-base font-semibold text-foreground mb-1">{title}</h3>
+        <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">{description}</p>
         {action && (
           <button
             onClick={action}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium"
           >
             {actionLabel || 'Add New'}
           </button>

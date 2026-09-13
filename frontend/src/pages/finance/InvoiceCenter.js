@@ -1,122 +1,129 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { financeApi } from '../../api';
-import PageHeader from '../../components/shared/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import EnterprisePage from '../../components/layout/EnterprisePage';
+import DataTable from '../../components/shared/DataTable';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { formatCurrency } from '../../utils';
-import { FileText, Plus, Receipt, Search, Filter, ArrowRight } from 'lucide-react';
-import { Input } from '../../components/ui/input';
+import { exportToCsv, exportToPdf } from '../../lib/exportTable';
+import { FileText, Plus } from 'lucide-react';
+import EmptyState from '../../components/shared/EmptyState';
+import POSInvoiceDialog from './components/POSInvoiceDialog';
+
+const StatusBadge = ({ status }) => {
+  const variants = {
+    PAID: 'bg-emerald-100 text-emerald-700',
+    OVERDUE: 'bg-rose-100 text-rose-700',
+    SENT: 'bg-blue-100 text-blue-700',
+    DRAFT: 'bg-slate-100 text-slate-600',
+    PARTIALLY_PAID: 'bg-amber-100 text-amber-700',
+  };
+  return <Badge className={`${variants[status] || 'bg-slate-100'} shadow-none`}>{status}</Badge>;
+};
 
 const InvoiceCenter = () => {
-    const [invoices, setInvoices] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [tab, setTab] = useState('all');
+  const [posOpen, setPosOpen] = useState(false);
 
-    useEffect(() => {
-        const fetchInvoices = async () => {
-            try {
-                const res = await financeApi.getInvoices();
-                setInvoices(res.data.data || []);
-            } catch (e) {
-                console.error('Failed to fetch invoices', e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchInvoices();
-    }, []);
+  const fetchInvoices = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await financeApi.getInvoices();
+      setInvoices(res.data.data || []);
+    } catch (e) {
+      setError('Failed to load invoices.');
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    const StatusBadge = ({ status }) => {
-        const variants = {
-            'PAID': 'bg-emerald-100 text-emerald-700',
-            'OVERDUE': 'bg-rose-100 text-rose-700',
-            'SENT': 'bg-blue-100 text-blue-700',
-            'DRAFT': 'bg-slate-100 text-slate-600',
-            'PARTIALLY_PAID': 'bg-amber-100 text-amber-700'
-        };
-        return <Badge className={`${variants[status] || 'bg-slate-100'} hover:bg-opacity-80 shadow-none`}>{status}</Badge>;
-    };
+  useEffect(() => { fetchInvoices(); }, [fetchInvoices]);
 
-    return (
-        <div className="flex flex-col gap-6 p-4 md:p-8 bg-slate-50 min-h-screen">
-            <div className="flex justify-between items-center">
-                <PageHeader
-                    title="Invoice Center"
-                    subtitle="Manage multi-stream billing, POS receipts, and service contracts"
-                />
-                <div className="flex gap-2">
-                    <Button variant="outline" className="bg-white"><Receipt className="mr-2 h-4 w-4" /> POS Entry</Button>
-                    <Button className="bg-indigo-600 hover:bg-indigo-700"><Plus className="mr-2 h-4 w-4" /> Service Invoice</Button>
-                </div>
-            </div>
+  const filtered = useMemo(() => {
+    if (tab === 'pos') return invoices.filter((i) => i.invoiceType === 'POS');
+    if (tab === 'service') return invoices.filter((i) => i.invoiceType === 'SERVICE');
+    if (tab === 'overdue') return invoices.filter((i) => i.status === 'OVERDUE');
+    return invoices;
+  }, [invoices, tab]);
 
-            <Tabs defaultValue="all" className="w-full">
-                <div className="flex justify-between items-center mb-4">
-                    <TabsList className="bg-slate-100">
-                        <TabsTrigger value="all">All Invoices</TabsTrigger>
-                        <TabsTrigger value="pos">POS Sales</TabsTrigger>
-                        <TabsTrigger value="service">Service Contracts</TabsTrigger>
-                        <TabsTrigger value="overdue">Overdue</TabsTrigger>
-                    </TabsList>
+  const columns = [
+    { accessorKey: 'invoiceNumber', header: 'Invoice #', cell: ({ row }) => <span className="font-mono font-bold">{row.original.invoiceNumber}</span> },
+    { accessorKey: 'clientName', header: 'Customer' },
+    { accessorKey: 'businessUnit', header: 'Unit', cell: ({ row }) => <Badge variant="outline" className="text-[10px]">{row.original.businessUnit}</Badge> },
+    {
+      accessorKey: 'createdAt',
+      header: 'Date',
+      cell: ({ row }) => row.original.createdAt ? new Date(row.original.createdAt).toLocaleDateString() : '—',
+    },
+    {
+      accessorKey: 'totalAmount',
+      header: 'Total',
+      cell: ({ row }) => <span className="font-bold">{formatCurrency(row.original.totalAmount)}</span>,
+    },
+    { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+  ];
 
-                    <div className="flex gap-2">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <Input placeholder="Search invoices..." className="pl-9 h-9 w-64 bg-white" />
-                        </div>
-                        <Button variant="outline" size="sm" className="bg-white h-9"><Filter className="h-4 w-4 mr-2" /> Filter</Button>
-                    </div>
-                </div>
+  const stats = [
+    { title: 'Total Invoices', value: invoices.length, icon: FileText, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+    { title: 'Overdue', value: invoices.filter((i) => i.status === 'OVERDUE').length, icon: FileText, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
+    { title: 'Outstanding', value: formatCurrency(invoices.filter((i) => i.status !== 'PAID').reduce((s, i) => s + (Number(i.totalAmount) || 0), 0)), icon: FileText, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+  ];
 
-                <TabsContent value="all" className="m-0">
-                    <Card className="border-none shadow-sm overflow-hidden">
-                        <CardContent className="p-0">
-                            <Table>
-                                <TableHeader className="bg-slate-50">
-                                    <TableRow>
-                                        <TableHead>Invoice #</TableHead>
-                                        <TableHead>Customer</TableHead>
-                                        <TableHead>Unit</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead className="text-right">Total Amount</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody className="bg-white">
-                                    {invoices.map((inv, i) => (
-                                        <TableRow key={i} className="hover:bg-slate-50 transition-colors">
-                                            <TableCell className="font-mono font-bold text-slate-900">{inv.invoiceNumber}</TableCell>
-                                            <TableCell>{inv.clientName}</TableCell>
-                                            <TableCell><Badge variant="outline" className="text-[10px]">{inv.businessUnit}</Badge></TableCell>
-                                            <TableCell className="text-slate-500">{new Date(inv.createdAt).toLocaleDateString()}</TableCell>
-                                            <TableCell className="text-right font-bold">{formatCurrency(inv.totalAmount)}</TableCell>
-                                            <TableCell><StatusBadge status={inv.status} /></TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="icon" className="h-8 w-8"><ArrowRight className="h-4 w-4" /></Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {invoices.length === 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={7} className="text-center py-20">
-                                                <div className="flex flex-col items-center gap-2 text-slate-400">
-                                                    <FileText className="h-10 w-10 opacity-20" />
-                                                    <p className="italic">No invoices found. Generate your first POS or Service invoice above.</p>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-        </div>
-    );
+  return (
+    <EnterprisePage
+      title="Invoice Center"
+      subtitle="Multi-stream billing from pharmacy POS, services, training, and consultancy"
+      breadcrumbs={['Finance', 'Invoices']}
+      loading={loading}
+      error={error}
+      onRetry={fetchInvoices}
+      onRefresh={fetchInvoices}
+      stats={stats}
+      exportData={filtered}
+      exportColumns={columns}
+      exportFilename="invoices"
+      exportElementId="invoice-table"
+      exportTitle="Invoice Report"
+      actions={
+        <Button className="bg-primary hover:bg-primary/90" onClick={() => setPosOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> POS Invoice
+        </Button>
+      }
+    >
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="bg-slate-100 mb-6">
+          <TabsTrigger value="all">All ({invoices.length})</TabsTrigger>
+          <TabsTrigger value="pos">POS</TabsTrigger>
+          <TabsTrigger value="service">Service</TabsTrigger>
+          <TabsTrigger value="overdue">Overdue</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={tab} className="m-0">
+          <div id="invoice-table">
+            {filtered.length === 0 ? (
+              <EmptyState
+                icon={FileText}
+                title="No invoices found"
+                description="Generate a POS invoice or create a service invoice to get started."
+                actionLabel="Create POS Invoice"
+                action={() => setPosOpen(true)}
+              />
+            ) : (
+              <DataTable columns={columns} data={filtered} searchable pagination pageSize={15} />
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <POSInvoiceDialog open={posOpen} onOpenChange={setPosOpen} onSuccess={fetchInvoices} />
+    </EnterprisePage>
+  );
 };
 
 export default InvoiceCenter;

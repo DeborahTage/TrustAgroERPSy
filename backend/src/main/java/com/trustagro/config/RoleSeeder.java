@@ -10,59 +10,55 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Seeds the roles table with the enterprise permission matrix on first startup.
- * Existing roles are updated with latest permissions.
- */
 @Component
 public class RoleSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(RoleSeeder.class);
-
     private final RoleRepository roleRepository;
 
     public RoleSeeder(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
     }
 
-    private static final Map<String, List<String>> ROLE_PERMISSIONS = Map.of(
-        "ADMIN", List.of("*"),
-        "GENERAL_MANAGER", List.of(
-            "farms:read","flocks:read","daily_records:read","inventory:read","veterinary:read",
-            "pharmacy_sales:read","finance:read","revenue:read","costs:read","invoices:read",
-            "payroll:read","reports:read","reports:export","users:read","settings:read","audit:read"
-        ),
-        "OPERATIONS_MANAGER", List.of(
-            "farms:read","farms:manage","flocks:read","daily_records:read","daily_records:approve",
-            "inventory:read","veterinary:read","reports:read","users:read","notifications:read"
-        ),
-        "FARM_MANAGER", List.of(
-            "farms:read","flocks:read","flocks:write","daily_records:read","daily_records:write",
-            "daily_records:approve","inventory:read","veterinary:read","biosecurity:read",
-            "reports:read","notifications:read"
-        ),
-        "VETERINARY_OFFICER", List.of(
-            "farms:read","flocks:read","daily_records:read","veterinary:read","veterinary:write",
-            "disease_cases:read","disease_cases:write","vaccinations:read","vaccinations:write",
-            "vaccinations:administer","prescriptions:read","prescriptions:write","treatments:read",
-            "treatments:write","biosecurity:read","biosecurity:write","inventory:read",
-            "reports:read","notifications:read"
-        ),
-        "STORE_KEEPER", List.of(
+    private static final Map<String, List<String>> ROLE_PERMISSIONS = Map.ofEntries(
+        Map.entry("ADMIN", List.of("*")),
+        Map.entry("FARM_MANAGER", List.of(
+            "farms:read","farms:write","flocks:read","flocks:write",
+            "daily_records:read","daily_records:write","chicken_sales:read","chicken_sales:write",
+            "reports:read","notifications:read","settings:read"
+        )),
+        Map.entry("INVENTORY_MANAGER", List.of(
             "inventory:read","inventory:write","stock_in:write","stock_out:write",
-            "suppliers:read","suppliers:write","reports:read","notifications:read"
-        ),
-        "PHARMACY_SALES", List.of(
-            "pharmacy_sales:read","pharmacy_sales:write","inventory:read","notifications:read"
-        ),
-        "FINANCE_OFFICER", List.of(
-            "finance:read","finance:write","revenue:read","revenue:write","costs:read","costs:write",
-            "invoices:read","invoices:write","payroll:read","payroll:write","reports:read",
-            "reports:export","inventory:read","notifications:read"
-        ),
-        "EXTENSION_WORKER", List.of(
-            "daily_records:write","flocks:read","notifications:read"
-        )
+            "suppliers:read","suppliers:write","reports:read","notifications:read","settings:read"
+        )),
+        Map.entry("PHARMACIST", List.of(
+            "pharmacy_sales:read","pharmacy_sales:write","inventory:read",
+            "notifications:read","settings:read"
+        )),
+        Map.entry("VETERINARIAN", List.of(
+            "flocks:read","veterinary:read","veterinary:write",
+            "disease_cases:read","disease_cases:write","vaccinations:read","vaccinations:write",
+            "prescriptions:read","prescriptions:write","treatments:read","treatments:write",
+            "reports:read","notifications:read","settings:read"
+        )),
+        Map.entry("FINANCE", List.of(
+            "finance:read","finance:write","revenue:read","revenue:write",
+            "costs:read","costs:write","invoices:read","invoices:write",
+            "reports:read","reports:export","notifications:read","settings:read"
+        )),
+        Map.entry("CRM_MANAGER", List.of(
+            "crm:read","crm:write","leads:read","leads:write",
+            "pipeline:read","pipeline:write","orders:read","orders:write",
+            "consultancy:read","consultancy:write","training:read",
+            "notifications:read","settings:read"
+        )),
+        Map.entry("MARKETING", List.of(
+            "marketing:read","marketing:write","campaigns:read","campaigns:write",
+            "leads:read","leads:write","reports:read","notifications:read","settings:read"
+        )),
+        Map.entry("TRAINING_OFFICER", List.of(
+            "training:read","training:write","notifications:read","settings:read"
+        ))
     );
 
     @Override
@@ -77,7 +73,7 @@ public class RoleSeeder implements CommandLineRunner {
                     });
             role.setPermissions(permissions);
             roleRepository.save(role);
-            log.info("Seeded role: {} with {} permissions", roleName, permissions.size());
+            log.info("Seeded role: {} ({} permissions)", roleName, permissions.size());
         });
     }
 }

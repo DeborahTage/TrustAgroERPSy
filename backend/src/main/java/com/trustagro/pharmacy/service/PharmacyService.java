@@ -15,6 +15,8 @@ import com.trustagro.pharmacy.dto.PosSaleRequest;
 import com.trustagro.pharmacy.dto.SaleItemDto;
 import com.trustagro.pharmacy.entity.*;
 import com.trustagro.pharmacy.repository.*;
+import com.trustagro.notification.service.NotificationService;
+import com.trustagro.user.entity.Role;
 import com.trustagro.user.entity.User;
 import com.trustagro.veterinary.entity.Prescription;
 import com.trustagro.veterinary.repository.PrescriptionRepository;
@@ -49,6 +51,7 @@ public class PharmacyService {
     private final StockMovementRepository stockMovementRepository;
     private final FinanceService financeService;
     private final InventoryService inventoryService;
+    private final NotificationService notificationService;
 
     public PharmacyService(PharmacyPatientRepository patientRepository,
                            PharmacyPrescriptionRepository rxRepository,
@@ -63,7 +66,8 @@ public class PharmacyService {
                            StockBatchRepository stockBatchRepository,
                            StockMovementRepository stockMovementRepository,
                            FinanceService financeService,
-                           InventoryService inventoryService) {
+                           InventoryService inventoryService,
+                           NotificationService notificationService) {
         this.patientRepository = patientRepository;
         this.rxRepository = rxRepository;
         this.rxItemRepository = rxItemRepository;
@@ -78,6 +82,7 @@ public class PharmacyService {
         this.stockMovementRepository = stockMovementRepository;
         this.financeService = financeService;
         this.inventoryService = inventoryService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -252,27 +257,23 @@ public class PharmacyService {
 
         for (SaleItemDto itemDto : request.getItems()) {
             InventoryItem item = inventoryItemRepository.findById(itemDto.getItemId()).orElseThrow();
-            
-            // PRESCRIPTION GUARD
-            if (Boolean.TRUE.equals(item.getIsControlled()) && sale.getPrescription() == null) {
+
+            if (Boolean.TRUE.equals(item.getIsControlled()) && sale.getPrescription() == null
+                    && (request.getPrescriptionNumber() == null || request.getPrescriptionNumber().isBlank())) {
                 throw new IllegalStateException("Sale blocked: " + item.getItemName() + " requires a prescription.");
             }
 
-            // Deduct Stock
             Map<String, Object> outResult = inventoryService.stockOut(
-                itemDto.getItemId(), 
-                itemDto.getQty().doubleValue(), 
-                "PHARMACY_SALE", 
-                null, 
+                itemDto.getItemId(),
+                itemDto.getQty().doubleValue(),
+                "SALE",
+                null,
                 user
             );
 
-            // Tiered Pricing logic
-            BigDecimal unitPrice = item.getRetailPrice();
-            if (sale.getPriceType() == PriceType.WHOLESALE && item.getWholesalePrice() != null) {
-                unitPrice = item.getWholesalePrice();
-            } else if (sale.getPriceType() == PriceType.PARTNER && item.getPartnerPrice() != null) {
-                unitPrice = item.getPartnerPrice();
+            BigDecimal unitPrice = resolveUnitPrice(item, sale.getPriceType(), itemDto.getUnitPrice());
+            if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalStateException("Item " + item.getItemName() + " has no valid selling price. Update inventory pricing first.");
             }
 
             BigDecimal lineTotal = unitPrice.multiply(itemDto.getQty());
@@ -316,12 +317,32 @@ public class PharmacyService {
 
         PharmacySale savedSale = saleRepository.save(sale);
 
-        // Revenue Log
-        financeService.postRevenue(total, request.getBusinessUnit(), "4200", 
+        financeService.postRevenue(total, com.trustagro.finance.entity.BusinessUnit.PHARMACY, "4200",
                 "Sale: " + savedSale.getSaleCode(), "PHARMACY", "PHARMACY_SALE", savedSale.getId());
 
+        notificationService.createRoleNotification(
+                "Pharmacy Sale Completed",
+                String.format("Sale %s recorded: ETB %s (%d items)", savedSale.getSaleCode(), total, saleItems.size()),
+                Role.FINANCE);
+        notificationService.createRoleNotification(
+                "Revenue Recorded",
+                String.format("POS sale %s posted to finance ledger", savedSale.getSaleCode()),
+                Role.GENERAL_MANAGER);
 
         return savedSale;
+    }
+
+    private BigDecimal resolveUnitPrice(InventoryItem item, PriceType priceType, BigDecimal clientPrice) {
+        if (clientPrice != null && clientPrice.compareTo(BigDecimal.ZERO) > 0) {
+            return clientPrice;
+        }
+        BigDecimal unitPrice = item.getRetailPrice();
+        if (priceType == PriceType.WHOLESALE && item.getWholesalePrice() != null) {
+            unitPrice = item.getWholesalePrice();
+        } else if (priceType == PriceType.PARTNER && item.getPartnerPrice() != null) {
+            unitPrice = item.getPartnerPrice();
+        }
+        return unitPrice != null ? unitPrice : BigDecimal.ZERO;
     }
 
     public Map<String, Object> getDashboardStats() {

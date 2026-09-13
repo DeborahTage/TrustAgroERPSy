@@ -43,24 +43,8 @@ public class AuthService {
     }
 
     private List<String> resolvePermissions(Role role) {
-        // Map enum role name to DB role name
-        String roleName = toDisplayName(role);
-        return roleRepository.findByName(roleName)
+        return roleRepository.findByName(role.name())
                 .map(RoleEntity::getPermissions)
                 .orElseGet(() -> role == Role.ADMIN ? List.of("*") : List.of());
-    }
-
-    private String toDisplayName(Role role) {
-        return switch (role) {
-            case ADMIN -> "Admin";
-            case GENERAL_MANAGER -> "General Manager";
-            case OPERATIONS_MANAGER -> "Operations Manager";
-            case FARM_MANAGER -> "Farm Manager";
-            case VETERINARY_OFFICER -> "Veterinary Officer";
-            case STORE_KEEPER -> "Store Keeper";
-            case PHARMACY_SALES -> "Pharmacy Sales";
-            case FINANCE_OFFICER -> "Finance Officer";
-            case EXTENSION_WORKER -> "Extension Worker";
-        };
     }
 }

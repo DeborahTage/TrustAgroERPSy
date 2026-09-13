@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { pharmacyApi, inventoryApi } from '../../api';
-import PageHeader from '../../components/shared/PageHeader';
-import PageContainer from '../../components/layout/PageContainer';
-import StatsCard from '../../components/shared/StatsCard';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 import DataTable from '../../components/shared/DataTable';
 import StatusBadge from '../../components/shared/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -44,10 +42,10 @@ const PharmacyOverview = () => {
             const [dashRes, rxRes, itemsRes] = await Promise.all([
                 pharmacyApi.getDashboard(),
                 pharmacyApi.getPrescriptions(),
-                inventoryApi.getItems()
+                pharmacyApi.getPharmacyCatalog()
             ]);
             setDashData({
-                ...dashRes.data,
+                ...(dashRes.data?.data || dashRes.data || {}),
                 pending_rx_list: rxRes.data?.data || []
             });
             setItems(itemsRes.data?.data || []);
@@ -66,6 +64,15 @@ const PharmacyOverview = () => {
 
     const lowStockCount = items.filter(i => (i.currentStock || 0) <= (i.minimumStockLevel || 0)).length;
 
+    const expiringCount = items.filter(i => i.expiryDate && new Date(i.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length;
+
+    const getStockStatus = (item) => {
+        if ((item.currentStock || 0) <= 0) return 'out_of_stock';
+        if (item.expiryDate && new Date(item.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)) return 'expiring_soon';
+        if ((item.currentStock || 0) <= (item.minimumStockLevel || item.reorderPoint || 0)) return 'low_stock';
+        return 'in_stock';
+    };
+
     const kpis = [
         {
             title: "Today's Revenue",
@@ -76,34 +83,41 @@ const PharmacyOverview = () => {
             bgColor: 'bg-emerald-50'
         },
         {
-            title: "Monthly Volume",
+            title: 'Monthly Revenue',
             value: formatCurrency(dashData.revenue_month || 0),
-            description: `Targeting 15% growth`,
+            description: `${dashData.sales_count_month || 0} sales this month`,
             icon: TrendingUp,
-            iconColor: 'text-indigo-600',
-            bgColor: 'bg-indigo-50'
+            iconColor: 'text-primary',
+            bgColor: 'bg-primary/10'
         },
         {
-            title: 'Current Valuation',
+            title: 'Inventory Value',
             value: formatCurrency(inventoryValue),
-            description: `${items.length} unique products`,
+            description: `${items.length} products monitored`,
             icon: Package,
             iconColor: 'text-blue-600',
             bgColor: 'bg-blue-50'
         },
         {
-            title: 'Active Alerts',
-            value: lowStockCount,
-            description: 'Items below threshold',
+            title: 'Alerts',
+            value: lowStockCount + expiringCount,
+            description: `${lowStockCount} low stock · ${expiringCount} expiring`,
             icon: AlertTriangle,
             iconColor: 'text-amber-600',
             bgColor: 'bg-amber-50',
-            trend: lowStockCount > 0 ? 'up' : 'none',
-            trendValue: lowStockCount
         }
     ];
 
     const columns = useMemo(() => [
+        {
+            accessorKey: 'category',
+            header: 'Category',
+            cell: ({ row }) => (
+                <Badge variant="secondary" className="text-[10px] font-bold uppercase">
+                    {row.original.category?.replace('_', ' ') || 'N/A'}
+                </Badge>
+            )
+        },
         {
             accessorKey: 'itemName',
             header: 'Product',
@@ -121,7 +135,7 @@ const PharmacyOverview = () => {
         },
         {
             accessorKey: 'currentStock',
-            header: 'On-Hand',
+            header: 'Stock',
             cell: ({ row }) => (
                 <span className={cn(
                     "font-black",
@@ -133,8 +147,18 @@ const PharmacyOverview = () => {
         },
         {
             accessorKey: 'retailPrice',
-            header: 'Retail Price',
-            cell: ({ row }) => <span className="font-bold text-indigo-600">{formatCurrency(row.original.retailPrice || row.original.sellingPrice)}</span>
+            header: 'Unit Price',
+            cell: ({ row }) => <span className="font-bold text-primary">{formatCurrency(row.original.retailPrice || row.original.sellingPrice)}</span>
+        },
+        {
+            id: 'batch',
+            header: 'Batch',
+            cell: ({ row }) => <span className="text-xs font-mono text-gray-600">{row.original.batchNumber || '—'}</span>
+        },
+        {
+            id: 'expiry',
+            header: 'Expiry',
+            cell: ({ row }) => <span className="text-xs text-gray-600">{row.original.expiryDate || '—'}</span>
         },
         {
             id: 'invValue',
@@ -148,58 +172,44 @@ const PharmacyOverview = () => {
             accessorKey: 'status',
             header: 'Stock Status',
             cell: ({ row }) => {
-                let status = 'in_stock';
-                if (row.original.currentStock <= 0) status = 'out_of_stock';
-                else if (row.original.currentStock <= row.original.minimumStockLevel) status = 'low_stock';
+                const status = getStockStatus(row.original);
                 return <StatusBadge status={status} />
             }
         }
     ], []);
 
     if (loading) {
-        return (
-            <PageContainer>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />)}
-                </div>
-            </PageContainer>
-        );
+        return <EnterprisePage title="Pharmacy Terminal" subtitle="Loading..." breadcrumbs={['Pharmacy']} loading />;
     }
 
     return (
-        <PageContainer>
-            <PageHeader
-                title="Pharmacy Terminal"
-                subtitle="End-to-end medical sales and fulfillment oversight."
-                breadcrumbs={['Pharmacy', 'Command Center']}
-            >
-                <div className="flex gap-2">
-                    <Button variant="outline" className="h-11 rounded-xl font-bold border-gray-200" onClick={fetchAll} disabled={refreshing}>
-                        <RefreshCw className={cn("mr-2 h-4 w-4", refreshing && "animate-spin")} />
-                        Sync Data
+        <EnterprisePage
+            title="Pharmacy Terminal"
+            subtitle="End-to-end medical sales and fulfillment oversight"
+            breadcrumbs={['Pharmacy', 'Command Center']}
+            onRefresh={fetchAll}
+            stats={kpis}
+            actions={
+                <>
+                    <Button variant="outline" onClick={fetchAll} disabled={refreshing}>
+                        <RefreshCw className={cn('mr-2 h-4 w-4', refreshing && 'animate-spin')} />
+                        Sync
                     </Button>
-                    <Button className="h-11 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100" onClick={() => navigate('/pharmacy/pos')}>
-                        <Plus className="mr-2 h-4 w-4 stroke-[3px]" />
-                        New POS Sale
+                    <Button className="bg-primary hover:bg-primary/90" onClick={() => navigate('/pharmacy/pos')}>
+                        <Plus className="mr-2 h-4 w-4" /> New POS Sale
                     </Button>
-                </div>
-            </PageHeader>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {kpis.map((kpi, i) => (
-                    <StatsCard key={i} {...kpi} />
-                ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+                </>
+            }
+        >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                     <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
                         <CardHeader className="border-b border-gray-50 flex flex-row items-center justify-between px-8 py-6">
                             <CardTitle className="text-base font-black uppercase tracking-tight text-gray-900 flex items-center gap-2">
-                                <Package className="h-4.5 w-4.5 text-indigo-600" />
+                                <Package className="h-4.5 w-4.5 text-primary" />
                                 Drugs & Supply Monitoring
                             </CardTitle>
-                            <Badge className="bg-indigo-50 text-indigo-600 border-none font-bold">Live Catalog</Badge>
+                            <Badge className="bg-primary/10 text-primary border-none font-bold">Live Catalog</Badge>
                         </CardHeader>
                         <CardContent className="p-0">
                             <DataTable columns={columns} data={items} pageSize={5} searchable />
@@ -221,7 +231,7 @@ const PharmacyOverview = () => {
                     </Card>
                 </div>
             </div>
-        </PageContainer>
+        </EnterprisePage>
     );
 };
 

@@ -13,7 +13,7 @@ const PrescriptionQueue = ({ prescriptions, loading }) => {
     if (loading) {
         return (
             <div className="py-12 flex justify-center items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
         );
     }
@@ -46,7 +46,7 @@ const PrescriptionQueue = ({ prescriptions, loading }) => {
                                 <span className="text-[10px] text-gray-400 italic">via {rx.administrationRoute}</span>
                             </div>
                         </TableCell>
-                        <TableCell className="font-bold text-indigo-600">{rx.quantity} <span className="text-[10px] text-gray-400 font-normal">units</span></TableCell>
+                        <TableCell className="font-bold text-primary">{rx.quantity} <span className="text-[10px] text-gray-400 font-normal">units</span></TableCell>
                         <TableCell>
                             <Badge className={cn(
                                 "text-[10px] h-5",
@@ -61,7 +61,7 @@ const PrescriptionQueue = ({ prescriptions, loading }) => {
                                     e.stopPropagation();
                                     navigate(`/pharmacy/process-rx?rxId=${rx.id}`);
                                 }}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ml-auto"
+                                className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 ml-auto"
                             >
                                 <ArrowUpRight className="h-3 w-3" /> Process
                             </button>

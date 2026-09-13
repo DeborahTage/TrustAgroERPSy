@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,8 +19,20 @@ public class WalletController {
 
     private final WalletService walletService;
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','FINANCE','GENERAL_MANAGER')")
+    public ResponseEntity<ApiResponse<List<CustomerWallet>>> getAll() {
+        return ResponseEntity.ok(ApiResponse.success(walletService.getAllWallets()));
+    }
+
+    @GetMapping("/summary")
+    @PreAuthorize("hasAnyRole('ADMIN','FINANCE','GENERAL_MANAGER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getSummary() {
+        return ResponseEntity.ok(ApiResponse.success(walletService.getWalletSummary()));
+    }
+
     @PostMapping("/deposit")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE_OFFICER', 'CASHIER')")
+    @PreAuthorize("hasAnyRole('ADMIN','FINANCE')")
     public ResponseEntity<ApiResponse<CustomerWallet>> deposit(@RequestBody Map<String, Object> req) {
         CustomerWallet wallet = walletService.deposit(
                 Long.valueOf(req.get("clientId").toString()),

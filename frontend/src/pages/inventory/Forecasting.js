@@ -1,87 +1,133 @@
-import React, { useState, useEffect } from 'react';
-import axios from '../../api/axios';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { inventoryApi } from '../../api';
+import EnterprisePage from '../../components/layout/EnterprisePage';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { TrendingUp, TrendingDown, Package, ShoppingCart } from 'lucide-react';
+import { cn } from '../../lib/utils';
+import api from '../../api/axios';
 
 export default function Forecasting() {
-    const [items, setItems] = useState([]);
-    const [selectedId, setSelectedId] = useState('');
-    const [forecast, setForecast] = useState(null);
-    const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [selectedId, setSelectedId] = useState('');
+  const [forecast, setForecast] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        axios.get('/api/inventory/items').then(r => setItems(r.data || [])).catch(() => { });
-    }, []);
+  const loadItems = useCallback(async () => {
+    setFetching(true);
+    try {
+      const r = await inventoryApi.getItems();
+      setItems(r.data?.data || r.data || []);
+    } catch {
+      setError('Failed to load inventory items.');
+    } finally {
+      setFetching(false);
+    }
+  }, []);
 
-    const loadForecast = async (id) => {
-        if (!id) return;
-        setSelectedId(id); setLoading(true);
-        try {
-            const res = await axios.get(`/api/inventory/forecast/${id}`);
-            setForecast(res.data);
-        } catch (e) { setForecast(null); }
-        finally { setLoading(false); }
-    };
+  useEffect(() => { loadItems(); }, [loadItems]);
 
-    return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6">Demand Forecasting</h1>
+  const loadForecast = async (id) => {
+    if (!id) { setSelectedId(''); setForecast(null); return; }
+    setSelectedId(id);
+    setLoading(true);
+    setForecast(null);
+    try {
+      const res = await api.get(`/api/inventory/forecast/${id}`);
+      setForecast(res.data);
+    } catch {
+      setForecast(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            <select onChange={e => loadForecast(e.target.value)} value={selectedId}
-                className="w-full mb-6 border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <option value="">-- Select an inventory item --</option>
-                {items.map(i => <option key={i.id} value={i.id}>{i.itemName} ({i.sku})</option>)}
-            </select>
+  const chartData = forecast ? [
+    { month: 'Now', qty: forecast.predictedDemand || 0 },
+    { month: '+1mo', qty: (forecast.predictedDemand || 0) + (forecast.trend || 0) },
+    { month: '+2mo', qty: (forecast.predictedDemand || 0) + (forecast.trend || 0) * 2 },
+    { month: '+3mo', qty: (forecast.predictedDemand || 0) + (forecast.trend || 0) * 3 },
+  ] : [];
 
-            {loading && <div className="text-center py-10 text-gray-400">Calculating forecast...</div>}
+  const stats = forecast ? [
+    { title: 'Predicted Demand', value: forecast.predictedDemand?.toFixed(1) || '—', icon: Package, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+    { title: 'Trend', value: `${forecast.trend >= 0 ? '+' : ''}${(forecast.trend || 0).toFixed(2)}`, icon: forecast.trend >= 0 ? TrendingUp : TrendingDown, iconColor: forecast.trend >= 0 ? 'text-emerald-600' : 'text-rose-600', bgColor: forecast.trend >= 0 ? 'bg-emerald-50' : 'bg-rose-50' },
+    { title: 'Recommended Order', value: forecast.recommendedOrder?.toFixed(1) || '—', icon: ShoppingCart, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
+    { title: 'Confidence', value: `${((forecast.confidenceScore || 0) * 100).toFixed(0)}%`, icon: TrendingUp, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+  ] : [];
 
-            {forecast && !loading && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white border rounded shadow-sm p-4">
-                        <h2 className="text-lg font-bold mb-4">Forecast Summary</h2>
-                        <div className="space-y-3">
-                            {[
-                                { label: 'Predicted Demand (next month)', value: forecast.predictedDemand?.toFixed(2) },
-                                { label: 'Trend', value: `${forecast.trend >= 0 ? '↑ +' : '↓ '}${Math.abs(forecast.trend || 0).toFixed(2)}`, color: forecast.trend >= 0 ? 'text-green-600' : 'text-red-600' },
-                                { label: 'Confidence Score', value: `${((forecast.confidenceScore || 0) * 100).toFixed(0)}%` },
-                                { label: 'Recommended Order Qty', value: forecast.recommendedOrder?.toFixed(2), color: 'text-blue-700 font-bold text-lg' },
-                            ].map(({ label, value, color }) => (
-                                <div key={label} className="flex justify-between items-center py-2 border-b">
-                                    <span className="text-gray-600 text-sm">{label}</span>
-                                    <span className={`font-semibold ${color || ''}`}>{value}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <button onClick={() => alert('Creating Draft PO for recommended quantity...')}
-                            className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm font-medium">
-                            Create PO for Recommended Qty
-                        </button>
-                    </div>
+  return (
+    <EnterprisePage
+      title="Demand Forecasting"
+      subtitle="Predict consumption and recommended reorder quantities from movement history"
+      breadcrumbs={['Inventory', 'Forecasting']}
+      loading={fetching || loading}
+      error={error}
+      onRetry={loadItems}
+      stats={stats}
+    >
+      <div className="mb-6 max-w-md">
+        <Select value={selectedId || 'none'} onValueChange={(v) => loadForecast(v === 'none' ? '' : v)}>
+          <SelectTrigger><SelectValue placeholder="Select an inventory item" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Select item...</SelectItem>
+            {items.map((i) => <SelectItem key={i.id} value={String(i.id)}>{i.itemName} ({i.sku})</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
 
-                    <div className="bg-white border rounded shadow-sm p-4">
-                        <h2 className="text-lg font-bold mb-4">Projected Demand</h2>
-                        <ResponsiveContainer width="100%" height={220}>
-                            <LineChart data={[
-                                { month: 'Now', qty: forecast.predictedDemand || 0 },
-                                { month: '+1mo', qty: (forecast.predictedDemand || 0) + (forecast.trend || 0) },
-                                { month: '+2mo', qty: (forecast.predictedDemand || 0) + (forecast.trend || 0) * 2 },
-                                { month: '+3mo', qty: (forecast.predictedDemand || 0) + (forecast.trend || 0) * 3 },
-                            ]}>
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                <Tooltip />
-                                <Line type="monotone" dataKey="qty" stroke="#3b82f6" strokeWidth={2} dot={true} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                        <p className="text-xs text-gray-400 mt-2 text-center">Based on moving average algorithm using 90-day sales data</p>
-                    </div>
+      {forecast && !loading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="rounded-2xl border-none shadow-sm">
+            <CardHeader><CardTitle>Forecast Summary</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {[
+                { label: 'Predicted Demand (next month)', value: forecast.predictedDemand?.toFixed(2) },
+                { label: 'Trend', value: `${forecast.trend >= 0 ? '↑ +' : '↓ '}${Math.abs(forecast.trend || 0).toFixed(2)}`, color: forecast.trend >= 0 ? 'text-emerald-600' : 'text-rose-600' },
+                { label: 'Confidence Score', value: `${((forecast.confidenceScore || 0) * 100).toFixed(0)}%` },
+                { label: 'Recommended Order Qty', value: forecast.recommendedOrder?.toFixed(2), color: 'text-primary font-bold' },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="flex justify-between py-2 border-b">
+                  <span className="text-slate-600 text-sm">{label}</span>
+                  <span className={cn('font-semibold', color)}>{value}</span>
                 </div>
-            )}
+              ))}
+              <Button className="w-full mt-4 bg-primary hover:bg-primary/90" onClick={() => navigate('/inventory/po')}>
+                Create Purchase Order
+              </Button>
+            </CardContent>
+          </Card>
 
-            {!forecast && !loading && selectedId && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded p-6 text-yellow-800 text-center">
-                    No historical sales data found for forecasting. Add stock movements to enable predictions.
-                </div>
-            )}
+          <Card className="rounded-2xl border-none shadow-sm">
+            <CardHeader><CardTitle>Projected Demand</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData}>
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="qty" stroke="#4f46e5" strokeWidth={2} dot />
+                </LineChart>
+              </ResponsiveContainer>
+              <p className="text-xs text-slate-500 mt-2 text-center">Based on 90-day movement history</p>
+            </CardContent>
+          </Card>
         </div>
-    );
+      )}
+
+      {!forecast && !loading && selectedId && (
+        <Card className="bg-amber-50 border-amber-200 rounded-2xl">
+          <CardContent className="p-6 text-amber-800 text-center">
+            No historical movement data found. Record stock movements to enable predictions.
+          </CardContent>
+        </Card>
+      )}
+    </EnterprisePage>
+  );
 }

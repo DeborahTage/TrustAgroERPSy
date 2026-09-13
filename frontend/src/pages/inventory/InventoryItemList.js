@@ -72,7 +72,7 @@ const InventoryItemList = () => {
       cell: ({ row }) => (
         <div className="flex flex-col">
           <span className="font-black text-gray-900 truncate max-w-[200px]">{row.original.itemName}</span>
-          <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{row.original.category}</span>
+          <span className="text-[10px] font-black text-primary uppercase tracking-widest">{row.original.category}</span>
         </div>
       )
     },
@@ -120,7 +120,7 @@ const InventoryItemList = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-none shadow-2xl bg-white/95 backdrop-blur-md">
               {canPerformAction('edit', 'inventoryItems') && (
-                <DropdownMenuItem onClick={() => navigate(`/inventory/items/${row.original.id}/edit`)} className="rounded-xl p-3 cursor-pointer hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                <DropdownMenuItem onClick={() => navigate(`/inventory/items/${row.original.id}/edit`)} className="rounded-xl p-3 cursor-pointer hover:bg-primary/10 hover:text-primary transition-all">
                   <Edit className="mr-3 h-4 w-4" />
                   <span className="font-bold text-sm">Edit Details</span>
                 </DropdownMenuItem>
@@ -149,7 +149,7 @@ const InventoryItemList = () => {
       >
         <div className="flex gap-2">
           <Button variant="outline" className="rounded-xl h-11 px-5 font-bold border-gray-200 hover:bg-gray-50" onClick={() => navigate('/inventory/reports')}>
-            <History className="mr-2 h-4 w-4 text-indigo-500" />
+            <History className="mr-2 h-4 w-4 text-primary" />
             Audit Log
           </Button>
           <Button className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11 px-5 font-bold shadow-lg shadow-slate-200 transition-all active:scale-95" onClick={() => navigate('/inventory/items/new')}>
@@ -169,7 +169,7 @@ const InventoryItemList = () => {
         <Tabs defaultValue="all" className="w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <TabsList className="bg-gray-100/50 p-1.5 rounded-2xl h-auto border border-gray-100">
-              <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm rounded-xl px-6 py-2 font-black text-[11px] uppercase tracking-wider transition-all">
+              <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-xl px-6 py-2 font-black text-[11px] uppercase tracking-wider transition-all">
                 All Products
               </TabsTrigger>
               <TabsTrigger value="low" className="data-[state=active]:bg-white data-[state=active]:text-rose-600 data-[state=active]:shadow-sm rounded-xl px-6 py-2 font-black text-[11px] uppercase tracking-wider transition-all">

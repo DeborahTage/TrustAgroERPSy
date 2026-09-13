@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +20,25 @@ public class WalletService {
 
     private final CustomerWalletRepository walletRepository;
     private final WalletTransactionRepository transactionRepository;
+
+    public List<CustomerWallet> getAllWallets() {
+        return walletRepository.findAll();
+    }
+
+    public Map<String, Object> getWalletSummary() {
+        List<CustomerWallet> wallets = walletRepository.findAll();
+        BigDecimal totalDeposits = wallets.stream()
+                .map(CustomerWallet::getBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalExposure = wallets.stream()
+                .map(CustomerWallet::getCreditLimit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("totalDeposits", totalDeposits);
+        summary.put("activeWallets", wallets.size());
+        summary.put("totalExposure", totalExposure);
+        return summary;
+    }
 
     @Transactional
     public CustomerWallet deposit(Long clientId, String clientName, BigDecimal amount) {

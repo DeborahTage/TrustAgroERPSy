@@ -20,8 +20,14 @@ import FlockList from './pages/farm/FlockList';
 import FlockForm from './pages/farm/FlockForm';
 import DailyFarmRecordList from './pages/farm/DailyFarmRecordList';
 import DailyFarmRecordForm from './pages/farm/DailyFarmRecordForm';
+import CrmPage from './pages/crm/CrmPage';
+import CrmLeads from './pages/crm/CrmLeads';
+import CrmPipeline from './pages/crm/CrmPipeline';
+import CrmClientForm from './pages/crm/CrmClientForm';
+import FarmVisitForm from './pages/crm/FarmVisitForm';
+import MarketingPage from './pages/marketing/MarketingPage';
 import BarnDashboard from './pages/farm/BarnDashboard';
-import EggAnalytics from './pages/farm/EggAnalytics';
+import ChickenSales from './pages/farm/ChickenSales';
 import SiloDashboard from './pages/feed/SiloDashboard';
 import FeedRecipeForm from './pages/feed/FeedRecipeForm';
 import OrderDashboard from './pages/crm/OrderDashboard';
@@ -66,9 +72,6 @@ import CashReconciliation from './pages/finance/CashReconciliation';
 import ReportCenter from './pages/finance/ReportCenter';
 import FlockProfitability from './pages/finance/FlockProfitability';
 import TransactionForm from './pages/finance/TransactionForm';
-import CrmPage from './pages/crm/CrmPage';
-import CrmClientForm from './pages/crm/CrmClientForm';
-import FarmVisitForm from './pages/crm/FarmVisitForm';
 import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
 import TrainingPage from './pages/training/TrainingPage';
@@ -109,7 +112,8 @@ function App() {
                 <Route path="flocks" element={<ModuleRoute module="flocks"><FlockList /></ModuleRoute>} />
                 <Route path="flocks/new" element={<ActionRoute action="create" resource="flocks"><FlockForm /></ActionRoute>} />
                 <Route path="flocks/:id/edit" element={<ActionRoute action="edit" resource="flocks"><FlockForm /></ActionRoute>} />
-                <Route path="flocks/:id/eggs" element={<PermissionRoute permission={PERMISSIONS.VIEW_FLOCKS}><EggAnalytics /></PermissionRoute>} />
+
+                <Route path="farm/chicken-sales" element={<ModuleRoute module="chickenSales"><ChickenSales /></ModuleRoute>} />
 
                 <Route path="feed/silos" element={<ModuleRoute module="farms"><SiloDashboard /></ModuleRoute>} />
                 <Route path="feed/recipes" element={<ModuleRoute module="farms"><FeedRecipeForm /></ModuleRoute>} />
@@ -132,6 +136,7 @@ function App() {
                 <Route path="inventory/suppliers" element={<ModuleRoute module="inventory"><SupplierPage /></ModuleRoute>} />
                 <Route path="inventory/reports" element={<PermissionRoute permission={PERMISSIONS.VIEW_INVENTORY_REPORTS}><InventoryReports /></PermissionRoute>} />
                 <Route path="inventory/requisitions" element={<ModuleRoute module="inventory"><RequisitionCenter /></ModuleRoute>} />
+                <Route path="inventory/items" element={<ModuleRoute module="inventory"><InventoryItemList /></ModuleRoute>} />
                 <Route path="inventory/items/new" element={<ActionRoute action="create" resource="inventoryItems"><InventoryItemForm /></ActionRoute>} />
                 <Route path="inventory/items/:id/edit" element={<ActionRoute action="edit" resource="inventoryItems"><InventoryItemForm /></ActionRoute>} />
                 <Route path="inventory/expiry" element={<PermissionRoute permission={PERMISSIONS.VIEW_EXPIRY_MONITORING}><ExpiryTracking /></PermissionRoute>} />
@@ -146,6 +151,7 @@ function App() {
                 <Route path="veterinary/biosecurity/new" element={<PermissionRoute permission={PERMISSIONS.CREATE_DISEASE_CASES}><BiosecurityForm /></PermissionRoute>} />
 
                 {/* Poultry Health EMR Routes */}
+                <Route path="vet/flocks" element={<ModuleRoute module="veterinary"><FlockList /></ModuleRoute>} />
                 <Route path="vet" element={<ModuleRoute module="veterinary"><VeterinaryDashboard /></ModuleRoute>} />
                 <Route path="vet/vaccinations" element={<ModuleRoute module="veterinary"><VaccinationCalendar /></ModuleRoute>} />
                 <Route path="vet/flock-emr/:id" element={<ModuleRoute module="veterinary"><FlockEMR /></ModuleRoute>} />
@@ -169,13 +175,32 @@ function App() {
                 <Route path="finance/new" element={<ProtectedRoute permissions={[PERMISSIONS.CREATE_INCOME, PERMISSIONS.CREATE_EXPENSES]}><TransactionForm /></ProtectedRoute>} />
 
                 <Route path="crm" element={<ModuleRoute module="crm"><CrmPage /></ModuleRoute>} />
+                <Route path="crm/leads" element={<ModuleRoute module="crm"><CrmLeads /></ModuleRoute>} />
+                <Route path="crm/clients" element={<ModuleRoute module="crm"><CrmPage /></ModuleRoute>} />
+                <Route path="crm/pipeline" element={<ModuleRoute module="crm"><CrmPipeline /></ModuleRoute>} />
+                <Route path="crm/follow-ups" element={<ModuleRoute module="crm"><CrmPage /></ModuleRoute>} />
+                <Route path="crm/tasks" element={<ModuleRoute module="crm"><CrmPage /></ModuleRoute>} />
+                <Route path="crm/reports" element={<ModuleRoute module="crm"><OrderDashboard /></ModuleRoute>} />
                 <Route path="crm/clients/new" element={<ActionRoute action="create" resource="customers"><CrmClientForm /></ActionRoute>} />
                 <Route path="crm/clients/:id/edit" element={<PermissionRoute permission={PERMISSIONS.MANAGE_CLIENTS}><CrmClientForm /></PermissionRoute>} />
                 <Route path="crm/visits/new" element={<ActionRoute action="create" resource="farmVisits"><FarmVisitForm /></ActionRoute>} />
 
-                <Route path="training" element={<ModuleRoute module="users"><TrainingPage /></ModuleRoute>} />
+                <Route path="marketing" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
+                <Route path="marketing/campaigns" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
+                <Route path="marketing/leads" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
+                <Route path="marketing/email" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
+                <Route path="marketing/events" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
+                <Route path="marketing/segments" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
+                <Route path="marketing/reports" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
+
+                <Route path="consultancy" element={<ModuleRoute module="consultancy"><CrmPage /></ModuleRoute>} />
+
+                <Route path="training" element={<ModuleRoute module="training"><TrainingPage /></ModuleRoute>} />
+                <Route path="training/sessions" element={<ModuleRoute module="training"><TrainingPage /></ModuleRoute>} />
+                <Route path="training/students" element={<ModuleRoute module="training"><TrainingPage /></ModuleRoute>} />
+                <Route path="training/certificates" element={<ModuleRoute module="training"><TrainingPage /></ModuleRoute>} />
                 <Route path="reports" element={<ModuleRoute module="reports"><Reports /></ModuleRoute>} />
-                <Route path="settings" element={<Settings />} />
+                <Route path="settings" element={<PermissionRoute permission={PERMISSIONS.VIEW_SETTINGS}><Settings /></PermissionRoute>} />
               </Route>
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>

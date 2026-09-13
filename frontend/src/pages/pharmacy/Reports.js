@@ -1,32 +1,76 @@
-import React from 'react';
-
-function ReportCard({ title, description, onClick }) {
-    return (
-        <div className="bg-white p-6 rounded shadow-sm border hover:shadow-md cursor-pointer transition" onClick={onClick}>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
-            <p className="text-gray-600 text-sm">{description}</p>
-            <div className="mt-4 text-blue-600 text-sm font-semibold">Generate &rarr;</div>
-        </div>
-    );
-}
+import React, { useCallback, useEffect, useState } from 'react';
+import { pharmacyApi } from '../../api';
+import EnterprisePage from '../../components/layout/EnterprisePage';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { formatCurrency } from '../../utils';
+import DataTable from '../../components/shared/DataTable';
+import { DollarSign, Package, Pill, TrendingUp } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export default function PharmacyReports() {
+  const [dashboard, setDashboard] = useState(null);
+  const [sales, setSales] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    const generateReport = (type) => {
-        alert(`Generating ${type} report... (Feature in development)`);
-    };
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [dashRes, salesRes] = await Promise.all([
+        pharmacyApi.getDashboard(),
+        pharmacyApi.getSales(),
+      ]);
+      setDashboard(dashRes.data?.data || dashRes.data || {});
+      setSales(salesRes.data?.data || salesRes.data || []);
+    } catch {
+      setError('Failed to load pharmacy reports.');
+      toast.error('Failed to load pharmacy reports');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6">Pharmacy Reports</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <ReportCard title="Sales Report" description="Overview of Daily, Weekly, and Monthly over-the-counter and Rx sales." onClick={() => generateReport('sales')} />
-                <ReportCard title="Drug Utilization" description="Analyze the most and least utilized veterinary drugs." onClick={() => generateReport('utilization')} />
-                <ReportCard title="Inventory Valuation" description="Calculated value of current stock within the pharmacy." onClick={() => generateReport('valuation')} />
-                <ReportCard title="Expiry Report" description="Upcoming expiries and expired drugs ready for disposal." onClick={() => generateReport('expiry')} />
-                <ReportCard title="Prescription Analysis" description="Aggregated trends of prescriptions by veterinary officers and flock patterns." onClick={() => generateReport('prescriptions')} />
-                <ReportCard title="Financial Summary" description="High-level dashboard metric extracts (Revenue, Costs, Profit margins)." onClick={() => generateReport('financial')} />
-            </div>
-        </div>
-    );
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const stats = dashboard ? [
+    { title: 'Revenue Today', value: formatCurrency(dashboard.revenue_today || dashboard.revenueToday || 0), icon: DollarSign, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: 'Sales Today', value: dashboard.sales_count_today || dashboard.salesCountToday || 0, icon: TrendingUp, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+    { title: 'Pending Rx', value: dashboard.pending_prescriptions || dashboard.pendingPrescriptions || 0, icon: Pill, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { title: 'Catalog Items', value: dashboard.catalog_count || dashboard.catalogCount || '—', icon: Package, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
+  ] : [];
+
+  const columns = [
+    { accessorKey: 'saleNumber', header: 'Sale #' },
+    { accessorKey: 'customerName', header: 'Customer', cell: ({ row }) => row.original.customerName || row.original.customer?.name || 'Walk-in' },
+    { accessorKey: 'totalAmount', header: 'Amount', cell: ({ row }) => formatCurrency(row.original.totalAmount || row.original.total) },
+    { accessorKey: 'paymentMethod', header: 'Payment' },
+    { accessorKey: 'saleDate', header: 'Date' },
+  ];
+
+  return (
+    <EnterprisePage
+      title="Pharmacy Reports"
+      subtitle="Sales performance and dispensing analytics from live pharmacy data"
+      breadcrumbs={['Pharmacy', 'Reports']}
+      loading={loading}
+      error={error}
+      onRetry={fetchData}
+      onRefresh={fetchData}
+      stats={stats}
+      exportData={sales}
+      exportColumns={columns}
+      exportFilename="pharmacy_sales"
+    >
+      <Card className="rounded-2xl border-none shadow-sm">
+        <CardHeader>
+          <CardTitle>Recent Sales</CardTitle>
+          <CardDescription>Transactions recorded in the pharmacy module</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataTable columns={columns} data={sales} loading={loading} pageSize={10} />
+        </CardContent>
+      </Card>
+    </EnterprisePage>
+  );
 }

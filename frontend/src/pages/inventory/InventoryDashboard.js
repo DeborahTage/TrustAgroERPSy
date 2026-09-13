@@ -2,9 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi } from '../../api';
-import StatsCard from '../../components/shared/StatsCard';
-import PageHeader from '../../components/shared/PageHeader';
-import PageContainer from '../../components/layout/PageContainer';
+import EnterprisePage from '../../components/layout/EnterprisePage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -33,13 +31,13 @@ export default function InventoryDashboard() {
 
   const isIM = user?.role === 'STORE_KEEPER' || user?.role === 'ADMIN';
 
-  const { data = {}, isLoading } = useQuery({
+  const { data = {}, isLoading, isError, refetch } = useQuery({
     queryKey: ['inventory-dashboard'],
     queryFn: async () => {
       const res = await inventoryApi.getDashboardStats();
       return res.data || {};
     },
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 30000,
   });
 
   const kpiCards = [
@@ -48,9 +46,8 @@ export default function InventoryDashboard() {
       value: formatCurrency(data.total_value || 0),
       description: 'Working capital in stock',
       icon: DollarSign,
-      iconColor: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-      trend: { value: '+2.4%', isPositive: true }
+      iconColor: 'text-primary',
+      bgColor: 'bg-primary/10',
     },
     {
       title: 'Inventory Turnover',
@@ -95,38 +92,33 @@ export default function InventoryDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <Activity className="h-12 w-12 animate-spin text-indigo-600 stroke-[3px]" />
-      </div>
+      <EnterprisePage
+        title="Inventory Control Center"
+        subtitle="Operational intelligence and supply chain management for Trust Agro."
+        breadcrumbs={['Inventory', 'Dashboard']}
+        loading
+      />
     );
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Inventory Control Center"
-        subtitle="Operational intelligence and supply chain management for Trust Agro."
-        breadcrumbs={['Inventory', 'Dashboard']}
-      >
-        <div className="flex gap-3">
-          <Button variant="outline" className="h-11 rounded-xl bg-white border-slate-200 font-bold">
-            <Layers className="mr-2 h-4 w-4" /> Stock Valuation
+    <EnterprisePage
+      title="Inventory Control Center"
+      subtitle="Operational intelligence and supply chain management for Trust Agro."
+      breadcrumbs={['Inventory', 'Dashboard']}
+      stats={kpiCards}
+      onRefresh={refetch}
+      error={isError ? 'Failed to load inventory dashboard.' : null}
+      onRetry={refetch}
+      actions={
+        isIM ? (
+          <Button className="h-11 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/10 font-black tracking-tight" onClick={() => navigate('/inventory/stock-in')}>
+            <PlusCircle className="mr-2 h-5 w-5 stroke-[3px]" />
+            Record Reception (GRN)
           </Button>
-          {isIM && (
-            <Button className="h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 font-black tracking-tight" onClick={() => navigate('/inventory/stock-in')}>
-              <PlusCircle className="mr-2 h-5 w-5 stroke-[3px]" />
-              Record Reception (GRN)
-            </Button>
-          )}
-        </div>
-      </PageHeader>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        {kpiCards.map((card, i) => (
-          <StatsCard key={i} {...card} />
-        ))}
-      </div>
-
+        ) : null
+      }
+    >
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Left Column: Movement Analytics */}
         <div className="xl:col-span-2 space-y-8">
@@ -139,7 +131,7 @@ export default function InventoryDashboard() {
                 </div>
                 <div className="flex gap-4">
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-indigo-600" />
+                    <div className="h-3 w-3 rounded-full bg-primary" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Inbound</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -188,7 +180,7 @@ export default function InventoryDashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={data.category_stats || []}
+                        data={data.category_stats?.map((c) => ({ name: c.category, value: c.value })) || []}
                         innerRadius={70}
                         outerRadius={90}
                         paddingAngle={8}
@@ -250,7 +242,7 @@ export default function InventoryDashboard() {
                 className="h-20 rounded-2xl bg-slate-800 border-none hover:bg-slate-700 justify-start px-6 group transition-all"
                 onClick={() => navigate('/inventory/requisitions')}
               >
-                <div className="h-10 w-10 rounded-xl bg-indigo-500 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                <div className="h-10 w-10 rounded-xl bg-primary/100 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
                   <ArrowRightLeft className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex flex-col items-start">
@@ -280,7 +272,7 @@ export default function InventoryDashboard() {
           <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
             <CardHeader className="p-8 pb-4">
               <CardTitle className="text-sm font-black text-slate-900 flex items-center gap-3">
-                <History className="h-5 w-5 text-indigo-600" /> Operational Log
+                <History className="h-5 w-5 text-primary" /> Operational Log
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -292,7 +284,7 @@ export default function InventoryDashboard() {
                       <div className={cn(
                         "h-6 w-6 rounded-full border-[6px] border-white z-10 mt-1 shadow-sm shrink-0",
                         log.action === 'RECEIPT' ? 'bg-emerald-500' :
-                          log.action === 'SALE' ? 'bg-indigo-500' :
+                          log.action === 'SALE' ? 'bg-primary/100' :
                             log.action === 'REQUISITION' ? 'bg-amber-500' : 'bg-slate-300'
                       )} />
                       <div className="flex flex-col gap-1">
@@ -315,6 +307,6 @@ export default function InventoryDashboard() {
           </Card>
         </div>
       </div>
-    </PageContainer>
+    </EnterprisePage>
   );
 }

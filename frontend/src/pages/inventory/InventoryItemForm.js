@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../../components/ui/switch';
 import { useLanguage } from '../../context/LanguageContext';
 import { toast } from 'react-toastify';
-import { Package, Settings, AlertTriangle, DollarSign } from 'lucide-react';
+import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
+import { AlertTriangle, DollarSign } from 'lucide-react';
 
 const InventoryItemForm = () => {
   const { t } = useLanguage();
@@ -20,25 +21,30 @@ const InventoryItemForm = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [fetching, setFetching] = useState(isEdit);
+
   useEffect(() => {
-    if (isEdit) inventoryApi.getItem(id).then(r => {
-      const i = r.data.data;
-      setForm({
-        itemName: i.itemName,
-        sku: i.sku || '',
-        category: i.category,
-        unit: i.unit,
-        minimumStockLevel: i.minimumStockLevel || '',
-        reorderPoint: i.reorderPoint || '',
-        reorderQty: i.reorderQty || '',
-        storageLocation: i.storageLocation || '',
-        expiryRequired: i.expiryRequired,
-        retailPrice: i.retailPrice || '',
-        wholesalePrice: i.wholesalePrice || '',
-        partnerPrice: i.partnerPrice || '',
-        isControlled: i.isControlled || false
-      });
-    });
+    if (isEdit) {
+      setFetching(true);
+      inventoryApi.getItem(id).then(r => {
+        const i = r.data.data;
+        setForm({
+          itemName: i.itemName,
+          sku: i.sku || '',
+          category: i.category,
+          unit: i.unit,
+          minimumStockLevel: i.minimumStockLevel || '',
+          reorderPoint: i.reorderPoint || '',
+          reorderQty: i.reorderQty || '',
+          storageLocation: i.storageLocation || '',
+          expiryRequired: i.expiryRequired,
+          retailPrice: i.retailPrice || '',
+          wholesalePrice: i.wholesalePrice || '',
+          partnerPrice: i.partnerPrice || '',
+          isControlled: i.isControlled || false
+        });
+      }).finally(() => setFetching(false));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isEdit]);
 
@@ -65,33 +71,14 @@ const InventoryItemForm = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          {isEdit ? t('inventoryItemForm.editTitle') : t('inventoryItemForm.addTitle')}
-        </h1>
-        <p className="text-gray-500 mt-1">
-          {isEdit ? 'Update inventory item details and settings' : 'Add a new inventory item to the system'}
-        </p>
-      </div>
-
-      {/* Error Alert */}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      {/* Form Card */}
-      <Card className="border-none shadow-xl shadow-gray-200/50">
-        <CardHeader className="bg-gray-50/50 border-b">
-          <CardTitle className="text-lg font-bold flex items-center gap-2">
-            <Package className="h-5 w-5 text-blue-600" />
-            Registry Details
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-8">
+    <EnterpriseFormPage
+      title={isEdit ? t('inventoryItemForm.editTitle') : t('inventoryItemForm.addTitle')}
+      subtitle={isEdit ? 'Update inventory item details and settings' : 'Add a new inventory item to the system'}
+      breadcrumbs={['Inventory', 'Items', isEdit ? 'Edit' : 'New']}
+      backTo="/inventory"
+      loading={fetching}
+      error={error}
+    >
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information Section */}
             <div className="space-y-6">
@@ -293,9 +280,7 @@ const InventoryItemForm = () => {
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+    </EnterpriseFormPage>
   );
 };
 
