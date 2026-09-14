@@ -33,8 +33,8 @@ public class WithdrawalService {
         if (isFlockLocked(flockId)) {
             Flock flock = flockRepository.findById(flockId).orElseThrow();
             throw new BusinessException("CRITICAL: Biological Lock. Flock " + flock.getBatchCode() + 
-                " is under drug withdrawal until " + flock.getWithdrawalHoldUntil() + 
-                ". Egg/Meat sales are prohibited.");
+                " is under drug withdrawal until " + flock.getWithdrawalHoldUntil() +
+                ". Chicken sales are prohibited until the hold ends.");
         }
     }
 }

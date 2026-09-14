@@ -6,7 +6,7 @@ import DataTable from '../../components/shared/DataTable';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
-import { FileText, TrendingDown, Activity, Plus, Egg } from 'lucide-react';
+import { FileText, TrendingDown, Activity, Plus } from 'lucide-react';
 import { formatDate } from '../../utils';
 
 const DailyFarmRecordList = () => {
@@ -38,7 +38,6 @@ const DailyFarmRecordList = () => {
     { title: 'Total Records', value: records.length, icon: FileText, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
     { title: "Today's Records", value: records.filter((r) => r.date === today).length, icon: Activity, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
     { title: 'Total Mortality', value: records.reduce((s, r) => s + (Number(r.mortality) || 0), 0), icon: TrendingDown, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
-    { title: 'Total Eggs', value: records.reduce((s, r) => s + (Number(r.eggProduction) || 0), 0).toLocaleString(), icon: Egg, iconColor: 'text-purple-600', bgColor: 'bg-purple-50' },
   ], [records, today]);
 
   const columns = useMemo(() => [
@@ -48,7 +47,6 @@ const DailyFarmRecordList = () => {
     { accessorKey: 'openingBirdCount', header: t('dailyRecordList.opening'), cell: ({ row }) => Number(row.original.openingBirdCount || 0).toLocaleString() },
     { accessorKey: 'mortality', header: t('dailyRecordList.mortality') },
     { accessorKey: 'feedConsumed', header: t('dailyRecordList.feed'), cell: ({ row }) => `${row.original.feedConsumed || 0} kg` },
-    { accessorKey: 'eggProduction', header: t('dailyRecordList.eggs') },
     { accessorKey: 'mortalityRate', header: t('dailyRecordList.mortalityRate'), cell: ({ row }) => row.original.mortalityRate ? `${row.original.mortalityRate.toFixed(2)}%` : '—' },
     { accessorKey: 'recordedBy', header: t('dailyRecordList.recordedBy') },
     {
@@ -73,13 +71,12 @@ const DailyFarmRecordList = () => {
     { header: 'Farm', accessorKey: 'farmName' },
     { header: 'Batch', accessorKey: 'batchCode' },
     { header: 'Mortality', accessorKey: 'mortality' },
-    { header: 'Eggs', accessorKey: 'eggProduction' },
   ];
 
   return (
     <EnterprisePage
       title="Daily Farm Records"
-      subtitle="Mortality, feed consumption, egg production, and flock performance logs"
+      subtitle="Mortality, feed consumption, and flock performance logs"
       breadcrumbs={['Farm', 'Daily Records']}
       loading={loading}
       error={error}

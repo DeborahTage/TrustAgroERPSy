@@ -23,21 +23,23 @@ const Dashboard = () => {
     setError(null);
     try {
       let res;
-      if (role === ROLES.ADMIN) res = await dashboardApi.admin();
-      else if (role === ROLES.FARM_MANAGER) res = await dashboardApi.farmManager();
-      else if (role === ROLES.INVENTORY_MANAGER || user?.role === ROLES.STORE_KEEPER) res = await dashboardApi.store();
-      else if (role === ROLES.VETERINARIAN || user?.role === ROLES.VETERINARY_OFFICER) res = await dashboardApi.vet();
-      else if (role === ROLES.PHARMACIST || user?.role === ROLES.PHARMACY_SALES) res = await dashboardApi.pharmacy();
-      else if (role === ROLES.FINANCE || user?.role === ROLES.FINANCE_OFFICER) res = await dashboardApi.finance();
-      else if (role === ROLES.CRM_MANAGER || user?.role === ROLES.EXTENSION_WORKER) res = await dashboardApi.crm();
-      else if (role === ROLES.MARKETING) res = await dashboardApi.marketing();
+      if (role === ROLES.ADMIN || role === ROLES.GENERAL_MANAGER || role === ROLES.OPERATIONS_MANAGER) {
+        res = await dashboardApi.admin();
+      } else if (role === ROLES.FARM_MANAGER || role === ROLES.FARM_WORKER) {
+        res = await dashboardApi.farmManager();
+      } else if (role === ROLES.INVENTORY_MANAGER) res = await dashboardApi.store();
+      else if (role === ROLES.VETERINARIAN) res = await dashboardApi.vet();
+      else if (role === ROLES.PHARMACIST) res = await dashboardApi.pharmacy();
+      else if (role === ROLES.FINANCE) res = await dashboardApi.finance();
+      else if (role === ROLES.CRM_MANAGER || role === ROLES.EXTENSION_WORKER) res = await dashboardApi.crm();
+      else if (role === ROLES.MARKETING_MANAGER) res = await dashboardApi.marketing();
       if (res) setData(res.data.data || {});
     } catch {
       setError('Failed to load dashboard data.');
     } finally {
       setLoading(false);
     }
-  }, [role, user?.role]);
+  }, [role]);
 
   useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
 
@@ -91,13 +93,13 @@ const Dashboard = () => {
   ];
 
   let cards = [];
-  if (role === ROLES.FARM_MANAGER) cards = farmCards;
+  if (role === ROLES.FARM_MANAGER || role === ROLES.FARM_WORKER) cards = farmCards;
   else if (role === ROLES.INVENTORY_MANAGER) cards = inventoryCards;
   else if (role === ROLES.VETERINARIAN) cards = vetCards;
   else if (role === ROLES.PHARMACIST) cards = pharmacyCards;
   else if (role === ROLES.FINANCE) cards = financeCards;
-  else if (role === ROLES.CRM_MANAGER) cards = crmCards;
-  else if (role === ROLES.MARKETING) cards = marketingCards;
+  else if (role === ROLES.CRM_MANAGER || role === ROLES.EXTENSION_WORKER) cards = crmCards;
+  else if (role === ROLES.MARKETING_MANAGER) cards = marketingCards;
 
   return (
     <EnterprisePage

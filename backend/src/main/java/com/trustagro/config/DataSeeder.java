@@ -38,8 +38,8 @@ public class DataSeeder implements CommandLineRunner {
             Map.entry("vet@trustagro.com", Role.VETERINARIAN),
             Map.entry("finance@trustagro.com", Role.FINANCE),
             Map.entry("crm@trustagro.com", Role.CRM_MANAGER),
-            Map.entry("marketing@trustagro.com", Role.MARKETING),
-            Map.entry("training@trustagro.com", Role.TRAINING_OFFICER)
+            Map.entry("marketing@trustagro.com", Role.MARKETING_MANAGER),
+            Map.entry("training@trustagro.com", Role.TRAINING_COORDINATOR)
     );
 
     public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
@@ -141,15 +141,20 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
+    /**
+     * Migrates deprecated role strings onto canonical roles.
+     * GENERAL_MANAGER, OPERATIONS_MANAGER, EXTENSION_WORKER are canonical — do not remap them.
+     * Note: earlier builds may have remapped GM/OPS → ADMIN; those rows cannot be auto-recovered.
+     */
     private void migrateLegacyRoles() {
         Map<String, String> migrations = Map.of(
-                "GENERAL_MANAGER", "ADMIN",
-                "OPERATIONS_MANAGER", "ADMIN",
                 "STORE_KEEPER", "INVENTORY_MANAGER",
                 "PHARMACY_SALES", "PHARMACIST",
                 "VETERINARY_OFFICER", "VETERINARIAN",
                 "FINANCE_OFFICER", "FINANCE",
-                "EXTENSION_WORKER", "CRM_MANAGER"
+                "MARKETING", "MARKETING_MANAGER",
+                "TRAINING_OFFICER", "TRAINING_COORDINATOR",
+                "CRM_AGENT", "CRM_MANAGER"
         );
         migrations.forEach((oldRole, newRole) -> {
             try {
@@ -184,14 +189,21 @@ public class DataSeeder implements CommandLineRunner {
     private String formatRoleName(Role role) {
         return switch (role) {
             case ADMIN -> "System Administrator";
+            case GENERAL_MANAGER -> "General Manager";
+            case OPERATIONS_MANAGER -> "Operations Manager";
+            case SECRETARY -> "Secretary";
             case FARM_MANAGER -> "Farm Manager";
+            case FARM_WORKER -> "Farm Worker";
             case INVENTORY_MANAGER -> "Inventory Manager";
             case PHARMACIST -> "Pharmacist";
             case VETERINARIAN -> "Veterinarian";
-            case FINANCE -> "Finance Officer";
+            case FINANCE -> "Finance";
+            case HR -> "HR";
             case CRM_MANAGER -> "CRM Manager";
-            case MARKETING -> "Marketing Manager";
-            case TRAINING_OFFICER -> "Training Officer";
+            case MARKETING_MANAGER, MARKETING -> "Marketing Manager";
+            case TRAINING_COORDINATOR, TRAINING_OFFICER -> "Training Coordinator";
+            case CONSULTANT -> "Consultant";
+            case EXTENSION_WORKER -> "Extension Worker";
             default -> role.name().replace('_', ' ');
         };
     }
@@ -210,7 +222,6 @@ public class DataSeeder implements CommandLineRunner {
         seedMDM(MasterDataCategory.FEED_TYPE, "STARTER", "Starter Feed", "0-4 weeks", 1);
         seedMDM(MasterDataCategory.FEED_TYPE, "GROWER", "Grower Feed", "4-8 weeks", 2);
         seedMDM(MasterDataCategory.FEED_TYPE, "FINISHER", "Finisher Feed", "8+ weeks", 3);
-        seedMDM(MasterDataCategory.FEED_TYPE, "LAYER_MASH", "Layer Mash", "Mature birds", 4);
 
         seedMDM(MasterDataCategory.DISEASE_TYPE, "VIRAL", "Viral", "Viral diseases", 1);
         seedMDM(MasterDataCategory.DISEASE_TYPE, "BACTERIAL", "Bacterial", "Bacterial diseases", 2);
@@ -219,8 +230,7 @@ public class DataSeeder implements CommandLineRunner {
 
         seedMDM(MasterDataCategory.FLOCK_PURPOSE, "BROILER", "Broiler Production", "Meat chickens", 1);
         seedMDM(MasterDataCategory.FLOCK_PURPOSE, "PULLET", "Pullet Rearing", "Grow chicks to maturity", 2);
-        seedMDM(MasterDataCategory.FLOCK_PURPOSE, "LAYER", "Layer Rearing", "Mature laying birds", 3);
-        seedMDM(MasterDataCategory.FLOCK_PURPOSE, "BREEDING", "Breeding Stock", "Parent stock", 4);
+        seedMDM(MasterDataCategory.FLOCK_PURPOSE, "BREEDING", "Breeding Stock", "Parent stock", 3);
     }
 
     private void seedMDM(MasterDataCategory category, String value, String label, String description, int sortOrder) {

@@ -8,14 +8,12 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'react-toastify';
-import { useLanguage } from '../../context/LanguageContext';
-import { ArrowLeft, AlertCircle, Calendar, Users, Activity, MessageSquare, ShieldAlert, Zap, Info, CheckCircle2, Siren } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Calendar, Users, Activity, ShieldAlert, Zap, Info, CheckCircle2, Siren } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const HealthIssueReportForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
   const dailyRecord = location.state?.dailyRecord;
 
   const [form, setForm] = useState({

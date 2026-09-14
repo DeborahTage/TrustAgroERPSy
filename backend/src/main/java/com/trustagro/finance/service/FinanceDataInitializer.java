@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
+/**
+ * Idempotent Chart of Accounts seed — creates any missing AccountCode entries without wiping balances.
+ */
 @Component
 @RequiredArgsConstructor
 public class FinanceDataInitializer {
@@ -17,8 +20,8 @@ public class FinanceDataInitializer {
 
     @PostConstruct
     public void init() {
-        if (coaRepository.count() == 0) {
-            for (AccountCode code : AccountCode.values()) {
+        for (AccountCode code : AccountCode.values()) {
+            if (coaRepository.findByAccountCode(code.getCode()).isEmpty()) {
                 ChartOfAccount coa = new ChartOfAccount();
                 coa.setAccountCode(code.getCode());
                 coa.setAccountName(code.getName());

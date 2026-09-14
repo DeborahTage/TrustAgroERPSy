@@ -87,7 +87,7 @@ public class DashboardController {
     private final MarketingService marketingService;
 
     @GetMapping("/admin")
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAuthority('users:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> adminDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("totalFarms", farmRepository.countByStatus(FarmStatus.ACTIVE));
@@ -102,7 +102,9 @@ public class DashboardController {
         data.put("pendingAlerts", notificationRepository.count());
         data.put("activeDiseaseCases", diseaseCaseRepository.count());
         data.put("openHealthReports", healthIssueReportRepository.countByStatus(HealthIssueReportStatus.OPEN));
-        data.put("pendingPrescriptions", prescriptionRepository.countByStatus(PrescriptionStatus.PENDING));
+        data.put("pendingPrescriptions", (prescriptionRepository.countByStatus(PrescriptionStatus.PENDING_PHARMACY)
+                + prescriptionRepository.countByStatus(PrescriptionStatus.PENDING)
+                + prescriptionRepository.countByStatus(PrescriptionStatus.APPROVED)));
 
         Map<String, Object> financeSummary = financeService.getDashboardSummary();
         data.put("cashInHand", financeSummary.get("cashInHand"));
@@ -132,7 +134,7 @@ public class DashboardController {
     }
 
     @GetMapping("/farm-manager")
-    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER')")
+    @PreAuthorize("hasAuthority('farm:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> farmManagerDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("totalFarms", farmRepository.countByStatus(FarmStatus.ACTIVE));
@@ -145,7 +147,7 @@ public class DashboardController {
     }
 
     @GetMapping("/store")
-    @PreAuthorize("hasAnyRole('ADMIN','INVENTORY_MANAGER')")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> storeDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("totalItems", inventoryItemRepository.count());
@@ -155,7 +157,7 @@ public class DashboardController {
     }
 
     @GetMapping("/vet")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIAN')")
+    @PreAuthorize("hasAuthority('veterinary:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> vetDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("upcomingVaccinations", vaccinationRepository
@@ -164,21 +166,25 @@ public class DashboardController {
                 .findByScheduledDateBeforeAndStatus(LocalDate.now(), VaccinationStatus.SCHEDULED).size());
         data.put("activeDiseaseCases", diseaseCaseRepository.count());
         data.put("openHealthReports", healthIssueReportRepository.countByStatus(HealthIssueReportStatus.OPEN));
-        data.put("pendingPrescriptions", prescriptionRepository.countByStatus(PrescriptionStatus.PENDING));
+        data.put("pendingPrescriptions", (prescriptionRepository.countByStatus(PrescriptionStatus.PENDING_PHARMACY)
+                + prescriptionRepository.countByStatus(PrescriptionStatus.PENDING)
+                + prescriptionRepository.countByStatus(PrescriptionStatus.APPROVED)));
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @GetMapping("/pharmacy")
-    @PreAuthorize("hasAnyRole('ADMIN','PHARMACIST')")
+    @PreAuthorize("hasAuthority('pharmacy:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> pharmacyDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("totalSalesCount", saleRepository.count());
-        data.put("pendingPrescriptions", prescriptionRepository.countByStatus(PrescriptionStatus.PENDING));
+        data.put("pendingPrescriptions", (prescriptionRepository.countByStatus(PrescriptionStatus.PENDING_PHARMACY)
+                + prescriptionRepository.countByStatus(PrescriptionStatus.PENDING)
+                + prescriptionRepository.countByStatus(PrescriptionStatus.APPROVED)));
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @GetMapping("/finance")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE')")
+    @PreAuthorize("hasAuthority('finance:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> financeDashboard() {
         LocalDate ytdStart = LocalDate.now().withDayOfYear(1);
         LocalDate today = LocalDate.now();
@@ -191,13 +197,13 @@ public class DashboardController {
     }
 
     @GetMapping("/crm")
-    @PreAuthorize("hasAnyRole('ADMIN','CRM_MANAGER')")
+    @PreAuthorize("hasAuthority('crm:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> crmDashboard() {
         return ResponseEntity.ok(ApiResponse.success(crmService.getDashboardStats()));
     }
 
     @GetMapping("/marketing")
-    @PreAuthorize("hasAnyRole('ADMIN','MARKETING')")
+    @PreAuthorize("hasAuthority('marketing:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> marketingDashboard() {
         return ResponseEntity.ok(ApiResponse.success(marketingService.getDashboard()));
     }

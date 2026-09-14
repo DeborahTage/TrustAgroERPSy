@@ -10,7 +10,6 @@ public class FlockObservationRequest {
     private String diarrheaType;
     private Double feedIntakeDropPercentage;
     private Double waterIntakeDropPercentage;
-    private Double eggProductionDropPercentage;
     private Integer mortalityCount;
     private String generalComments;
 
@@ -20,6 +19,5 @@ public class FlockObservationRequest {
     public String getDiarrheaType() { return diarrheaType; }
     public Double getFeedIntakeDropPercentage() { return feedIntakeDropPercentage; }
     public Double getWaterIntakeDropPercentage() { return waterIntakeDropPercentage; }
-    public Double getEggProductionDropPercentage() { return eggProductionDropPercentage; }
     public Integer getMortalityCount() { return mortalityCount; }
 }

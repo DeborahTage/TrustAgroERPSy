@@ -24,18 +24,24 @@ public class JwtService {
     }
 
     public String generateToken(String email) {
-        return generateToken(email, List.of(), List.of());
+        return generateToken(email, null, List.of(), List.of());
     }
 
     public String generateToken(String email, List<String> permissions, List<Long> farmIds) {
-        return Jwts.builder()
+        return generateToken(email, null, permissions, farmIds);
+    }
+
+    public String generateToken(String email, String role, List<String> permissions, List<Long> farmIds) {
+        var builder = Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .claim("permissions", permissions)
-                .claim("farmIds", farmIds)
-                .signWith(getKey(), SignatureAlgorithm.HS256)
-                .compact();
+                .claim("farmIds", farmIds);
+        if (role != null) {
+            builder.claim("role", role);
+        }
+        return builder.signWith(getKey(), SignatureAlgorithm.HS256).compact();
     }
 
     @SuppressWarnings("unchecked")
@@ -45,6 +51,13 @@ public class JwtService {
         Object perms = claims.get("permissions");
         if (perms instanceof List<?>) return (List<String>) perms;
         return List.of();
+    }
+
+    public String extractRole(String token) {
+        Claims claims = Jwts.parserBuilder().setSigningKey(getKey()).build()
+                .parseClaimsJws(token).getBody();
+        Object role = claims.get("role");
+        return role != null ? role.toString() : null;
     }
 
     @SuppressWarnings("unchecked")

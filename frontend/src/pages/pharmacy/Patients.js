@@ -9,13 +9,21 @@ export default function PharmacyPatients() {
         // Usually via /api/pharmacy/patients (assuming the endpoint exists, we mock if not)
         axios.get('/api/pharmacy/prescriptions')
             .then(res => {
-                // derivation from prescriptions to patients
-                const rxList = res.data || [];
-                const patientMap = new Map();
-                rxList.forEach(rx => {
-                    if (rx.patient) patientMap.set(rx.patient.id, rx.patient);
+                // Canonical queue returns ApiResponse; no separate pharmacy patient entity in this flow
+                const rxList = res.data?.data || res.data || [];
+                const flockMap = new Map();
+                (Array.isArray(rxList) ? rxList : []).forEach((rx) => {
+                    const key = rx.flockId || rx.farmId;
+                    if (!key) return;
+                    if (!flockMap.has(key)) {
+                        flockMap.set(key, {
+                            id: key,
+                            name: rx.batchCode || rx.flockName || rx.farmName || `Flock ${key}`,
+                            farmName: rx.farmName,
+                        });
+                    }
                 });
-                setPatients(Array.from(patientMap.values()));
+                setPatients(Array.from(flockMap.values()));
             })
             .catch(e => console.error(e));
     }, []);

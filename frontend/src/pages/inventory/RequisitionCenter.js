@@ -12,24 +12,24 @@ import { Label } from '../../components/ui/label';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { useAuth } from '../../context/AuthContext';
+import { normalizeRole } from '../../lib/permissions';
 import { toast } from 'react-toastify';
 import {
-    ClipboardList, Plus, Search, Filter,
-    FileText, CheckCircle2, Truck, AlertCircle,
-    User, Calendar, Hash, ArrowUpRight,
-    Activity, Clock, Box, Building2
+    ClipboardList, Plus,
+    CheckCircle2, Truck,
+    Hash,
+    Activity, Clock
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { cn } from '../../lib/utils';
 
 export default function RequisitionCenter() {
-    const { user, canPerformAction } = useAuth();
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
 
-    // Feature Checks
-    const isIM = user?.role === 'STORE_KEEPER' || user?.role === 'ADMIN';
-    const canRequest = ['FARM_MANAGER', 'VETERINARY_OFFICER', 'PHARMACY_SALES'].includes(user?.role);
+    const role = normalizeRole(user?.role);
+    const isIM = role === 'INVENTORY_MANAGER' || role === 'ADMIN';
+    const canRequest = ['FARM_MANAGER', 'VETERINARIAN', 'PHARMACIST'].includes(role);
 
     // Data Fetching
     const { data: requisitions = [], isLoading: loadingReqs } = useQuery({

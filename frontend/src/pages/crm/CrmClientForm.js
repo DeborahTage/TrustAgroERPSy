@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { crmApi, userApi } from '../../api';
+import { crmApi, userApi, chickenSaleApi } from '../../api';
 import { Card, Form, Button, Row, Col, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { useLanguage } from '../../context/LanguageContext';
@@ -12,6 +12,7 @@ const CrmClientForm = () => {
   const isEdit = Boolean(id);
   const [form, setForm] = useState({ clientName: '', phone: '', location: '', farmType: '', farmSize: '', numberOfBirds: '', status: 'LEAD', assignedExtensionWorkerId: '' });
   const [workers, setWorkers] = useState([]);
+  const [sales, setSales] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +23,7 @@ const CrmClientForm = () => {
         const c = r.data.data;
         setForm({ clientName: c.clientName, phone: c.phone || '', location: c.location || '', farmType: c.farmType || '', farmSize: c.farmSize || '', numberOfBirds: c.numberOfBirds || '', status: c.status, assignedExtensionWorkerId: c.assignedExtensionWorkerId || '' });
       });
+      chickenSaleApi.getAll({ customerId: id }).then((r) => setSales(r.data.data || [])).catch(() => setSales([]));
     }
   }, [id, isEdit]);
 
@@ -69,6 +71,20 @@ const CrmClientForm = () => {
           </Form>
         </Card.Body>
       </Card>
+      {isEdit && (
+        <Card className="border-0 shadow-sm mt-4" style={{ maxWidth: 800 }}>
+          <Card.Body className="p-4">
+            <h6 className="fw-bold mb-3">Chicken purchases</h6>
+            {sales.length === 0 && <p className="text-muted small mb-0">No chicken sales for this customer yet.</p>}
+            {sales.map((s) => (
+              <div key={s.id} className="d-flex justify-content-between border-bottom py-2 small">
+                <span>{s.saleNumber} · {s.status} · {s.flockBatchCode}</span>
+                <span>{s.totalAmount} ETB outstanding {s.outstandingAmount}</span>
+              </div>
+            ))}
+          </Card.Body>
+        </Card>
+      )}
     </div>
   );
 };

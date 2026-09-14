@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { normalizeRole } from '../../lib/permissions';
 import LoadingState from '../shared/LoadingState';
 
 /**
@@ -24,7 +25,7 @@ const ProtectedRoute = ({ children, roles, module, permission, permissions, acti
     return <Navigate to="/login" replace />;
   }
 
-  if (roles && !roles.includes(user.role)) {
+  if (roles && !roles.map(normalizeRole).includes(normalizeRole(user.role))) {
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -19,7 +19,7 @@ public class OrderItem {
     private CustomerOrder order;
 
     @Column(nullable = false)
-    private String productName; // e.g., Eggs Grade A, Broiler Meat
+    private String productName; // e.g., Broiler meat
 
     private String category; // EGGS, MEAT
     

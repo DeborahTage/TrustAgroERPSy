@@ -1,38 +1,36 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { vetApi, farmApi } from '../../api';
 import DataTable from '../../components/shared/DataTable';
 import StatusBadge from '../../components/shared/StatusBadge';
 import EnterprisePage from '../../components/layout/EnterprisePage';
-import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatDate } from '../../utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
-import { Syringe, FileText, Activity, Pill, Check, MoreHorizontal, Plus, ShieldAlert, ClipboardCheck, Stethoscope, Search, Filter, ArrowUpRight, TrendingUp, AlertTriangle, ChevronRight, Lock, Calendar as CalendarIcon, List, ShieldCheck } from 'lucide-react';
+import { Syringe, FileText, Activity, Pill, Check, Plus, ShieldAlert, ClipboardCheck, Stethoscope, AlertTriangle, ChevronRight, Calendar as CalendarIcon, List, ShieldCheck } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { PERMISSIONS } from '../../lib/permissions';
 
 const VeterinaryPage = () => {
-  const { t } = useLanguage();
   const { hasAnyPermission } = useAuth();
   const [vaccinations, setVaccinations] = useState([]);
   const [healthReports, setHealthReports] = useState([]);
   const [diseaseCases, setDiseaseCases] = useState([]);
-  const [treatments, setTreatments] = useState([]);
+  const [, setTreatments] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [biosecurityLogs, setBiosecurityLogs] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
   const [reviewForm, setReviewForm] = useState({ suspectedDiagnosis: '', severity: 'LOW', treatmentPlan: '', status: 'REVIEWED' });
-  const [reviewLoading, setReviewLoading] = useState(false);
-  const [reviewError, setReviewError] = useState('');
+  const [, setReviewLoading] = useState(false);
+  const [, setReviewError] = useState('');
   const [loading, setLoading] = useState(true);
   const [vaccinationView, setVaccinationView] = useState('list');
   const navigate = useNavigate();
@@ -88,7 +86,17 @@ const VeterinaryPage = () => {
 
   const [error, setError] = useState(null);
 
-  const loadData = () => {
+  const fetchBiosecurityLogs = useCallback(async () => {
+    try {
+      const farmRes = await farmApi.getAll();
+      if (farmRes.data.data?.length > 0) {
+        const res = await farmApi.getBiosecurityLogs(farmRes.data.data[0].id);
+        setBiosecurityLogs(res.data.data || []);
+      }
+    } catch (err) { console.error("Could not load biosecurity", err); }
+  }, []);
+
+  const loadData = useCallback(() => {
     setLoading(true);
     setError(null);
     Promise.all([
@@ -109,21 +117,11 @@ const VeterinaryPage = () => {
       setError('Could not load veterinary data.');
       toast.error('Could not load veterinary data. Please refresh or try again.');
     }).finally(() => setLoading(false));
-  };
+  }, [fetchBiosecurityLogs]);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const fetchBiosecurityLogs = async () => {
-    try {
-      const farmRes = await farmApi.getAll();
-      if (farmRes.data.data?.length > 0) {
-        const res = await farmApi.getBiosecurityLogs(farmRes.data.data[0].id);
-        setBiosecurityLogs(res.data.data || []);
-      }
-    } catch (err) { console.error("Could not load biosecurity", err); }
-  };
-
-  const completeVaccination = async (id) => {
+  const completeVaccination = useCallback(async (id) => {
     if (!canWrite) return;
     try {
       await vetApi.completeVaccination(id);
@@ -132,9 +130,9 @@ const VeterinaryPage = () => {
     } catch (e) {
       toast.error('Failed to update vaccination');
     }
-  };
+  }, [canWrite]);
 
-  const openReviewModal = (report) => {
+  const openReviewModal = useCallback((report) => {
     if (!canWrite) return;
     setSelectedReport(report);
     setReviewForm({
@@ -144,7 +142,7 @@ const VeterinaryPage = () => {
       status: report.status === 'CLOSED' ? 'CLOSED' : 'REVIEWED',
     });
     setReviewError('');
-  };
+  }, [canWrite]);
 
   const submitReview = async () => {
     if (!selectedReport || !canWrite) return;
@@ -204,7 +202,7 @@ const VeterinaryPage = () => {
         </div>
       )
     },
-  ], [canWrite]);
+  ], [canWrite, completeVaccination]);
 
   const healthReportCols = useMemo(() => [
     {
@@ -253,12 +251,12 @@ const VeterinaryPage = () => {
         </div>
       ),
     },
-  ], [canWrite, navigate]);
+  ], [canWrite, navigate, openReviewModal]);
 
   const vetStats = [
     { title: 'Active Cases', value: diseaseCases.filter(c => c.status === 'ACTIVE').length, icon: Activity, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
     { title: 'Open Reports', value: healthReports.filter(r => r.status === 'OPEN').length, icon: AlertTriangle, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
-    { title: 'Pending Rx', value: prescriptions.filter(p => p.status === 'PENDING').length, icon: Pill, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+    { title: 'Pending Rx', value: prescriptions.filter(p => ['PENDING', 'PENDING_PHARMACY', 'SUBMITTED', 'APPROVED'].includes(p.status)).length, icon: Pill, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
     { title: 'Vaccinations', value: vaccinations.filter(v => v.status !== 'COMPLETED').length, icon: Syringe, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
   ];
 
@@ -303,7 +301,7 @@ const VeterinaryPage = () => {
                   <span className="text-[9px] font-black uppercase text-white/50 tracking-tight">Vacs Pending</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xl font-black text-amber-400">{prescriptions.filter(p => p.status === 'PENDING').length}</span>
+                  <span className="text-xl font-black text-amber-400">{prescriptions.filter(p => ['PENDING', 'PENDING_PHARMACY', 'SUBMITTED', 'APPROVED'].includes(p.status)).length}</span>
                   <span className="text-[9px] font-black uppercase text-white/50 tracking-tight">Rx Queued</span>
                 </div>
               </div>

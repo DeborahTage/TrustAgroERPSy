@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { vetApi, farmApi, flockApi } from '../../api';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { useLanguage } from '../../context/LanguageContext';
 import EnterprisePage from '../../components/layout/EnterprisePage';
 import { exportToPdf } from '../../lib/exportTable';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell } from 'recharts';
@@ -17,9 +15,6 @@ import { formatCurrency } from '../../utils';
 const COLORS = ['#4f46e5', '#ec4899', '#f59e0b', '#10b981', '#6366f1', '#14b8a6', '#8b5cf6'];
 
 const DrugUsageReport = () => {
-    const navigate = useNavigate();
-    const { t } = useLanguage();
-
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [farms, setFarms] = useState([]);

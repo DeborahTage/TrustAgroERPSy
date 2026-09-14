@@ -15,7 +15,6 @@ import {
   Megaphone,
   Briefcase,
   Shield,
-  Bell,
   Warehouse,
   Truck,
   ScanLine,
@@ -46,6 +45,7 @@ const adminMenus = [
     label: 'ADMIN',
     items: [
       { path: '/users', labelKey: 'users', icon: Users, permission: PERMISSIONS.VIEW_USERS },
+      { path: '/farm/chicken-sales', label: 'Chicken Sales', icon: ShoppingCart, permission: PERMISSIONS.VIEW_CHICKEN_SALES },
       { path: '/reports', labelKey: 'reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
       { path: '/settings', labelKey: 'settings', icon: Settings, alwaysVisible: true },
     ],
@@ -64,7 +64,7 @@ const farmManagerMenus = [
       { path: '/farms/barn-dashboard', label: 'Barns', icon: Warehouse },
       { path: '/flocks', labelKey: 'flocks', icon: Layers },
       { path: '/daily-records', labelKey: 'dailyRecords', icon: FileText },
-      { path: '/farm/chicken-sales', label: 'Chicken Sales', icon: ShoppingCart },
+      { path: '/farm/chicken-sales', label: 'Chicken Sales', icon: ShoppingCart, permission: PERMISSIONS.VIEW_CHICKEN_SALES },
       { path: '/feed/silos', label: 'Feed Usage', icon: Package },
       { path: '/reports', label: 'Reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
       { path: '/settings', labelKey: 'settings', icon: Settings, alwaysVisible: true },
@@ -149,6 +149,7 @@ const financeMenus = [
       { path: '/finance/new', label: 'Revenue & Expenses', icon: TrendingUp, permission: PERMISSIONS.CREATE_INCOME },
       { path: '/finance/coa', label: 'Chart of Accounts', icon: BookOpen },
       { path: '/finance/invoices', label: 'Invoice Center', icon: Receipt },
+      { path: '/farm/chicken-sales', label: 'Chicken Sales', icon: ShoppingCart, permission: PERMISSIONS.VIEW_CHICKEN_SALES },
       { path: '/finance/wallets', label: 'Digital Wallets', icon: Wallet },
       { path: '/finance/reconciliation', label: 'Cash Flow', icon: DollarSign },
       { path: '/finance/reports', label: 'Reports', icon: BarChart3, permission: PERMISSIONS.VIEW_FINANCIAL_REPORTS },
@@ -170,6 +171,7 @@ const crmManagerMenus = [
       { path: '/crm/clients', label: 'Customers', icon: Users },
       { path: '/crm/pipeline', label: 'Sales Pipeline', icon: TrendingUp },
       { path: '/crm/orders', label: 'Orders', icon: ShoppingCart },
+      { path: '/farm/chicken-sales', label: 'Chicken Sales', icon: ShoppingCart, permission: PERMISSIONS.VIEW_CHICKEN_SALES },
       { path: '/crm/follow-ups', label: 'Follow-ups', icon: Calendar },
       { path: '/crm/tasks', label: 'Tasks', icon: ClipboardList },
       { path: '/crm/reports', label: 'Reports', icon: BarChart3 },
@@ -214,8 +216,9 @@ const trainingOfficerMenus = [
     label: 'TRAINING',
     items: [
       { path: '/training', label: 'Dashboard', icon: GraduationCap },
+      { path: '/training/programs', label: 'Programs', icon: Calendar },
       { path: '/training/sessions', label: 'Sessions', icon: Calendar },
-      { path: '/training/students', label: 'Students', icon: Users },
+      { path: '/training/registrations', label: 'Registrations', icon: Users },
       { path: '/training/certificates', label: 'Certificates', icon: Shield },
       { path: '/settings', labelKey: 'settings', icon: Settings, alwaysVisible: true },
     ],
@@ -224,14 +227,17 @@ const trainingOfficerMenus = [
 
 const ROLE_MENU_MAP = {
   ADMIN: adminMenus,
+  GENERAL_MANAGER: adminMenus,
+  OPERATIONS_MANAGER: adminMenus,
   FARM_MANAGER: farmManagerMenus,
   INVENTORY_MANAGER: inventoryManagerMenus,
   PHARMACIST: pharmacistMenus,
   VETERINARIAN: veterinarianMenus,
   FINANCE: financeMenus,
   CRM_MANAGER: crmManagerMenus,
-  MARKETING: marketingMenus,
-  TRAINING_OFFICER: trainingOfficerMenus,
+  MARKETING_MANAGER: marketingMenus,
+  TRAINING_COORDINATOR: trainingOfficerMenus,
+  EXTENSION_WORKER: crmManagerMenus,
 };
 
 export { normalizeRole, ROLE_ALIASES } from './permissions';

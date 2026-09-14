@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { crmApi } from '../../api';
 import EnterprisePage from '../../components/layout/EnterprisePage';
-import StatsCard from '../../components/shared/StatsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Users, Target, Activity, Calendar } from 'lucide-react';
 

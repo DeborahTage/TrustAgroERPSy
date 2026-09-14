@@ -10,7 +10,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "finance_transactions")
+@Table(
+        name = "finance_transactions",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_finance_tx_source_ref",
+                columnNames = {"source_module", "reference_type", "reference_id"}
+        )
+)
 @Data
 public class FinanceTransaction {
 
@@ -38,7 +44,14 @@ public class FinanceTransaction {
     @JoinColumn(name = "credit_account_id")
     private ChartOfAccount creditAccount;
 
-    private String sourceModule; // PHARMACY, INVENTORY, FARM, etc.
+    @Column(name = "source_module")
+    private String sourceModule;
+
+    @Column(name = "reference_type")
+    private String referenceType;
+
+    @Column(name = "reference_id")
+    private Long referenceId;
 
     @Enumerated(EnumType.STRING)
     private BusinessUnit businessUnit = BusinessUnit.GENERAL;
@@ -47,7 +60,7 @@ public class FinanceTransaction {
 
     private String invoiceRef;
 
-    private String status = "COMPLETED"; // COMPLETED, PENDING, REVERSED
+    private String status = "COMPLETED";
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -61,8 +74,6 @@ public class FinanceTransaction {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-
-    // Manually added getters/setters to ensure Lombok issues don't block us
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public TransactionType getTransactionType() { return transactionType; }
@@ -73,14 +84,16 @@ public class FinanceTransaction {
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public PaymentMethod getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
-    
     public ChartOfAccount getDebitAccount() { return debitAccount; }
     public void setDebitAccount(ChartOfAccount debitAccount) { this.debitAccount = debitAccount; }
     public ChartOfAccount getCreditAccount() { return creditAccount; }
     public void setCreditAccount(ChartOfAccount creditAccount) { this.creditAccount = creditAccount; }
     public String getSourceModule() { return sourceModule; }
     public void setSourceModule(String sourceModule) { this.sourceModule = sourceModule; }
-
+    public String getReferenceType() { return referenceType; }
+    public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
+    public Long getReferenceId() { return referenceId; }
+    public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
     public BusinessUnit getBusinessUnit() { return businessUnit; }
     public void setBusinessUnit(BusinessUnit businessUnit) { this.businessUnit = businessUnit; }
     public BigDecimal getVatAmount() { return vatAmount; }
@@ -97,5 +110,4 @@ public class FinanceTransaction {
     public void setRecordedBy(User recordedBy) { this.recordedBy = recordedBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
 }

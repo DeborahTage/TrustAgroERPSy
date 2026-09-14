@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Clipboard, Activity, Calendar, Droplet,
-    HeartPulse, ShieldAlert, FileText, Plus,
+    Droplet,
+    ShieldAlert, Plus,
     History, User, Zap, AlertTriangle, CheckCircle2,
     Stethoscope, Microscope, Beaker
 } from 'lucide-react';
@@ -9,12 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { ScrollArea } from '../../components/ui/scroll-area';
 import { Progress } from '../../components/ui/progress';
 import { vetApi } from '../../api';
 import EnterprisePage from '../../components/layout/EnterprisePage';
 import { useParams } from 'react-router-dom';
-import { formatCurrency, formatDate } from '../../utils';
+import { formatDate } from '../../utils';
 import { toast } from 'react-toastify';
 
 const FlockEMR = () => {
@@ -22,13 +21,9 @@ const FlockEMR = () => {
     const [emr, setEmr] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchEMR();
-    }, [id]);
-
     const [error, setError] = useState(null);
 
-    const fetchEMR = async () => {
+    const fetchEMR = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -40,7 +35,11 @@ const FlockEMR = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        fetchEMR();
+    }, [fetchEMR]);
 
     return (
         <EnterprisePage

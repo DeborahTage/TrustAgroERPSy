@@ -17,7 +17,7 @@ const DailyFarmRecordForm = () => {
   const isEdit = Boolean(id);
   const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
-    farmId: '', flockId: '',     openingBirdCount: '', mortality: 0, culledBirds: 0, chickensSold: 0,
+    farmId: '', flockId: '',     openingBirdCount: '', mortality: 0, culledBirds: 0,
     feedConsumed: '', waterConsumed: '', averageWeight: '',
     symptomsOrRemarks: '', mortalityCause: '', mortalityNotes: '',
   });
@@ -37,7 +37,7 @@ const DailyFarmRecordForm = () => {
           setForm({
             date: d.date, farmId: String(d.farmId), flockId: String(d.flockId),
             openingBirdCount: d.openingBirdCount || '', mortality: d.mortality || 0,
-            culledBirds: d.culledBirds || 0, chickensSold: d.chickensSold || d.culledBirds || 0,
+            culledBirds: d.culledBirds || 0,
             feedConsumed: d.feedConsumed || '',
             waterConsumed: d.waterConsumed || '', averageWeight: d.averageWeight || '',
             symptomsOrRemarks: d.symptomsOrRemarks || '', mortalityCause: d.mortalityCause || '',
@@ -71,14 +71,10 @@ const DailyFarmRecordForm = () => {
         flockId: Number(form.flockId),
         openingBirdCount: Number(form.openingBirdCount),
         mortality: Number(form.mortality),
-        culledBirds: Number(form.culledBirds),
+        culledBirds: Number(form.culledBirds) || 0,
         feedConsumed: Number(form.feedConsumed),
         waterConsumed: Number(form.waterConsumed),
         averageWeight: form.averageWeight ? Number(form.averageWeight) : null,
-        chickensSold: Number(form.chickensSold) || 0,
-        culledBirds: Number(form.culledBirds) || 0,
-        eggProduction: 0,
-        damagedEggs: 0,
         mortalityCause: form.mortalityCause || null,
       };
       if (isEdit) await dailyRecordApi.update(id, payload);
@@ -95,7 +91,7 @@ const DailyFarmRecordForm = () => {
   return (
     <EnterpriseFormPage
       title={isEdit ? t('dailyRecordForm.editTitle') : t('dailyRecordForm.addTitle')}
-      subtitle="Daily mortality, feed, water, growth, and chicken sales records"
+      subtitle="Daily mortality, feed, water, and growth records"
       breadcrumbs={['Farm', 'Daily Records', isEdit ? 'Edit' : 'New']}
       backTo="/daily-records"
       loading={fetching}
@@ -136,8 +132,6 @@ const DailyFarmRecordForm = () => {
           <div className="space-y-2"><Label>{t('dailyRecordForm.feedConsumed')}</Label><Input type="number" min="0" step="0.01" value={form.feedConsumed} onChange={(e) => setForm({ ...form, feedConsumed: e.target.value })} /></div>
           <div className="space-y-2"><Label>{t('dailyRecordForm.water')}</Label><Input type="number" min="0" step="0.01" value={form.waterConsumed} onChange={(e) => setForm({ ...form, waterConsumed: e.target.value })} /></div>
           <div className="space-y-2"><Label>{t('dailyRecordForm.averageWeight')}</Label><Input type="number" min="0" step="0.01" value={form.averageWeight} onChange={(e) => setForm({ ...form, averageWeight: e.target.value })} /></div>
-          <div className="space-y-2"><Label>Chickens Sold</Label><Input type="number" min="0" value={form.chickensSold} onChange={(e) => setForm({ ...form, chickensSold: e.target.value })} /></div>
-          <div className="space-y-2"><Label>Harvested / Culled</Label><Input type="number" min="0" value={form.culledBirds} onChange={(e) => setForm({ ...form, culledBirds: e.target.value })} /></div>
         </div>
 
         <div className="space-y-2">

@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Microscope, Heart, Info, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';

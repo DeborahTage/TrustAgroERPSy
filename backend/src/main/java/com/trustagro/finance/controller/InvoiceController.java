@@ -1,7 +1,6 @@
 package com.trustagro.finance.controller;
 
 import com.trustagro.common.response.ApiResponse;
-import com.trustagro.finance.entity.BusinessUnit;
 import com.trustagro.finance.entity.Invoice;
 import com.trustagro.finance.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +22,13 @@ public class InvoiceController {
     private final InvoiceService invoiceService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE','GENERAL_MANAGER')")
+    @PreAuthorize("hasAuthority('finance:read')")
     public ResponseEntity<ApiResponse<List<Invoice>>> getAll() {
         return ResponseEntity.ok(ApiResponse.success(invoiceService.getAllInvoices()));
     }
 
     @PostMapping("/pos")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE', 'INVENTORY_MANAGER', 'PHARMACIST')")
+    @PreAuthorize("hasAnyAuthority('finance:create','pharmacy:sale')")
     public ResponseEntity<ApiResponse<Invoice>> createPOS(@RequestBody Map<String, Object> req) {
         String clientName = req.containsKey("clientName")
                 ? req.get("clientName").toString()
@@ -57,7 +56,7 @@ public class InvoiceController {
     }
 
     @PostMapping("/service")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE', 'GENERAL_MANAGER')")
+    @PreAuthorize("hasAuthority('finance:create')")
     public ResponseEntity<ApiResponse<Invoice>> createService(@RequestBody Map<String, Object> req) {
         Invoice invoice = invoiceService.createServiceInvoice(
                 Long.valueOf(req.get("clientId").toString()),

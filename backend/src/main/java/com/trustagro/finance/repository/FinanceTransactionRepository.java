@@ -9,12 +9,19 @@ import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface FinanceTransactionRepository extends JpaRepository<FinanceTransaction, Long> {
 
     List<FinanceTransaction> findByTransactionType(TransactionType type);
 
     List<FinanceTransaction> findByTransactionDateBetween(LocalDate from, LocalDate to);
+
+    Optional<FinanceTransaction> findBySourceModuleAndReferenceTypeAndReferenceId(
+            String sourceModule, String referenceType, Long referenceId);
+
+    boolean existsBySourceModuleAndReferenceTypeAndReferenceId(
+            String sourceModule, String referenceType, Long referenceId);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM FinanceTransaction t WHERE t.transactionType = :type")
     BigDecimal sumByType(@Param("type") TransactionType type);
@@ -30,5 +37,10 @@ public interface FinanceTransactionRepository extends JpaRepository<FinanceTrans
            "FROM FinanceTransaction t WHERE (t.debitAccount.accountCode = :code OR t.creditAccount.accountCode = :code) " +
            "AND t.transactionDate BETWEEN :from AND :to")
     BigDecimal sumByAccountInRange(@Param("code") String code, @Param("from") LocalDate from, @Param("to") LocalDate to);
-}
 
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM FinanceTransaction t WHERE t.debitAccount.accountCode = :code")
+    BigDecimal sumDebitsToAccount(@Param("code") String code);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM FinanceTransaction t WHERE t.creditAccount.accountCode = :code")
+    BigDecimal sumCreditsFromAccount(@Param("code") String code);
+}

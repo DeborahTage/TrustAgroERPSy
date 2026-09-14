@@ -155,17 +155,14 @@ public class InventoryService {
         movement.setCreatedBy(user);
         movementRepository.save(movement);
 
-        // Auto-create finance expense entry for purchase cost
+        // Auto-create inventory receipt on AP (asset, not expense). Failures are fatal for integrity.
         if (batch.getUnitCost() != null && batch.getUnitCost().compareTo(java.math.BigDecimal.ZERO) > 0) {
-            try {
-                // Debit Inventory (1400), Credit Accounts Payable (2200) or Cash (1000)
-                financeService.postTransaction(com.trustagro.finance.entity.TransactionType.EXPENSE, 
-                        batch.getUnitCost().multiply(java.math.BigDecimal.valueOf(quantity)), 
-                        null, "1400", "2200", 
-                        "Stock receipt: " + item.getItemName() + " x" + quantity, "INVENTORY", "STOCK_BATCH", batch.getId());
-            } catch (Exception ex) {
-                log.warn("Finance entry for stock-in failed (non-fatal): {}", ex.getMessage());
-            }
+            financeService.postInventoryReceipt(
+                    batch.getUnitCost().multiply(java.math.BigDecimal.valueOf(quantity)),
+                    "Stock receipt: " + item.getItemName() + " x" + quantity,
+                    com.trustagro.finance.entity.FinanceSourceTypes.MODULE_INVENTORY,
+                    com.trustagro.finance.entity.FinanceSourceTypes.REF_STOCK_IN,
+                    batch.getId());
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -180,12 +177,35 @@ public class InventoryService {
 
     @Transactional
     public Map<String, Object> stockOut(Long itemId, Double quantity, String reason, Long referenceId, User user) {
+        return stockOut(itemId, quantity, reason, referenceId, user, null, null, null);
+    }
+
+    @Transactional
+    public Map<String, Object> stockOut(Long itemId, Double quantity, String reason, Long referenceId, User user,
+                                        Long batchId, String referenceType, String movementTypeOverride) {
         InventoryItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory item not found: " + itemId));
-        List<StockBatch> batches = batchRepository.findAvailableBatchesFEFO(itemId, LocalDate.now());
+
+        List<StockBatch> batches;
+        if (batchId != null) {
+            StockBatch selected = batchRepository.findById(batchId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Batch not found: " + batchId));
+            if (selected.getItem() == null || !itemId.equals(selected.getItem().getId())) {
+                throw new IllegalStateException("Selected batch does not belong to inventory item");
+            }
+            if (selected.getQuantityRemaining() == null || selected.getQuantityRemaining() <= 0) {
+                throw new IllegalStateException("Selected batch has no remaining quantity");
+            }
+            batches = List.of(selected);
+        } else {
+            batches = batchRepository.findAvailableBatchesFEFO(itemId, LocalDate.now());
+        }
 
         double remaining = quantity;
         List<StockMovement> movements = new ArrayList<>();
+        BigDecimal totalCost = BigDecimal.ZERO;
+
+        MovementType movementType = resolveMovementType(reason, movementTypeOverride);
 
         for (StockBatch batch : batches) {
             if (remaining <= 0) break;
@@ -197,11 +217,17 @@ public class InventoryService {
             StockMovement mv = new StockMovement();
             mv.setItem(item);
             mv.setBatch(batch);
-            mv.setMovementType("SALE".equals(reason) ? MovementType.SALE : MovementType.ISSUE);
+            mv.setMovementType(movementType);
             mv.setQuantity(deduct);
             mv.setUnitCost(batch.getUnitCost());
-            mv.setTotalCost(batch.getUnitCost() != null ? batch.getUnitCost().multiply(BigDecimal.valueOf(deduct)) : null);
+            BigDecimal lineCost = batch.getUnitCost() != null
+                    ? batch.getUnitCost().multiply(BigDecimal.valueOf(deduct)) : BigDecimal.ZERO;
+            mv.setTotalCost(lineCost);
+            totalCost = totalCost.add(lineCost);
             mv.setReferenceId(referenceId);
+            if (referenceType != null) {
+                mv.setReferenceType(referenceType);
+            }
             mv.setCreatedBy(user);
             movements.add(mv);
         }
@@ -215,28 +241,21 @@ public class InventoryService {
         itemRepository.save(item);
         movementRepository.saveAll(movements);
 
-        String firstBatch = movements.isEmpty() ? null
-                : (movements.get(0).getBatch() != null ? movements.get(0).getBatch().getBatchNumber() : null);
+        StockBatch first = movements.isEmpty() ? null : movements.get(0).getBatch();
 
-        // Auto-create COGS finance entry for sales
-        if ("SALE".equals(reason)) {
-            try {
-                double totalCogs = movements.stream()
-                        .mapToDouble(m -> m.getTotalCost() != null ? m.getTotalCost().doubleValue() : 0.0)
-                        .sum();
-                if (totalCogs > 0) {
-                    // Debit COGS (5000), Credit Inventory (1400)
-                    financeService.postTransaction(com.trustagro.finance.entity.TransactionType.EXPENSE, 
-                            java.math.BigDecimal.valueOf(totalCogs), 
-                            null, "5000", "1400", 
-                            "Cost of goods sold: " + item.getItemName() + " x" + quantity, "INVENTORY", "STOCK_OUT", null);
-                }
-            } catch (Exception ex) {
-                log.warn("Finance COGS entry for stock-out failed (non-fatal): {}", ex.getMessage());
-            }
+        // Commercial SALE COGS is posted by PharmacyService against the sale id (avoids double-count).
+        // Non-pharmacy SALE callers may still pass a referenceId to post here.
+        if ("SALE".equals(reason) && referenceId != null && totalCost.compareTo(BigDecimal.ZERO) > 0) {
+            financeService.postCogs(
+                    totalCost,
+                    com.trustagro.finance.entity.BusinessUnit.PHARMACY,
+                    com.trustagro.finance.entity.AccountCode.COGS_PHARMACY.getCode(),
+                    "Cost of goods sold: " + item.getItemName() + " x" + quantity,
+                    com.trustagro.finance.entity.FinanceSourceTypes.MODULE_INVENTORY,
+                    com.trustagro.finance.entity.FinanceSourceTypes.REF_STOCK_OUT_COGS,
+                    referenceId);
         }
 
-        // Check if we need to auto-reorder
         if (item.getReorderPoint() != null && newStock <= item.getReorderPoint()) {
             createAutoReorder(item, user);
         }
@@ -244,10 +263,28 @@ public class InventoryService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("deducted", quantity);
         result.put("newStock", newStock);
-        if (firstBatch != null) {
-            result.put("batchNumber", firstBatch);
+        result.put("totalCost", totalCost);
+        if (first != null) {
+            result.put("batchId", first.getId());
+            result.put("batchNumber", first.getBatchNumber());
+            result.put("expiryDate", first.getExpiryDate());
+            result.put("unitCost", first.getUnitCost());
         }
         return result;
+    }
+
+    private MovementType resolveMovementType(String reason, String override) {
+        if (override != null && !override.isBlank()) {
+            try {
+                return MovementType.valueOf(override);
+            } catch (IllegalArgumentException ignored) {
+                // fall through
+            }
+        }
+        if (reason != null && reason.startsWith("VETERINARY_PRESCRIPTION")) {
+            return MovementType.INTERNAL_CONSUMPTION;
+        }
+        return "SALE".equals(reason) ? MovementType.SALE : MovementType.ISSUE;
     }
 
     @Transactional
@@ -299,7 +336,8 @@ public class InventoryService {
     public Map<String, Object> stockOut(StockOutRequest req) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByEmail(email).orElse(null);
-        return stockOut(req.getItemId(), req.getQuantity(), req.getReason(), req.getReferenceId(), currentUser);
+        return stockOut(req.getItemId(), req.getQuantity(), req.getReason(), req.getReferenceId(), currentUser,
+                req.getBatchId(), req.getReferenceType(), req.getMovementTypeOverride());
     }
 
     // ============================================================

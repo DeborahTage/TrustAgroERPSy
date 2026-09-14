@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { masterDataApi } from '../api';
 import { useAuth } from './AuthContext';
 
@@ -9,7 +9,7 @@ export const MasterDataProvider = ({ children }) => {
     const [data, setData] = useState({});
     const [loading, setLoading] = useState(true);
 
-    const fetchCategory = async (category) => {
+    const fetchCategory = useCallback(async (category) => {
         try {
             const response = await masterDataApi.getByCategory(category);
             if (response.data?.success) {
@@ -21,19 +21,19 @@ export const MasterDataProvider = ({ children }) => {
         } catch (error) {
             console.error(`Failed to fetch master data for ${category}:`, error);
         }
-    };
+    }, []);
 
-    const loadAll = async () => {
+    const loadAll = useCallback(async () => {
         setLoading(true);
         // Categories we need eagerly for forms
         const categories = [
             'BREED', 'DRUG_TYPE', 'FEED_TYPE', 'BARN_TYPE',
-            'EGG_GRADE', 'DISEASE_TYPE', 'VACCINE_TYPE', 'FLOCK_PURPOSE'
+            'DISEASE_TYPE', 'VACCINE_TYPE', 'FLOCK_PURPOSE'
         ];
 
         await Promise.all(categories.map(c => fetchCategory(c)));
         setLoading(false);
-    };
+    }, [fetchCategory]);
 
     useEffect(() => {
         if (!authLoading && user) {
@@ -41,7 +41,7 @@ export const MasterDataProvider = ({ children }) => {
         } else if (!authLoading && !user) {
             setLoading(false);
         }
-    }, [user, authLoading]);
+    }, [user, authLoading, loadAll]);
 
     const refreshCategory = (category) => fetchCategory(category);
 

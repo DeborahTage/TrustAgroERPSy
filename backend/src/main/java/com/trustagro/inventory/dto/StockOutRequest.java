@@ -26,6 +26,10 @@ public class StockOutRequest {
     private LocalDate movementDate;
     private Long prescriptionId;
     private Long vaccinationId;
+    /** Optional FEFO override — dispense from this batch only. */
+    private Long batchId;
+    /** When set (e.g. INTERNAL_CONSUMPTION), overrides default ISSUE/SALE typing. */
+    private String movementTypeOverride;
 
     public void setItemId(Long itemId) { this.itemId = itemId; }
     public void setQuantity(Double quantity) { this.quantity = quantity; }

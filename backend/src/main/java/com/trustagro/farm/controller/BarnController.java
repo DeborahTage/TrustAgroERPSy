@@ -18,23 +18,25 @@ public class BarnController {
     private final BarnService barnService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('farm:read')")
     public ResponseEntity<ApiResponse<List<Barn>>> getAllBarns() {
         return ResponseEntity.ok(ApiResponse.success(barnService.getAllBarns()));
     }
 
     @GetMapping("/farm/{farmId}")
+    @PreAuthorize("hasAuthority('farm:read')")
     public ResponseEntity<ApiResponse<List<Barn>>> getBarnsByFarm(@PathVariable Long farmId) {
         return ResponseEntity.ok(ApiResponse.success(barnService.getBarnsByFarm(farmId)));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER')")
+    @PreAuthorize("hasAuthority('farm:create')")
     public ResponseEntity<ApiResponse<Barn>> createBarn(@RequestBody Barn barn) {
         return ResponseEntity.ok(ApiResponse.success("Barn created", barnService.createBarn(barn)));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER')")
+    @PreAuthorize("hasAuthority('farm:update')")
     public ResponseEntity<ApiResponse<Barn>> updateBarn(@PathVariable Long id, @RequestBody Barn barn) {
         return ResponseEntity.ok(ApiResponse.success("Barn updated", barnService.updateBarn(id, barn)));
     }

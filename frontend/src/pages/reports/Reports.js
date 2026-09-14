@@ -104,7 +104,7 @@ const Reports = () => {
     { accessorKey: 'farmName', header: t('reportsPage.farm') }, { accessorKey: 'batchCode', header: t('reportsPage.batch') },
     { accessorKey: 'openingBirdCount', header: t('reportsPage.opening') }, { accessorKey: 'mortality', header: t('reportsPage.mortalityCol') },
     { accessorKey: 'mortalityRate', header: t('reportsPage.rate'), cell: ({ row }) => row.original.mortalityRate ? `${row.original.mortalityRate.toFixed(2)}%` : '-' },
-    { accessorKey: 'feedConsumed', header: t('reportsPage.feed') }, { accessorKey: 'eggProduction', header: t('reportsPage.eggs') },
+    { accessorKey: 'feedConsumed', header: t('reportsPage.feed') },
   ];
 
   const stockCols = [

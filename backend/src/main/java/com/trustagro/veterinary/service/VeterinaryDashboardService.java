@@ -46,7 +46,10 @@ public class VeterinaryDashboardService {
                 .findByScheduledDateAfterAndStatus(today, VaccinationStatus.SCHEDULED).size());
         data.put("activeTreatments", treatmentRepo.countByStatus(TreatmentStatus.ACTIVE));
         data.put("openHealthReports", healthIssueReportRepo.countByStatus(HealthIssueReportStatus.OPEN));
-        data.put("pendingPrescriptions", prescriptionRepo.countByStatus(PrescriptionStatus.PENDING));
+        data.put("pendingPrescriptions",
+                prescriptionRepo.countByStatus(PrescriptionStatus.PENDING_PHARMACY)
+                        + prescriptionRepo.countByStatus(PrescriptionStatus.PENDING)
+                        + prescriptionRepo.countByStatus(PrescriptionStatus.APPROVED));
 
         int mortality7d = dailyRecordRepo.sumMortalityBetween(today.minusDays(7), today);
         int openingEstimate = Math.max(mortality7d * 20, 1);

@@ -64,6 +64,17 @@ public class NotificationService {
         create(title, message, NotificationType.INFO, role, null, null);
     }
 
+    public void createUserNotification(String title, String message, User user) {
+        if (user == null) return;
+        Notification n = new Notification();
+        n.setTitle(title);
+        n.setMessage(message);
+        n.setType(NotificationType.INFO);
+        n.setTargetUser(user);
+        n.setRelatedModule("PRESCRIPTION");
+        notificationRepository.save(n);
+    }
+
     private void create(String title, String message, NotificationType type, Role role, String module, Long relatedId) {
         Notification n = new Notification();
         n.setTitle(title);

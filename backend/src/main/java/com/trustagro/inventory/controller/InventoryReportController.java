@@ -6,6 +6,7 @@ import com.trustagro.user.repository.UserRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,11 +32,13 @@ public class InventoryReportController {
     }
 
     @GetMapping("/valuation")
+    @PreAuthorize("hasAnyAuthority('inventory:read','reports:read')")
     public ResponseEntity<Map<String, Object>> getValuationReport() {
         return ResponseEntity.ok(reportService.getStockValuationReport());
     }
 
     @GetMapping("/valuation/csv")
+    @PreAuthorize("hasAnyAuthority('inventory:read','reports:read')")
     public ResponseEntity<byte[]> getValuationCsv() {
         String csv = reportService.generateValuationCsv();
         return ResponseEntity.ok()
@@ -45,6 +48,7 @@ public class InventoryReportController {
     }
 
     @GetMapping("/expiry/csv")
+    @PreAuthorize("hasAnyAuthority('inventory:read','reports:read')")
     public ResponseEntity<byte[]> getExpiryCsv() {
         String csv = reportService.generateExpiryCsv();
         return ResponseEntity.ok()
@@ -54,11 +58,13 @@ public class InventoryReportController {
     }
 
     @GetMapping("/turnover")
+    @PreAuthorize("hasAnyAuthority('inventory:read','reports:read')")
     public ResponseEntity<java.util.List<Map<String, Object>>> getTurnover() {
         return ResponseEntity.ok(reportService.getTurnoverReport());
     }
 
     @GetMapping("/summary")
+    @PreAuthorize("hasAnyAuthority('inventory:read','reports:read')")
     public ResponseEntity<Map<String, Object>> getSummary() {
         return ResponseEntity.ok(reportService.getInventorySummary());
     }

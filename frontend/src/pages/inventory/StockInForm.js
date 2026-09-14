@@ -6,16 +6,14 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import { ArrowLeft, Package, Truck, Calendar, Tag, DollarSign, Activity, Save, X, Info, FileStack } from 'lucide-react';
+import { Package, Truck, Calendar, Tag, DollarSign, Activity, Save, Info, FileStack } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import api from '../../api/axios';
 import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
 
 const StockInForm = () => {
-  const { t } = useLanguage();
   const { canPerformAction } = useAuth();
   const canStockIn = canPerformAction('stockIn', 'inventoryItems');
   const navigate = useNavigate();

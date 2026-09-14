@@ -52,6 +52,7 @@ public class PharmacyService {
     private final FinanceService financeService;
     private final InventoryService inventoryService;
     private final NotificationService notificationService;
+    private final com.trustagro.finance.repository.InvoiceRepository invoiceRepository;
 
     public PharmacyService(PharmacyPatientRepository patientRepository,
                            PharmacyPrescriptionRepository rxRepository,
@@ -67,7 +68,8 @@ public class PharmacyService {
                            StockMovementRepository stockMovementRepository,
                            FinanceService financeService,
                            InventoryService inventoryService,
-                           NotificationService notificationService) {
+                           NotificationService notificationService,
+                           com.trustagro.finance.repository.InvoiceRepository invoiceRepository) {
         this.patientRepository = patientRepository;
         this.rxRepository = rxRepository;
         this.rxItemRepository = rxItemRepository;
@@ -83,6 +85,7 @@ public class PharmacyService {
         this.financeService = financeService;
         this.inventoryService = inventoryService;
         this.notificationService = notificationService;
+        this.invoiceRepository = invoiceRepository;
     }
 
     @Transactional
@@ -200,14 +203,18 @@ public class PharmacyService {
             vetRx.setStatus(com.trustagro.veterinary.entity.PrescriptionStatus.COMPLETED);
             vetRxRepository.save(vetRx);
 
-            // Finance Logging
+            // Finance Logging — internal farm use is cost (never revenue); client sales belong on POS
             if (vetRx.getPrescriptionType() == com.trustagro.veterinary.entity.PrescriptionType.INTERNAL_FARM) {
-                financeService.postExpense(totalCost, null, "5120", 
-                        "Internal Dispense: " + rx.getPrescriptionCode(), "PHARMACY", "PHARMACY_DISPENSE", rx.getId());
-            } else {
-                financeService.postRevenue(totalCost, null, "4200", 
-                        "Client Sale: " + rx.getPrescriptionCode(), "PHARMACY", "PHARMACY_DISPENSE", rx.getId());
+                if (totalCost.compareTo(BigDecimal.ZERO) > 0) {
+                    financeService.postInventoryConsumption(totalCost,
+                            com.trustagro.finance.entity.BusinessUnit.PHARMACY, "5120",
+                            "Internal Dispense: " + rx.getPrescriptionCode(),
+                            com.trustagro.finance.entity.FinanceSourceTypes.MODULE_PHARMACY,
+                            com.trustagro.finance.entity.FinanceSourceTypes.REF_INTERNAL_CONSUMPTION,
+                            rx.getId());
+                }
             }
+            // EXTERNAL_CLIENT / walk-in revenue must go through processSale (POS) to avoid double-counting.
 
         }
 
@@ -253,6 +260,7 @@ public class PharmacyService {
         }
 
         BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal totalCogs = BigDecimal.ZERO;
         List<PharmacySaleItem> saleItems = new ArrayList<>();
 
         for (SaleItemDto itemDto : request.getItems()) {
@@ -270,6 +278,11 @@ public class PharmacyService {
                 null,
                 user
             );
+            if (outResult.get("totalCost") instanceof BigDecimal cogsLine) {
+                totalCogs = totalCogs.add(cogsLine);
+            } else if (outResult.get("totalCost") != null) {
+                totalCogs = totalCogs.add(new BigDecimal(outResult.get("totalCost").toString()));
+            }
 
             BigDecimal unitPrice = resolveUnitPrice(item, sale.getPriceType(), itemDto.getUnitPrice());
             if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
@@ -288,7 +301,6 @@ public class PharmacyService {
             si.setLineTotal(lineTotal);
             si.setPriceType(sale.getPriceType());
             
-            // Traceability: attach first batch used if available from inventory result
             if (outResult.containsKey("batchNumber")) {
                 si.setBatchNumber((String) outResult.get("batchNumber"));
             }
@@ -296,7 +308,7 @@ public class PharmacyService {
             saleItems.add(si);
         }
 
-        BigDecimal tax = subtotal.multiply(BigDecimal.valueOf(0.15));
+        BigDecimal tax = subtotal.multiply(BigDecimal.valueOf(0.15)).setScale(2, java.math.RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(tax);
 
         sale.setSaleItems(saleItems);
@@ -304,8 +316,8 @@ public class PharmacyService {
         sale.setTaxAmount(tax);
         sale.setTotalAmount(total);
 
-        // Handle Credit Payment
-        if ("CREDIT".equalsIgnoreCase(request.getPaymentMethod()) && customer != null) {
+        boolean isCredit = "CREDIT".equalsIgnoreCase(request.getPaymentMethod());
+        if (isCredit && customer != null) {
             BigDecimal newBalance = customer.getOutstandingBalance().add(total);
             if (customer.getCreditLimit() != null && newBalance.compareTo(customer.getCreditLimit()) > 0) {
                 throw new IllegalStateException("Credit limit exceeded for customer: " + customer.getName());
@@ -316,9 +328,7 @@ public class PharmacyService {
         }
 
         PharmacySale savedSale = saleRepository.save(sale);
-
-        financeService.postRevenue(total, com.trustagro.finance.entity.BusinessUnit.PHARMACY, "4200",
-                "Sale: " + savedSale.getSaleCode(), "PHARMACY", "PHARMACY_SALE", savedSale.getId());
+        postPharmacySaleFinance(savedSale, customer, isCredit, totalCogs);
 
         notificationService.createRoleNotification(
                 "Pharmacy Sale Completed",
@@ -330,6 +340,100 @@ public class PharmacyService {
                 Role.GENERAL_MANAGER);
 
         return savedSale;
+    }
+
+    /**
+     * Revenue recognition vs cash settlement:
+     * - Subtotal → revenue (INCOME)
+     * - VAT → liability (TRANSFER), not revenue
+     * - Cash/Bank/AR debit depending on payment method
+     * - CREDIT sales debit AR; cash sales debit cash/bank (already settled)
+     * Payments must never be posted again as revenue.
+     */
+    private void postPharmacySaleFinance(PharmacySale savedSale, PharmacyCustomer customer,
+                                         boolean isCredit, BigDecimal totalCogs) {
+        BigDecimal subtotal = savedSale.getSubtotal() != null ? savedSale.getSubtotal() : BigDecimal.ZERO;
+        BigDecimal tax = savedSale.getTaxAmount() != null ? savedSale.getTaxAmount() : BigDecimal.ZERO;
+        String debitAsset = resolvePharmacyDebitAccount(savedSale.getPaymentMethod(), isCredit);
+        com.trustagro.finance.entity.PaymentMethod pm = mapPaymentMethod(savedSale.getPaymentMethod());
+
+        // Authoritative invoice for AR / traceability
+        com.trustagro.finance.entity.Invoice invoice = new com.trustagro.finance.entity.Invoice();
+        invoice.setInvoiceNumber("PHINV-" + savedSale.getSaleCode());
+        invoice.setInvoiceType(com.trustagro.finance.entity.InvoiceType.POS);
+        invoice.setStatus(isCredit ? com.trustagro.finance.entity.InvoiceStatus.SENT
+                : com.trustagro.finance.entity.InvoiceStatus.PAID);
+        invoice.setClientId(customer != null ? customer.getId() : null);
+        invoice.setClientName(customer != null ? customer.getName()
+                : (savedSale.getCustomerName() != null ? savedSale.getCustomerName() : "Walk-in"));
+        invoice.setSubtotal(subtotal);
+        invoice.setVatAmount(tax);
+        invoice.setTotalAmount(savedSale.getTotalAmount());
+        invoice.setPaidAmount(isCredit ? BigDecimal.ZERO : savedSale.getTotalAmount());
+        invoice.setBusinessUnit(com.trustagro.finance.entity.BusinessUnit.PHARMACY);
+        invoice.setSourceModule(com.trustagro.finance.entity.FinanceSourceTypes.MODULE_PHARMACY);
+        invoice.setSourceType(com.trustagro.finance.entity.FinanceSourceTypes.REF_PHARMACY_SALE_REVENUE);
+        invoice.setSourceId(savedSale.getId());
+        invoice.setDueDate(java.time.LocalDate.now().plusDays(isCredit ? 14 : 0));
+        invoice = invoiceRepository.save(invoice);
+
+        if (subtotal.compareTo(BigDecimal.ZERO) > 0) {
+            financeService.postTransaction(
+                    com.trustagro.finance.entity.TransactionType.INCOME,
+                    subtotal,
+                    com.trustagro.finance.entity.BusinessUnit.PHARMACY,
+                    debitAsset,
+                    "4200",
+                    "Pharmacy sale " + savedSale.getSaleCode() + " revenue",
+                    com.trustagro.finance.entity.FinanceSourceTypes.MODULE_PHARMACY,
+                    com.trustagro.finance.entity.FinanceSourceTypes.REF_PHARMACY_SALE_REVENUE,
+                    savedSale.getId(),
+                    pm,
+                    java.time.LocalDate.now());
+        }
+        if (tax.compareTo(BigDecimal.ZERO) > 0) {
+            financeService.postTransaction(
+                    com.trustagro.finance.entity.TransactionType.TRANSFER,
+                    tax,
+                    com.trustagro.finance.entity.BusinessUnit.PHARMACY,
+                    debitAsset,
+                    com.trustagro.finance.entity.AccountCode.LIABILITY_VAT.getCode(),
+                    "Pharmacy sale " + savedSale.getSaleCode() + " VAT",
+                    com.trustagro.finance.entity.FinanceSourceTypes.MODULE_PHARMACY,
+                    com.trustagro.finance.entity.FinanceSourceTypes.REF_PHARMACY_SALE_VAT,
+                    savedSale.getId(),
+                    pm,
+                    java.time.LocalDate.now());
+        }
+        if (totalCogs != null && totalCogs.compareTo(BigDecimal.ZERO) > 0) {
+            financeService.postCogs(
+                    totalCogs,
+                    com.trustagro.finance.entity.BusinessUnit.PHARMACY,
+                    com.trustagro.finance.entity.AccountCode.COGS_PHARMACY.getCode(),
+                    "Pharmacy COGS " + savedSale.getSaleCode(),
+                    com.trustagro.finance.entity.FinanceSourceTypes.MODULE_PHARMACY,
+                    com.trustagro.finance.entity.FinanceSourceTypes.REF_PHARMACY_SALE_COGS,
+                    savedSale.getId());
+        }
+    }
+
+    private String resolvePharmacyDebitAccount(String paymentMethod, boolean isCredit) {
+        if (isCredit || "CREDIT".equalsIgnoreCase(paymentMethod)) {
+            return com.trustagro.finance.entity.AccountCode.ASSET_RECEIVABLE.getCode();
+        }
+        if ("BANK_TRANSFER".equalsIgnoreCase(paymentMethod) || "MOBILE_MONEY".equalsIgnoreCase(paymentMethod)) {
+            return com.trustagro.finance.entity.AccountCode.ASSET_BANK.getCode();
+        }
+        return com.trustagro.finance.entity.AccountCode.ASSET_CASH.getCode();
+    }
+
+    private com.trustagro.finance.entity.PaymentMethod mapPaymentMethod(String method) {
+        if (method == null) return com.trustagro.finance.entity.PaymentMethod.CASH;
+        try {
+            return com.trustagro.finance.entity.PaymentMethod.valueOf(method.toUpperCase());
+        } catch (Exception e) {
+            return com.trustagro.finance.entity.PaymentMethod.CASH;
+        }
     }
 
     private BigDecimal resolveUnitPrice(InventoryItem item, PriceType priceType, BigDecimal clientPrice) {
@@ -354,11 +458,11 @@ public class PharmacyService {
         List<PharmacySale> monthSales = saleRepository.findSalesBetweenDates(startOfMonth, endOfDay);
 
         BigDecimal revenueToday = todaySales.stream()
-                .map(s -> s.getTotalAmount() != null ? s.getTotalAmount() : BigDecimal.ZERO)
+                .map(s -> s.getSubtotal() != null ? s.getSubtotal() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal revenueMonth = monthSales.stream()
-                .map(s -> s.getTotalAmount() != null ? s.getTotalAmount() : BigDecimal.ZERO)
+                .map(s -> s.getSubtotal() != null ? s.getSubtotal() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         long pendingRx = rxRepository.countByStatus("Pending");

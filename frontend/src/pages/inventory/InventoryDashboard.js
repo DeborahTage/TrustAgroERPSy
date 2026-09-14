@@ -6,30 +6,28 @@ import EnterprisePage from '../../components/layout/EnterprisePage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
-import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency } from '../../utils';
 import {
-  Package, AlertTriangle, Clock, Activity, BarChart3, TrendingUp, DollarSign,
-  ArrowDownToLine, ArrowUpFromLine, Layers, History,
-  ShoppingCart, ShieldAlert, PlusCircle, MinusCircle, FileText, RefreshCw,
-  Box, ShieldCheck, Settings, Pill, ArrowRightLeft, ExternalLink, User
+  Package, AlertTriangle, BarChart3, DollarSign,
+  History,
+  ShoppingCart, PlusCircle, FileText, RefreshCw,
+  ArrowRightLeft, ExternalLink, User
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, PieChart, Pie
+  Cell, PieChart, Pie
 } from 'recharts';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import { useAuth } from '../../context/AuthContext';
+import { normalizeRole } from '../../lib/permissions';
 import { cn } from '../../lib/utils';
 
 export default function InventoryDashboard() {
-  const { t } = useLanguage();
-  const { user, canPerformAction } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  const isIM = user?.role === 'STORE_KEEPER' || user?.role === 'ADMIN';
+  const role = normalizeRole(user?.role);
+  const isIM = role === 'INVENTORY_MANAGER' || role === 'ADMIN';
 
   const { data = {}, isLoading, isError, refetch } = useQuery({
     queryKey: ['inventory-dashboard'],

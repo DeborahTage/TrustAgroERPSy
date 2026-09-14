@@ -1,5 +1,6 @@
 package com.trustagro.finance.service;
 
+import com.trustagro.common.exception.BusinessException;
 import com.trustagro.finance.entity.*;
 import com.trustagro.finance.repository.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,18 +38,25 @@ public class InvoiceService {
         invoice.setPaidAmount(subtotal.add(vatAmount));
         invoice.setBusinessUnit(unit);
         invoice.setDueDate(LocalDate.now());
+        invoice.setSourceModule(FinanceSourceTypes.MODULE_INVOICE);
 
         Invoice saved = invoiceRepository.save(invoice);
+        invoice.setSourceId(saved.getId());
+        invoice.setSourceType(FinanceSourceTypes.REF_INVOICE_REVENUE);
+        saved = invoiceRepository.save(invoice);
 
-        // Auto-post to finance
         AccountCode accountCode = getRevenueAccountForUnit(unit);
-        financeService.postRevenue(subtotal, unit, accountCode.getCode(),
-                "POS Invoice " + saved.getInvoiceNumber(), "INVOICE", "INVOICE", saved.getId());
+        // Revenue recognition only on subtotal — VAT is liability, not income
+        financeService.postTransaction(TransactionType.INCOME, subtotal, unit,
+                AccountCode.ASSET_CASH.getCode(), accountCode.getCode(),
+                "POS Invoice " + saved.getInvoiceNumber(),
+                FinanceSourceTypes.MODULE_INVOICE, FinanceSourceTypes.REF_INVOICE_REVENUE, saved.getId());
 
         if (vatAmount.compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(TransactionType.INCOME, vatAmount, unit,
-                    "1000", AccountCode.LIABILITY_VAT.getCode(),
-                    "VAT from Invoice " + saved.getInvoiceNumber(), "INVOICE", "INVOICE", saved.getId());
+            financeService.postTransaction(TransactionType.TRANSFER, vatAmount, unit,
+                    AccountCode.ASSET_CASH.getCode(), AccountCode.LIABILITY_VAT.getCode(),
+                    "VAT from Invoice " + saved.getInvoiceNumber(),
+                    FinanceSourceTypes.MODULE_INVOICE, FinanceSourceTypes.REF_INVOICE_VAT, saved.getId());
         }
 
         return saved;
@@ -63,7 +71,7 @@ public class InvoiceService {
             default -> AccountCode.REV_OTHER;
         };
     }
-    
+
     @Transactional
     public Invoice createServiceInvoice(Long clientId, String clientName, BusinessUnit unit,
                                        BigDecimal amount, LocalDate dueDate) {
@@ -74,10 +82,38 @@ public class InvoiceService {
         invoice.setClientId(clientId);
         invoice.setClientName(clientName);
         invoice.setSubtotal(amount);
-        invoice.setTotalAmount(amount); // Assuming service might be VAT exempt or included for now
+        invoice.setTotalAmount(amount);
         invoice.setBusinessUnit(unit);
         invoice.setDueDate(dueDate);
-        
+        invoice.setSourceModule(FinanceSourceTypes.MODULE_INVOICE);
+        Invoice saved = invoiceRepository.save(invoice);
+        // Service invoices recognize revenue on issue via AR (no cash until payment)
+        financeService.postTransaction(TransactionType.INCOME, amount, unit,
+                AccountCode.ASSET_RECEIVABLE.getCode(), getRevenueAccountForUnit(unit).getCode(),
+                "Service invoice " + saved.getInvoiceNumber(),
+                FinanceSourceTypes.MODULE_INVOICE, FinanceSourceTypes.REF_INVOICE_REVENUE, saved.getId());
+        return saved;
+    }
+
+    @Transactional
+    public Invoice cancelInvoice(Long id) {
+        Invoice invoice = invoiceRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Invoice not found"));
+        if (invoice.getStatus() == InvoiceStatus.PAID || invoice.getStatus() == InvoiceStatus.PARTIALLY_PAID) {
+            throw new BusinessException("Cannot cancel an invoice with payments; reverse payments first");
+        }
+        if (invoice.getStatus() == InvoiceStatus.CANCELLED) {
+            return invoice;
+        }
+        invoice.setStatus(InvoiceStatus.CANCELLED);
         return invoiceRepository.save(invoice);
+    }
+
+    public List<Invoice> getOpenReceivables() {
+        return invoiceRepository.findAll().stream()
+                .filter(i -> i.getStatus() == InvoiceStatus.SENT
+                        || i.getStatus() == InvoiceStatus.PARTIALLY_PAID
+                        || i.getStatus() == InvoiceStatus.OVERDUE)
+                .toList();
     }
 }

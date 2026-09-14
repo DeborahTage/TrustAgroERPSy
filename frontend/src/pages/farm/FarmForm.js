@@ -91,7 +91,6 @@ const FarmForm = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="BROILER">{t('options.BROILER')}</SelectItem>
-                  <SelectItem value="LAYER">{t('options.LAYER')}</SelectItem>
                   <SelectItem value="MIXED">{t('options.MIXED')}</SelectItem>
                 </SelectContent>
               </Select>

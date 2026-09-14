@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { inventoryApi, supplierApi, api } from '../../api';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { supplierApi } from '../../api';
+import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import {
     Table,
@@ -15,7 +15,7 @@ import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Plus, Users, Mail, Phone, MapPin, Star, Trash2, Edit } from 'lucide-react';
+import { Plus, Users, Mail, Phone, Star, Trash2, Edit } from 'lucide-react';
 import { toast } from 'react-toastify';
 import EnterprisePage from '../../components/layout/EnterprisePage';
 

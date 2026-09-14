@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Activity, AlertCircle, Calendar, ClipboardList,
-  HeartPulse, ShieldCheck, FileText, Stethoscope, Pill,
+  HeartPulse, ShieldCheck, Stethoscope, Pill,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';

@@ -1,28 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { financeApi, pharmacyApi } from '../../api';
+import { financeApi } from '../../api';
 import { useNavigate } from 'react-router-dom';
 
 
 import EnterprisePage from '../../components/layout/EnterprisePage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency } from '../../utils';
 import {
-  DollarSign, TrendingUp, TrendingDown, Activity, Wallet, Receipt,
+  DollarSign, TrendingUp, TrendingDown, Wallet, Receipt,
   BarChart3, PieChart, ArrowUpRight, ArrowDownRight, Clock, ShieldCheck,
   RefreshCw, FileText, Download, Calculator
 } from 'lucide-react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, Legend
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar
 } from 'recharts';
 import { Badge } from '../../components/ui/badge';
 import ReconciliationDialog from './components/ReconciliationDialog';
 import POSInvoiceDialog from './components/POSInvoiceDialog';
 
 const FinanceDashboard = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [data, setData] = useState({
@@ -33,14 +31,18 @@ const FinanceDashboard = () => {
     transactions: [],
     accountsReceivable: 0,
     cashInHand: 0,
-    accountsPayable: 0
+    bankBalance: 0,
+    accountsPayable: 0,
+    cashInflow: 0,
+    cashOutflow: 0,
+    accountingNote: '',
   });
 
   const [loading, setLoading] = useState(true);
   const [reconcileOpen, setReconcileOpen] = useState(false);
   const [posOpen, setPosOpen] = useState(false);
 
-  const [creditCustomers, setCreditCustomers] = useState([]);
+  const [openReceivables, setOpenReceivables] = useState([]);
 
   const [error, setError] = useState(null);
 
@@ -48,13 +50,12 @@ const FinanceDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const [dashRes, txRes, custRes] = await Promise.all([
+      const [dashRes, txRes, arRes] = await Promise.all([
         financeApi.getDashboard(),
         financeApi.getTransactions(),
-        pharmacyApi.getCustomers().catch(() => ({ data: { data: [] } }))
+        financeApi.getReceivables().catch(() => ({ data: { data: [] } })),
       ]);
-      const customers = custRes.data?.data || [];
-      setCreditCustomers(customers.filter((c) => (c.outstandingBalance || 0) > 0));
+      setOpenReceivables(arRes.data?.data || []);
       setData({
         ...dashRes.data.data,
         transactions: txRes.data.data || []
@@ -77,7 +78,7 @@ const FinanceDashboard = () => {
       icon: TrendingUp,
       iconColor: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
-      description: 'Consolidated income'
+      description: 'Posted INCOME (not cash receipts)'
     },
     {
       title: 'Total Expenses',
@@ -85,15 +86,15 @@ const FinanceDashboard = () => {
       icon: TrendingDown,
       iconColor: 'text-rose-600',
       bgColor: 'bg-rose-50',
-      description: 'Operating costs'
+      description: 'Posted EXPENSE + COGS'
     },
     {
-      title: 'Net Profit',
+      title: 'Net Result',
       value: formatCurrency(data.netProfit),
       icon: DollarSign,
       iconColor: data.netProfit >= 0 ? 'text-primary' : 'text-rose-600',
       bgColor: 'bg-primary/10',
-      description: 'Bottom line earnings'
+      description: 'Revenue − expenses'
     },
     {
       title: 'Accounts Receivable',
@@ -101,15 +102,15 @@ const FinanceDashboard = () => {
       icon: Clock,
       iconColor: 'text-amber-600',
       bgColor: 'bg-amber-50',
-      description: 'Pending payments'
+      description: 'Open invoice outstanding'
     },
     {
-      title: 'Cash Position',
-      value: formatCurrency(data.cashInHand || 0),
+      title: 'Cash + Bank',
+      value: formatCurrency((Number(data.cashInHand) || 0) + (Number(data.bankBalance) || 0)),
       icon: Wallet,
       iconColor: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      description: 'Liquid assets'
+      description: `Cash ${formatCurrency(data.cashInHand || 0)} · Bank ${formatCurrency(data.bankBalance || 0)}`
     },
     {
       title: 'Accounts Payable',
@@ -117,7 +118,7 @@ const FinanceDashboard = () => {
       icon: ShieldCheck,
       iconColor: 'text-purple-600',
       bgColor: 'bg-purple-50',
-      description: 'Pending obligations'
+      description: 'Inventory receipts on AP'
     }
   ];
 
@@ -148,7 +149,7 @@ const FinanceDashboard = () => {
   return (
     <EnterprisePage
       title="Financial Oversight Center"
-      subtitle="Multi-stream revenue tracking and professional ERP accounting"
+      subtitle="Ledger KPIs from posted finance transactions and open invoices — not frontend estimates"
       breadcrumbs={['Finance', 'Dashboard']}
       error={error}
       onRetry={fetchDashboard}
@@ -171,7 +172,7 @@ const FinanceDashboard = () => {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-bold">Revenue by Business Unit</CardTitle>
-                <CardDescription>Income distribution across farm, pharmacy, and services</CardDescription>
+                <CardDescription>Income distribution across farm and pharmacy units with posted activity</CardDescription>
               </div>
               <BarChart3 className="text-slate-400 h-5 w-5" />
             </CardHeader>
@@ -194,7 +195,7 @@ const FinanceDashboard = () => {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-bold">Expense by Source Module</CardTitle>
-                <CardDescription>Operating costs from inventory, pharmacy, payroll, and farm operations</CardDescription>
+                <CardDescription>Operating costs from inventory, pharmacy COGS, and farm/vet consumption</CardDescription>
               </div>
               <PieChart className="text-slate-400 h-5 w-5" />
             </CardHeader>
@@ -222,7 +223,7 @@ const FinanceDashboard = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle className="text-lg font-bold">Revenue Log</CardTitle>
-                  <CardDescription>Income posted from pharmacy sales, training, consulting, and farm products</CardDescription>
+                  <CardDescription>Income posted from pharmacy sales and chicken sales (INCOME type only)</CardDescription>
                 </div>
                 <Badge variant="outline">{revenueTransactions.length} records</Badge>
               </div>
@@ -241,6 +242,7 @@ const FinanceDashboard = () => {
                         <p className="text-sm font-bold text-slate-800">{tx.description}</p>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-[10px] font-mono py-0">{tx.sourceModule || tx.businessUnit}</Badge>
+                          <span className="text-[10px] text-slate-400">{tx.referenceType}{tx.referenceId != null ? `#${tx.referenceId}` : ''}</span>
                           <span className="text-[10px] text-slate-400">{tx.transactionDate}</span>
                         </div>
                       </div>
@@ -257,7 +259,7 @@ const FinanceDashboard = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle className="text-lg font-bold">Expense Log</CardTitle>
-                  <CardDescription>Costs from stock consumption, drugs, feed, payroll, and maintenance</CardDescription>
+                  <CardDescription>Costs from stock consumption, drugs, feed, and maintenance (not payroll until HR exists)</CardDescription>
                 </div>
                 <Badge variant="outline">{expenseTransactions.length} records</Badge>
               </div>
@@ -276,6 +278,7 @@ const FinanceDashboard = () => {
                         <p className="text-sm font-bold text-slate-800">{tx.description}</p>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-[10px] font-mono py-0">{tx.sourceModule || 'MANUAL'}</Badge>
+                          <span className="text-[10px] text-slate-400">{tx.referenceType}{tx.referenceId != null ? `#${tx.referenceId}` : ''}</span>
                           <span className="text-[10px] text-slate-400">{tx.transactionDate}</span>
                         </div>
                       </div>
@@ -321,7 +324,10 @@ const FinanceDashboard = () => {
                       <p className={`text-sm font-bold ${tx.transactionType === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {tx.transactionType === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
                       </p>
-                      <p className="text-[10px] text-slate-400">Ref: {tx.referenceType || 'Manual'}</p>
+                      <p className="text-[10px] text-slate-400">
+                        {tx.sourceModule || 'MANUAL'} · {tx.referenceType || '—'}
+                        {tx.referenceId != null ? ` #${tx.referenceId}` : ''}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -363,32 +369,41 @@ const FinanceDashboard = () => {
           <Card className="border-none shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-500" /> AR Aging Watch
+                <Clock className="h-4 w-4 text-amber-500" /> Open Receivables
               </CardTitle>
+              <CardDescription className="text-xs">From open invoices (authoritative AR)</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {creditCustomers.length === 0 ? (
-                  <p className="text-sm text-gray-500">No outstanding pharmacy credit balances.</p>
-                ) : creditCustomers.slice(0, 6).map((customer) => (
-                  <div key={customer.id} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span>{customer.name}</span>
-                      <span>{formatCurrency(customer.outstandingBalance || 0)}</span>
+                {openReceivables.length === 0 ? (
+                  <p className="text-sm text-gray-500">No open invoices with outstanding balances.</p>
+                ) : openReceivables.slice(0, 8).map((inv) => {
+                  const outstanding = Math.max(0, (Number(inv.totalAmount) || 0) - (Number(inv.paidAmount) || 0));
+                  return (
+                    <div key={inv.id} className="space-y-1">
+                      <div className="flex justify-between text-xs font-semibold">
+                        <span className="truncate pr-2">{inv.clientName} · {inv.invoiceNumber}</span>
+                        <span>{formatCurrency(outstanding)}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] text-slate-400">
+                        <span>{inv.sourceModule || inv.invoiceType} · {inv.status}</span>
+                        <span>Due {inv.dueDate || '—'}</span>
+                      </div>
                     </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-500"
-                        style={{ width: `${Math.min(100, ((customer.outstandingBalance || 0) / (customer.creditLimit || customer.outstandingBalance || 1)) * 100)}%` }}
-                      />
-                    </div>
+                  );
+                })}
+                <div className="pt-2 border-t text-xs font-bold text-slate-600 flex justify-between">
+                  <span>Total AR</span>
+                  <span>{formatCurrency(data.accountsReceivable || 0)}</span>
+                </div>
+                {(Number(data.cashInflow) > 0 || Number(data.cashOutflow) > 0) && (
+                  <div className="pt-2 border-t text-[11px] text-slate-500 space-y-1">
+                    <div className="flex justify-between"><span>Cash/Bank inflows</span><span>{formatCurrency(data.cashInflow || 0)}</span></div>
+                    <div className="flex justify-between"><span>Cash/Bank outflows</span><span>{formatCurrency(data.cashOutflow || 0)}</span></div>
                   </div>
-                ))}
-                {data.accountsReceivable > 0 && (
-                  <div className="pt-2 border-t text-xs font-bold text-slate-600 flex justify-between">
-                    <span>Total AR (Ledger)</span>
-                    <span>{formatCurrency(data.accountsReceivable)}</span>
-                  </div>
+                )}
+                {data.accountingNote && (
+                  <p className="text-[10px] text-slate-400 pt-2 border-t leading-relaxed">{data.accountingNote}</p>
                 )}
               </div>
             </CardContent>

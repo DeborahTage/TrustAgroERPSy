@@ -41,6 +41,7 @@ public class VeterinaryService {
     private final DiseaseCaseRepository diseaseCaseRepo;
     private final TreatmentRecordRepository treatmentRepo;
     private final PrescriptionRepository prescriptionRepo;
+    private final PrescriptionWorkflowService prescriptionWorkflowService;
     private final HealthIssueReportRepository healthIssueReportRepo;
     private final NecropsyRecordRepository necropsyRepo;
     private final FlockObservationRepository observationRepo;
@@ -121,7 +122,6 @@ public class VeterinaryService {
         obs.setDiarrheaType(req.getDiarrheaType());
         obs.setFeedIntakeDropPercentage(req.getFeedIntakeDropPercentage());
         obs.setWaterIntakeDropPercentage(req.getWaterIntakeDropPercentage());
-        obs.setEggProductionDropPercentage(req.getEggProductionDropPercentage());
         obs.setMortalityCount(req.getMortalityCount());
         obs.setGeneralComments(req.getGeneralComments());
         
@@ -368,115 +368,25 @@ public class VeterinaryService {
                 .stream().limit(count).map(this::toTreatmentResponse).collect(Collectors.toList());
     }
 
-    // Prescriptions
+    // Prescriptions — delegated to canonical PrescriptionWorkflowService
     public List<PrescriptionResponse> getAllPrescriptions() {
-        return prescriptionRepo.findAll().stream().map(this::toPrescriptionResponse).collect(Collectors.toList());
+        return prescriptionWorkflowService.listAll();
     }
 
     public PrescriptionResponse createPrescription(PrescriptionRequest req) {
-        if (prescriptionRepo.existsByPrescriptionNumber(req.getPrescriptionNumber()))
-            throw new BusinessException("Prescription number already exists");
-        Prescription p = new Prescription();
-        p.setPrescriptionNumber(req.getPrescriptionNumber());
-        p.setPrescriptionType(req.getPrescriptionType() != null ? req.getPrescriptionType() : PrescriptionType.INTERNAL_FARM);
-        p.setFarmId(req.getFarmId());
-        p.setFlockId(req.getFlockId());
-        p.setClientId(req.getClientId());
-        p.setDiseaseCaseId(req.getDiseaseCaseId());
-        p.setInventoryItemId(req.getInventoryItemId());
-        p.setDrugName(req.getDrugName());
-        p.setQuantity(req.getQuantity());
-        p.setDosageInstruction(req.getDosageInstruction());
-        p.setWithdrawalPeriodDays(req.getWithdrawalPeriodDays());
-        
-        if (req.getWithdrawalPeriodDays() != null && req.getWithdrawalPeriodDays() > 0) {
-            p.setWithdrawalEndDate(LocalDate.now().plusDays(req.getWithdrawalPeriodDays()));
-        }
-
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        userRepository.findByEmail(email).ifPresent(p::setCreatedByVet);
-        p.setStatus(PrescriptionStatus.PENDING_PHARMACY);
-        Prescription saved = prescriptionRepo.save(p);
-        auditService.logObject("CREATE", MODULE, "PRESCRIPTION", saved.getId(), null, toPrescriptionResponse(saved));
-        notificationService.createRoleNotification(
-                "Prescription Ready for Dispensing",
-                req.getPrescriptionNumber() + " has been sent to pharmacy.",
-                com.trustagro.user.entity.Role.PHARMACIST
-        );
-        return toPrescriptionResponse(saved);
+        return prescriptionWorkflowService.create(req);
     }
 
-    @Transactional
     public PrescriptionResponse approvePrescription(Long id) {
-        Prescription p = prescriptionRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
-        if (p.getStatus() == PrescriptionStatus.DISPENSED || p.getStatus() == PrescriptionStatus.COMPLETED) {
-            throw new BusinessException("Prescription already dispensed");
-        }
-        if (p.getInventoryItemId() != null) {
-            InventoryItem item = inventoryItemRepository.findById(p.getInventoryItemId()).orElse(null);
-            if (item != null && item.getCurrentStock() != null && p.getQuantity() != null
-                    && item.getCurrentStock() < p.getQuantity()) {
-                throw new BusinessException("Insufficient stock for " + item.getItemName());
-            }
-        }
-        p.setStatus(PrescriptionStatus.APPROVED);
-        Prescription saved = prescriptionRepo.save(p);
-        notificationService.createRoleNotification(
-                "Prescription Approved",
-                "Order " + p.getPrescriptionNumber() + " approved by pharmacy.",
-                com.trustagro.user.entity.Role.VETERINARIAN);
-        auditService.logObject("APPROVE", MODULE, "PRESCRIPTION", saved.getId(), null, toPrescriptionResponse(saved));
-        return toPrescriptionResponse(saved);
+        return prescriptionWorkflowService.approve(id);
     }
 
-    @Transactional
     public PrescriptionResponse dispensePrescription(Long id) {
-        Prescription p = prescriptionRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
-        if (p.getStatus() == PrescriptionStatus.CANCELLED)
-            throw new BusinessException("Prescription is cancelled");
-        if (p.getStatus() == PrescriptionStatus.DISPENSED)
-            throw new BusinessException("Prescription already dispensed");
-        if (p.getStatus() != PrescriptionStatus.APPROVED && p.getStatus() != PrescriptionStatus.PENDING_PHARMACY
-                && p.getStatus() != PrescriptionStatus.PENDING) {
-            throw new BusinessException("Prescription must be approved before dispensing");
-        }
-        String before = summarizePrescription(p);
-        deductStockIfApplicable(
-                p.getInventoryItemId(),
-                p.getQuantity(),
-                p.getFarmId(),
-                "PRESCRIPTION",
-                p.getId(),
-                "Prescription Dispense - " + p.getPrescriptionNumber()
-        );
-        BigDecimal expenseAmount = BigDecimal.ZERO;
-        if (p.getInventoryItemId() != null && p.getQuantity() != null) {
-            InventoryItem item = inventoryItemRepository.findById(p.getInventoryItemId()).orElse(null);
-            if (item != null) {
-                BigDecimal unitCost = item.getAvgUnitCost() != null ? item.getAvgUnitCost()
-                        : (item.getRetailPrice() != null ? item.getRetailPrice() : BigDecimal.ZERO);
-                expenseAmount = unitCost.multiply(BigDecimal.valueOf(p.getQuantity()));
-            }
-        }
-        if (expenseAmount.compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postExpense(expenseAmount, com.trustagro.finance.entity.BusinessUnit.PHARMACY, "5120",
-                    "Vet dispense: " + p.getPrescriptionNumber() + " - " + p.getDrugName(),
-                    "VETERINARY", "PRESCRIPTION", p.getId());
-        }
-        p.setStatus(PrescriptionStatus.DISPENSED);
-        Prescription saved = prescriptionRepo.save(p);
-        notificationService.createRoleNotification(
-                "Prescription Dispensed",
-                "Order " + p.getPrescriptionNumber() + " dispensed. Stock deducted and expense recorded.",
-                com.trustagro.user.entity.Role.VETERINARIAN);
-        notificationService.createRoleNotification(
-                "Veterinary Expense Recorded",
-                String.format("ETB %s posted for Rx %s", expenseAmount, p.getPrescriptionNumber()),
-                com.trustagro.user.entity.Role.FINANCE);
-        auditService.logObject("DISPENSE", MODULE, "PRESCRIPTION", saved.getId(), before, toPrescriptionResponse(saved));
-        return toPrescriptionResponse(saved);
+        return prescriptionWorkflowService.dispense(id, null);
+    }
+
+    public PrescriptionResponse dispensePrescription(Long id, DispensePrescriptionRequest req) {
+        return prescriptionWorkflowService.dispense(id, req);
     }
 
     private void deductStockIfApplicable(Long inventoryItemId, Double quantity, Long farmId,
@@ -505,10 +415,6 @@ public class VeterinaryService {
 
     private String summarizeTreatment(TreatmentRecord t) {
         return t.getDrugName() + " | qty=" + t.getQuantity() + " | outcome=" + t.getOutcome();
-    }
-
-    private String summarizePrescription(Prescription p) {
-        return p.getPrescriptionNumber() + " | " + p.getDrugName() + " | qty=" + p.getQuantity() + " | " + p.getStatus();
     }
 
     public VaccinationResponse toVaccinationResponse(VaccinationSchedule v) {
@@ -576,36 +482,6 @@ public class VeterinaryService {
         }
         r.setOutcome(t.getOutcome());
         r.setCreatedAt(t.getCreatedAt());
-        return r;
-    }
-
-    private PrescriptionResponse toPrescriptionResponse(Prescription p) {
-        PrescriptionResponse r = new PrescriptionResponse();
-        r.setId(p.getId());
-        r.setPrescriptionNumber(p.getPrescriptionNumber());
-        r.setPrescriptionType(p.getPrescriptionType());
-        r.setFarmId(p.getFarmId());
-        if (p.getFarmId() != null) {
-            farmRepository.findById(p.getFarmId()).ifPresent(f -> r.setFarmName(f.getFarmName()));
-        }
-        r.setFlockId(p.getFlockId());
-        if (p.getFlockId() != null) {
-            flockRepository.findById(p.getFlockId()).ifPresent(f -> r.setBatchCode(f.getBatchCode()));
-        }
-        r.setClientId(p.getClientId());
-        r.setDiseaseCaseId(p.getDiseaseCaseId());
-        r.setInventoryItemId(p.getInventoryItemId());
-        r.setDrugName(p.getDrugName());
-        r.setQuantity(p.getQuantity());
-        r.setDosageInstruction(p.getDosageInstruction());
-        r.setWithdrawalPeriodDays(p.getWithdrawalPeriodDays());
-        r.setWithdrawalEndDate(p.getWithdrawalEndDate());
-        if (p.getCreatedByVet() != null) {
-            r.setPrescribedById(p.getCreatedByVet().getId());
-            r.setCreatedByVet(p.getCreatedByVet().getFullName());
-        }
-        r.setStatus(p.getStatus());
-        r.setCreatedAt(p.getCreatedAt());
         return r;
     }
 

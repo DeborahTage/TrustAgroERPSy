@@ -8,10 +8,10 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { useLanguage } from '../../context/LanguageContext';
 import { toast } from 'react-toastify';
-import { ROLES } from '../../utils';
+import { CANONICAL_ROLES, ROLE_LABELS, normalizeRole } from '../../lib/permissions';
 import { User, Lock } from 'lucide-react';
 
-const ROLE_OPTIONS = Object.values(ROLES);
+const ROLE_OPTIONS = CANONICAL_ROLES;
 
 const UserForm = () => {
   const { t } = useLanguage();
@@ -29,7 +29,7 @@ const UserForm = () => {
       userApi.getById(id)
         .then((r) => {
           const u = r.data.data;
-          setForm({ fullName: u.fullName, email: u.email, phone: u.phone || '', password: '', role: u.role });
+          setForm({ fullName: u.fullName, email: u.email, phone: u.phone || '', password: '', role: normalizeRole(u.role) || u.role });
         })
         .catch(() => setError('Failed to load user.'))
         .finally(() => setFetching(false));
@@ -87,7 +87,7 @@ const UserForm = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ROLE_OPTIONS.map((r) => (
-                    <SelectItem key={r} value={r}>{t(`roles.${r}`)}</SelectItem>
+                    <SelectItem key={r} value={r}>{ROLE_LABELS[r] || t(`roles.${r}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

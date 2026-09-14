@@ -18,18 +18,19 @@ public class CustomerOrderController {
     private final CustomerOrderService orderService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('crm:read')")
     public ResponseEntity<ApiResponse<List<CustomerOrder>>> getAllOrders() {
         return ResponseEntity.ok(ApiResponse.success(orderService.getAllOrders()));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER','CRM_AGENT')")
+    @PreAuthorize("hasAuthority('crm:create')")
     public ResponseEntity<ApiResponse<CustomerOrder>> createOrder(@RequestBody CustomerOrder order) {
         return ResponseEntity.ok(ApiResponse.success("Order created", orderService.createOrder(order)));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER','CRM_AGENT')")
+    @PreAuthorize("hasAuthority('crm:update')")
     public ResponseEntity<ApiResponse<CustomerOrder>> updateStatus(@PathVariable Long id, @RequestParam String status) {
         return ResponseEntity.ok(ApiResponse.success("Status updated", orderService.updateStatus(id, status)));
     }

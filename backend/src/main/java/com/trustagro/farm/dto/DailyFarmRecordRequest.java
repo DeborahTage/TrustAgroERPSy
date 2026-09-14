@@ -24,8 +24,6 @@ public class DailyFarmRecordRequest {
     @Min(0) private BigDecimal waterConsumed;
     @PositiveOrZero
     private BigDecimal averageWeight;
-    @Min(0) private Integer eggProduction;
-    @Min(0) private Integer damagedEggs;
     @Size(max = 1000)
     private String symptomsOrRemarks;
     private com.trustagro.veterinary.entity.MortalityCause mortalityCause;
@@ -43,8 +41,6 @@ public class DailyFarmRecordRequest {
     public BigDecimal getFeedConsumed() { return feedConsumed; }
     public BigDecimal getWaterConsumed() { return waterConsumed; }
     public BigDecimal getAverageWeight() { return averageWeight; }
-    public Integer getEggProduction() { return eggProduction; }
-    public Integer getDamagedEggs() { return damagedEggs; }
     public String getSymptomsOrRemarks() { return symptomsOrRemarks; }
     public com.trustagro.veterinary.entity.MortalityCause getMortalityCause() { return mortalityCause; }
     public String getMortalityNotes() { return mortalityNotes; }

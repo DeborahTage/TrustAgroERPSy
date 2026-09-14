@@ -22,31 +22,31 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAuthority('users:read')")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAll() {
         return ResponseEntity.ok(ApiResponse.success(userService.getAll()));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAuthority('users:read')")
     public ResponseEntity<ApiResponse<UserResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(userService.getById(id)));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('users:create')")
     public ResponseEntity<ApiResponse<UserResponse>> create(@Valid @RequestBody UserRequest req) {
         return ResponseEntity.ok(ApiResponse.success("User created", userService.create(req)));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('users:update')")
     public ResponseEntity<ApiResponse<UserResponse>> update(@PathVariable Long id, @Valid @RequestBody UserRequest req) {
         return ResponseEntity.ok(ApiResponse.success("User updated", userService.update(id, req)));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('users:update')")
     public ResponseEntity<ApiResponse<UserResponse>> updateStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         UserStatus status = UserStatus.valueOf(body.get("status"));
         return ResponseEntity.ok(ApiResponse.success("Status updated", userService.updateStatus(id, status)));

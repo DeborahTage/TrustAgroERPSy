@@ -8,15 +8,13 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'react-toastify';
-import { useLanguage } from '../../context/LanguageContext';
-import { ArrowLeft, FileSignature, Hash, User, Package, Clipboard, Info, CheckCircle2, FlaskConical, AlertCircle, Clock, ShieldCheck, Activity, Pill, Syringe, ClipboardList } from 'lucide-react';
+import { FileSignature, Hash, User, Package, Clipboard, CheckCircle2, FlaskConical, AlertCircle, ShieldCheck, Activity, Pill, Syringe, ClipboardList } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
 
 const PrescriptionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
   const healthReport = location.state?.healthReport;
   const diseaseCase = location.state?.diseaseCase;
 
@@ -79,8 +77,12 @@ const PrescriptionForm = () => {
         diseaseCaseId: form.diseaseCaseId ? Number(form.diseaseCaseId) : null,
         inventoryItemId: form.inventoryItemId ? Number(form.inventoryItemId) : null,
         withdrawalPeriodDays: form.withdrawalPeriodDays ? Number(form.withdrawalPeriodDays) : null,
+        frequency: form.frequency || null,
+        administrationRoute: form.administrationRoute || null,
+        priority: form.priority || 'NORMAL',
+        submitImmediately: true,
       });
-      toast.success('Prescription issued and logged in pharmacy ledger.');
+      toast.success('Prescription submitted to pharmacy queue.');
       navigate('/veterinary');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to authorize prescription.');
@@ -273,7 +275,7 @@ const PrescriptionForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Withdrawal Days (Meat/Eggs)</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Withdrawal Days (Meat)</Label>
                     <div className="relative">
                       <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-rose-500" />
                       <Input

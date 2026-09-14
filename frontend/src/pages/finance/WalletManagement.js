@@ -5,7 +5,6 @@ import DataTable from '../../components/shared/DataTable';
 import { Badge } from '../../components/ui/badge';
 import { formatCurrency } from '../../utils';
 import { Wallet, CreditCard, Users } from 'lucide-react';
-import EmptyState from '../../components/shared/EmptyState';
 
 const WalletManagement = () => {
   const [wallets, setWallets] = useState([]);
@@ -65,7 +64,7 @@ const WalletManagement = () => {
   return (
     <EnterprisePage
       title="Digital Wallet System"
-      subtitle="Customer deposits, training credits, and credit limits — synced with finance ledger"
+      subtitle="Operational prepaid/credit balances. Authoritative AR is invoice outstanding and account 1200 — wallet is not a second ledger."
       breadcrumbs={['Finance', 'Wallets']}
       loading={loading}
       error={error}

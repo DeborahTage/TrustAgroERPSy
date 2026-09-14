@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '../api';
-import { 
-  hasPermission as checkPermission, 
-  hasAnyPermission as checkAnyPermission, 
-  canAccessModule as checkModuleAccess, 
-  canPerformAction as checkActionPermission 
+import {
+  hasPermissionForUser,
+  hasAnyPermissionForUser,
+  canAccessModuleForUser,
+  canPerformActionForUser,
+  normalizeRole,
 } from '../lib/permissions';
 
 const AuthContext = createContext(null);
@@ -38,34 +39,26 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const hasRole = (...roles) => user && roles.includes(user.role);
-
-  const hasPermission = (permission) => {
+  const hasRole = (...roles) => {
     if (!user) return false;
-    return checkPermission(user.role, permission);
+    const userRole = normalizeRole(user.role);
+    return roles.some((r) => normalizeRole(r) === userRole);
   };
 
-  const hasAnyPermission = (permissions) => {
-    if (!user) return false;
-    return checkAnyPermission(user.role, permissions);
-  };
+  const hasPermission = (permission) => hasPermissionForUser(user, permission);
 
-  const canAccessModule = (module) => {
-    if (!user) return false;
-    return checkModuleAccess(user.role, module);
-  };
+  const hasAnyPermission = (permissions) => hasAnyPermissionForUser(user, permissions);
 
-  const canPerformAction = (action, module) => {
-    if (!user) return false;
-    return checkActionPermission(user.role, action, module);
-  };
+  const canAccessModule = (module) => canAccessModuleForUser(user, module);
+
+  const canPerformAction = (action, module) => canPerformActionForUser(user, action, module);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      login, 
-      logout, 
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      logout,
       hasRole,
       hasPermission,
       hasAnyPermission,

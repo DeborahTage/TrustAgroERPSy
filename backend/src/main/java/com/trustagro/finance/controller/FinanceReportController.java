@@ -22,7 +22,7 @@ public class FinanceReportController {
     private final FinanceReportService reportService;
 
     @GetMapping("/profit-loss")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','FINANCE')")
+    @PreAuthorize("hasAnyAuthority('finance:read','reports:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getProfitLoss(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
@@ -30,8 +30,16 @@ public class FinanceReportController {
     }
 
     @GetMapping("/balance-sheet")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER','FINANCE')")
+    @PreAuthorize("hasAnyAuthority('finance:read','reports:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getBalanceSheet() {
         return ResponseEntity.ok(ApiResponse.success(reportService.getBalanceSheet()));
+    }
+
+    @GetMapping("/cash-flow")
+    @PreAuthorize("hasAnyAuthority('finance:read','reports:read')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getCashFlow(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ResponseEntity.ok(ApiResponse.success(reportService.getCashFlow(from, to)));
     }
 }

@@ -52,7 +52,7 @@ const OrderDashboard = () => {
   return (
     <EnterprisePage
       title="Sales & Orders"
-      subtitle="Customer egg and meat orders with live delivery status tracking"
+      subtitle="Customer meat and live-bird orders with live delivery status tracking"
       breadcrumbs={['CRM', 'Orders']}
       loading={loading}
       error={error}

@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { marketingApi } from '../../api';
 import EnterprisePage from '../../components/layout/EnterprisePage';
-import StatsCard from '../../components/shared/StatsCard';
 import DataTable from '../../components/shared/DataTable';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';

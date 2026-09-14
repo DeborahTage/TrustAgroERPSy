@@ -118,25 +118,23 @@ public class RequisitionService {
             // This already creates a movement record
             inventoryService.stockOut(ri.getItem().getId(), ri.getQuantityIssued(), "REQUISITION", req.getId(), user);
             
-            // Automated Finance Logging for internal consumption
+            // Automated Finance Logging for internal consumption — credit inventory, not cash
             if (ri.getUnitCost() != null && ri.getUnitCost().compareTo(java.math.BigDecimal.ZERO) > 0) {
-                try {
-                    String desc = "Requisition fulfillment: " + ri.getItem().getItemName() + " x" + ri.getQuantityIssued();
-                    if (req.getFlock() != null) desc += " for Flock " + req.getFlock().getBatchCode();
-                    else if (req.getFarm() != null) desc += " for Farm " + req.getFarm().getFarmName();
+                String desc = "Requisition fulfillment: " + ri.getItem().getItemName() + " x" + ri.getQuantityIssued();
+                if (req.getFlock() != null) desc += " for Flock " + req.getFlock().getBatchCode();
+                else if (req.getFarm() != null) desc += " for Farm " + req.getFarm().getFarmName();
 
-                    financeService.postExpense(
-                            ri.getUnitCost().multiply(java.math.BigDecimal.valueOf(ri.getQuantityIssued())),
-                            com.trustagro.finance.entity.BusinessUnit.GENERAL,
-                            "5120",
-                            desc,
-                            "INVENTORY",
-                            "REQUISITION",
-                            req.getId()
-                    );
-                } catch (Exception ex) {
-                    log.warn("Finance logging for requisition {} failed: {}", req.getRequisitionNumber(), ex.getMessage());
-                }
+                // One posting per requisition item line via composite reference: requisitionId * 100000 + itemId
+                Long lineRef = req.getId() * 100_000L + ri.getItem().getId();
+                financeService.postInventoryConsumption(
+                        ri.getUnitCost().multiply(java.math.BigDecimal.valueOf(ri.getQuantityIssued())),
+                        com.trustagro.finance.entity.BusinessUnit.GENERAL,
+                        "5120",
+                        desc,
+                        com.trustagro.finance.entity.FinanceSourceTypes.MODULE_INVENTORY,
+                        com.trustagro.finance.entity.FinanceSourceTypes.REF_REQUISITION,
+                        lineRef
+                );
             }
         }
 

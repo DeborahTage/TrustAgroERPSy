@@ -4,7 +4,7 @@ import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
-import { ArrowUpRight, ClipboardList } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const PrescriptionQueue = ({ prescriptions, loading }) => {
@@ -37,23 +37,26 @@ const PrescriptionQueue = ({ prescriptions, loading }) => {
                         <TableCell>
                             <div className="flex flex-col">
                                 <span className="font-bold text-gray-900">{rx.farmName || 'Internal Farm'}</span>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{rx.flockName || 'General Stock'}</span>
+                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{rx.batchCode || rx.flockName || 'General'}</span>
                             </div>
                         </TableCell>
                         <TableCell>
                             <div className="flex flex-col">
                                 <span className="font-medium text-gray-700">{rx.drugName}</span>
-                                <span className="text-[10px] text-gray-400 italic">via {rx.administrationRoute}</span>
+                                <span className="text-[10px] text-gray-400 italic">via {rx.administrationRoute || '—'}</span>
                             </div>
                         </TableCell>
                         <TableCell className="font-bold text-primary">{rx.quantity} <span className="text-[10px] text-gray-400 font-normal">units</span></TableCell>
                         <TableCell>
-                            <Badge className={cn(
-                                "text-[10px] h-5",
-                                rx.priority === 'EMERGENCY' ? "bg-rose-500" : "bg-amber-500"
+                            <div className="flex flex-col gap-1">
+                                <Badge className="w-fit text-[10px] h-5 bg-slate-800">{rx.status}</Badge>
+                                <Badge className={cn(
+                                "text-[10px] h-5 w-fit",
+                                rx.priority === 'URGENT' || rx.priority === 'HIGH' ? "bg-rose-500" : "bg-amber-500"
                             )}>
                                 {rx.priority || 'NORMAL'}
                             </Badge>
+                            </div>
                         </TableCell>
                         <TableCell className="text-right">
                             <button

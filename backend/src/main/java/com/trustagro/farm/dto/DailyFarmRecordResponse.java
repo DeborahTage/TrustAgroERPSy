@@ -20,8 +20,6 @@ public class DailyFarmRecordResponse {
     private BigDecimal feedConsumed;
     private BigDecimal waterConsumed;
     private BigDecimal averageWeight;
-    private Integer eggProduction;
-    private Integer damagedEggs;
     private String symptomsOrRemarks;
     private com.trustagro.veterinary.entity.MortalityCause mortalityCause;
     private String mortalityNotes;
@@ -45,8 +43,6 @@ public class DailyFarmRecordResponse {
     public void setFeedConsumed(BigDecimal feedConsumed) { this.feedConsumed = feedConsumed; }
     public void setWaterConsumed(BigDecimal waterConsumed) { this.waterConsumed = waterConsumed; }
     public void setAverageWeight(BigDecimal averageWeight) { this.averageWeight = averageWeight; }
-    public void setEggProduction(Integer eggProduction) { this.eggProduction = eggProduction; }
-    public void setDamagedEggs(Integer damagedEggs) { this.damagedEggs = damagedEggs; }
     public void setSymptomsOrRemarks(String symptomsOrRemarks) { this.symptomsOrRemarks = symptomsOrRemarks; }
     public void setMortalityCause(com.trustagro.veterinary.entity.MortalityCause mortalityCause) { this.mortalityCause = mortalityCause; }
     public void setMortalityNotes(String mortalityNotes) { this.mortalityNotes = mortalityNotes; }

@@ -34,9 +34,18 @@ export const flockApi = {
   close: (id) => api.patch(`/api/flocks/${id}/close`),
   getGrowth: (id) => api.get(`/api/flocks/${id}/growth`),
   addGrowth: (id, data) => api.post(`/api/flocks/${id}/growth`, data),
-  getEggProduction: (id) => api.get(`/api/flocks/${id}/eggs`),
-  addEggProduction: (id, data) => api.post(`/api/flocks/${id}/eggs`, data),
-  getFCR: (id) => api.get(`/api/flocks/${id}/fcr`),
+};
+
+export const chickenSaleApi = {
+  getAll: (params) => api.get('/api/chicken-sales', { params }),
+  getById: (id) => api.get(`/api/chicken-sales/${id}`),
+  create: (data) => api.post('/api/chicken-sales', data),
+  update: (id, data) => api.put(`/api/chicken-sales/${id}`, data),
+  confirm: (id) => api.post(`/api/chicken-sales/${id}/confirm`),
+  invoice: (id) => api.post(`/api/chicken-sales/${id}/invoice`),
+  pay: (id, data) => api.post(`/api/chicken-sales/${id}/payments`, data),
+  complete: (id) => api.post(`/api/chicken-sales/${id}/complete`),
+  cancel: (id) => api.post(`/api/chicken-sales/${id}/cancel`),
 };
 
 export const dailyRecordApi = {
@@ -99,8 +108,11 @@ export const vetApi = {
   getTreatments: () => api.get('/api/vet/treatments'),
   createTreatment: (data) => api.post('/api/vet/treatments', data),
   getPrescriptions: () => api.get('/api/vet/prescriptions'),
+  getPrescription: (id) => api.get(`/api/vet/prescriptions/${id}`),
   createPrescription: (data) => api.post('/api/vet/prescriptions', data),
-  dispensePrescription: (id) => api.patch(`/api/vet/prescriptions/${id}/dispense`),
+  submitPrescription: (id) => api.post(`/api/vet/prescriptions/${id}/submit`),
+  cancelPrescription: (id) => api.post(`/api/vet/prescriptions/${id}/cancel`),
+  dispensePrescription: (id, data) => api.patch(`/api/vet/prescriptions/${id}/dispense`, data || {}),
   getDrugUsageReport: (params) => api.get('/api/vet/reports/drug-usage', { params }),
   getFlockEMR: (flockId) => api.get(`/api/vet/flocks/${flockId}/emr`),
   logObservation: (data) => api.post('/api/vet/observations', data),
@@ -123,9 +135,12 @@ export const pharmacyApi = {
   createCustomer: (data) => api.post('/api/pharmacy/customers', data),
   getSales: () => api.get('/api/pharmacy/sales'),
   createSale: (data) => api.post('/api/pharmacy/sales', data),
-  getPrescriptions: () => api.get('/api/vet/prescriptions'),
-  approvePrescription: (id) => api.patch(`/api/vet/prescriptions/${id}/approve`),
-  dispensePrescription: (id) => api.patch(`/api/vet/prescriptions/${id}/dispense`),
+  // Canonical prescription workflow (same entity as /api/vet/prescriptions)
+  getPrescriptions: (params) => api.get('/api/pharmacy/prescriptions', { params }),
+  getPrescription: (id) => api.get(`/api/pharmacy/prescriptions/${id}`),
+  approvePrescription: (id) => api.post(`/api/pharmacy/prescriptions/${id}/approve`),
+  rejectPrescription: (id, reason) => api.post(`/api/pharmacy/prescriptions/${id}/reject`, { reason }),
+  dispensePrescription: (id, data) => api.post(`/api/pharmacy/prescriptions/${id}/dispense`, data || {}),
   getReceipt: (id) => api.get(`/api/pharmacy/sales/${id}/receipt`),
 };
 
@@ -134,6 +149,7 @@ export const financeApi = {
   getTransactions: () => api.get('/api/finance/transactions'),
   getReports: (from, to) => api.get(`/api/finance/reports/profit-loss?from=${from}&to=${to}`),
   getBalanceSheet: () => api.get('/api/finance/reports/balance-sheet'),
+  getCashFlow: (from, to) => api.get(`/api/finance/reports/cash-flow?from=${from}&to=${to}`),
   getReconciliations: () => api.get('/api/finance/reconciliations'),
   reconcileCash: (data) => api.post('/api/finance/reconciliation', data),
   createPOSInvoice: (data) => api.post('/api/finance/invoices/pos', data),
@@ -141,6 +157,8 @@ export const financeApi = {
   getAccounts: () => api.get('/api/finance/accounts'),
   getAuditTrail: () => api.get('/api/finance/audit-trail'),
   getInvoices: () => api.get('/api/finance/invoices'),
+  getReceivables: () => api.get('/api/finance/receivables'),
+  getExpectedCash: () => api.get('/api/finance/cash/expected'),
   getWallets: () => api.get('/api/finance/wallets'),
   getWalletSummary: () => api.get('/api/finance/wallets/summary'),
   depositWallet: (data) => api.post('/api/finance/wallets/deposit', data),
@@ -162,6 +180,36 @@ export const crmApi = {
   createVisit: (data) => api.post('/api/crm/farm-visits', data),
   getFollowUps: () => api.get('/api/crm/follow-ups'),
   getOrders: () => api.get('/api/crm/orders'),
+};
+
+export const trainingApi = {
+  getDashboard: () => api.get('/api/training/dashboard'),
+  getReports: () => api.get('/api/training/reports'),
+  getPrograms: () => api.get('/api/training/programs'),
+  getProgram: (id) => api.get(`/api/training/programs/${id}`),
+  createProgram: (data) => api.post('/api/training/programs', data),
+  updateProgram: (id, data) => api.put(`/api/training/programs/${id}`, data),
+  publishProgram: (id) => api.post(`/api/training/programs/${id}/publish`),
+  openRegistration: (id) => api.post(`/api/training/programs/${id}/open-registration`),
+  closeRegistration: (id) => api.post(`/api/training/programs/${id}/close-registration`),
+  startProgram: (id) => api.post(`/api/training/programs/${id}/start`),
+  completeProgram: (id) => api.post(`/api/training/programs/${id}/complete`),
+  cancelProgram: (id) => api.post(`/api/training/programs/${id}/cancel`),
+  getSessions: (params) => api.get('/api/training/sessions', { params }),
+  getSession: (id) => api.get(`/api/training/sessions/${id}`),
+  createSession: (data) => api.post('/api/training/sessions', data),
+  getRegistrations: (params) => api.get('/api/training/registrations', { params }),
+  getRegistration: (id) => api.get(`/api/training/registrations/${id}`),
+  register: (data) => api.post('/api/training/registrations', data),
+  confirmRegistration: (id) => api.post(`/api/training/registrations/${id}/confirm`),
+  cancelRegistration: (id) => api.post(`/api/training/registrations/${id}/cancel`),
+  pay: (id, data) => api.post(`/api/training/registrations/${id}/payments`, data),
+  recordAttendance: (id, data) => api.post(`/api/training/registrations/${id}/attendance`, data),
+  completeRegistration: (id) => api.post(`/api/training/registrations/${id}/complete`),
+  issueCertificate: (id, data) => api.post(`/api/training/registrations/${id}/certificate`, data || {}),
+  revokeCertificate: (id) => api.post(`/api/training/registrations/${id}/certificate/revoke`),
+  getCertificates: () => api.get('/api/training/certificates'),
+  verifyCertificate: (code) => api.get(`/api/public/certificates/verify/${code}`),
 };
 
 export const marketingApi = {

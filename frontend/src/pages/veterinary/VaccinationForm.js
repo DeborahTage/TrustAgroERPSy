@@ -8,14 +8,12 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'react-toastify';
-import { useLanguage } from '../../context/LanguageContext';
 import { useMasterData } from '../../context/MasterDataContext';
 import { ArrowLeft, Syringe, Calendar, ShieldCheck, Tag, Info, CheckCircle2, FlaskConical, AlertCircle, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const VaccinationForm = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const [form, setForm] = useState({
     farmId: '',
     flockId: '',

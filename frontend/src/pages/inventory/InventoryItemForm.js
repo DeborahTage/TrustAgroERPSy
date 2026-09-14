@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { inventoryApi } from '../../api';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -101,7 +100,7 @@ const InventoryItemForm = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {['FEED', 'DRUG', 'VACCINE', 'VITAMIN', 'EQUIPMENT', 'FARM_MATERIAL', 'CLEANING_MATERIAL', 'OFFICE_SUPPLY', 'CONSUMABLE', 'EGGS', 'PACKAGING'].map(c => (
+                      {['FEED', 'DRUG', 'VACCINE', 'VITAMIN', 'EQUIPMENT', 'FARM_MATERIAL', 'CLEANING_MATERIAL', 'OFFICE_SUPPLY', 'CONSUMABLE', 'PACKAGING'].map(c => (
                         <SelectItem key={c} value={c}>{c.replace('_', ' ')}</SelectItem>
                       ))}
                     </SelectContent>

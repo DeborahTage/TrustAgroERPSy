@@ -44,6 +44,13 @@ public class Invoice {
     @Column(nullable = false)
     private BigDecimal paidAmount = BigDecimal.ZERO;
 
+    @Column(nullable = false)
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    private String sourceModule;
+    private String sourceType;
+    private Long sourceId;
+
     private LocalDate dueDate;
 
     @Enumerated(EnumType.STRING)
@@ -64,6 +71,10 @@ public class Invoice {
     public void setVatAmount(BigDecimal vatAmount) { this.vatAmount = vatAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
     public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
+    public void setSourceModule(String sourceModule) { this.sourceModule = sourceModule; }
+    public void setSourceType(String sourceType) { this.sourceType = sourceType; }
+    public void setSourceId(Long sourceId) { this.sourceId = sourceId; }
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
     public void setBusinessUnit(BusinessUnit businessUnit) { this.businessUnit = businessUnit; }
     public List<InvoiceItem> getItems() { return items; }
@@ -78,6 +89,10 @@ public class Invoice {
     public BigDecimal getVatAmount() { return vatAmount; }
     public BigDecimal getTotalAmount() { return totalAmount; }
     public BigDecimal getPaidAmount() { return paidAmount; }
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public String getSourceModule() { return sourceModule; }
+    public String getSourceType() { return sourceType; }
+    public Long getSourceId() { return sourceId; }
     public LocalDate getDueDate() { return dueDate; }
     public BusinessUnit getBusinessUnit() { return businessUnit; }
     public LocalDateTime getCreatedAt() { return createdAt; }

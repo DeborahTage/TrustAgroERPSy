@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Search, ShoppingCart, User, CreditCard, Receipt, Trash2,
-    Plus, Minus, AlertTriangle, CheckCircle2, Package, Pill,
-    Zap, Filter, RefreshCw, ClipboardCheck, Info
+    Search, ShoppingCart, User, CreditCard, Trash2,
+    Plus, Minus, AlertTriangle, CheckCircle2, Package,
+    Zap, RefreshCw, ClipboardCheck
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { Label } from '../../components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -18,8 +17,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '../../components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { inventoryApi, pharmacyApi } from '../../api';
+import { pharmacyApi } from '../../api';
 import { formatCurrency } from '../../utils';
 import { toast } from 'react-toastify';
 import { cn } from '../../lib/utils';

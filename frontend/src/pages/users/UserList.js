@@ -43,7 +43,7 @@ const UserList = () => {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-  const handleToggleStatus = async (user) => {
+  const handleToggleStatus = useCallback(async (user) => {
     const activating = user.status !== 'ACTIVE';
     if (activating && !hasPermission(PERMISSIONS.ACTIVATE_USERS)) return;
     if (!activating && !hasPermission(PERMISSIONS.DEACTIVATE_USERS)) return;
@@ -55,7 +55,7 @@ const UserList = () => {
     } catch (err) {
       toast.error('Failed to update user status');
     }
-  };
+  }, [hasPermission]);
 
   const stats = useMemo(() => [
     { title: 'Total Users', value: users.length, icon: Users, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
@@ -137,7 +137,7 @@ const UserList = () => {
         </div>
       ),
     },
-  ], [navigate, t, hasPermission]);
+  ], [navigate, t, hasPermission, handleToggleStatus]);
 
   const exportColumns = [
     { header: 'Name', accessorKey: 'fullName' },

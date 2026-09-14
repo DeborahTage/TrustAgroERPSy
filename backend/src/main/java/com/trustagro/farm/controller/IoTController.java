@@ -5,6 +5,7 @@ import com.trustagro.farm.entity.EnvironmentRecord;
 import com.trustagro.farm.repository.EnvironmentRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ public class IoTController {
     private final EnvironmentRecordRepository environmentRepository;
 
     @PostMapping("/ingest")
+    @PreAuthorize("hasAuthority('farm:update')")
     public ResponseEntity<ApiResponse<Void>> ingestSensorData(@RequestBody EnvironmentRecord record) {
         record.setTimestamp(LocalDateTime.now());
         record.setDataSource("IOT");

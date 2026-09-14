@@ -27,8 +27,7 @@ public class CustomerOrderService {
             BigDecimal total = BigDecimal.ZERO;
             for (OrderItem item : order.getItems()) {
                 // Biological Lock Enforcement
-                if (item.getFlockId() != null && 
-                    ("EGGS".equalsIgnoreCase(item.getCategory()) || "MEAT".equalsIgnoreCase(item.getCategory()))) {
+                if (item.getFlockId() != null && "MEAT".equalsIgnoreCase(item.getCategory())) {
                     withdrawalService.validateSalesEligibility(item.getFlockId());
                 }
 

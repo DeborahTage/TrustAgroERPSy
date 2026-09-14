@@ -85,6 +85,10 @@ public class FlockService {
         r.setBatchCode(flock.getBatchCode());
         r.setFarmId(flock.getFarm().getId());
         r.setFarmName(flock.getFarm().getFarmName());
+        if (flock.getBarn() != null) {
+            r.setBarnId(flock.getBarn().getId());
+            r.setBarnName(flock.getBarn().getName());
+        }
         r.setBirdType(flock.getBirdType());
         r.setInitialBirdCount(flock.getInitialBirdCount());
         r.setCurrentBirdCount(flock.getCurrentBirdCount());

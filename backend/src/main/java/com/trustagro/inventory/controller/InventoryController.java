@@ -63,6 +63,7 @@ public class InventoryController {
     // ─── Dashboard Stats ──────────────────────────────────────────────────────
 
     @GetMapping("/stats")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<Map<String, Object>> getStats() {
         return ResponseEntity.ok(inventoryService.getDashboardStats());
     }
@@ -70,6 +71,7 @@ public class InventoryController {
     // ─── Items ────────────────────────────────────────────────────────────────
 
     @GetMapping("/items")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<?> getAllItems() {
         try {
             List<InventoryItemResponse> result = inventoryService.getAllItems();
@@ -82,6 +84,7 @@ public class InventoryController {
     }
 
     @GetMapping("/items/{id}")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<InventoryItem> getItem(@PathVariable Long id) {
         return itemRepository.findById(id)
                 .map(ResponseEntity::ok)
@@ -89,13 +92,13 @@ public class InventoryController {
     }
 
     @PostMapping("/items")
-    @PreAuthorize("hasAnyRole('ADMIN','INVENTORY_MANAGER')")
+    @PreAuthorize("hasAuthority('inventory:create')")
     public ResponseEntity<InventoryItem> createItem(@RequestBody InventoryItem item) {
         return ResponseEntity.ok(itemRepository.save(item));
     }
 
     @PutMapping("/items/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','INVENTORY_MANAGER')")
+    @PreAuthorize("hasAuthority('inventory:update')")
     public ResponseEntity<InventoryItem> updateItem(@PathVariable Long id, @RequestBody InventoryItem item) {
         item.setId(id);
         return ResponseEntity.ok(itemRepository.save(item));
@@ -104,6 +107,7 @@ public class InventoryController {
     // ─── Low Stock / Expiry ───────────────────────────────────────────────────
 
     @GetMapping("/low-stock")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<List<InventoryItem>> getLowStock() {
         List<InventoryItem> lowStock = itemRepository.findAll().stream()
                 .filter(i -> i.getReorderPoint() != null && i.getCurrentStock() != null
@@ -113,6 +117,7 @@ public class InventoryController {
     }
 
     @GetMapping("/expiring")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<List<StockBatch>> getExpiring() {
         return ResponseEntity.ok(batchRepository.findExpiringBatches(LocalDate.now(), LocalDate.now().plusDays(30)));
     }
@@ -120,11 +125,13 @@ public class InventoryController {
     // ─── Barcode Scanning ─────────────────────────────────────────────────────
 
     @GetMapping("/scan/{barcode}")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<Map<String, Object>> scanItem(@PathVariable String barcode, Authentication auth) {
         return ResponseEntity.ok(inventoryService.scanItem(barcode, getUser(auth)));
     }
 
     @PostMapping("/scan-action")
+    @PreAuthorize("hasAuthority('inventory:stock_in')")
     public ResponseEntity<Map<String, Object>> processScanAction(@RequestBody Map<String, Object> data, Authentication auth) {
         return ResponseEntity.ok(inventoryService.processScanAction(data, getUser(auth)));
     }
@@ -132,7 +139,7 @@ public class InventoryController {
     // ─── Stock In (FIXED) ─────────────────────────────────────────────────────
 
     @PostMapping("/stock-in")
-    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
+    @PreAuthorize("hasAuthority('inventory:stock_in')")
     public ResponseEntity<Map<String, Object>> stockIn(@RequestBody Map<String, Object> data, Authentication auth) {
         try {
             // Null-safe field extraction
@@ -172,7 +179,7 @@ public class InventoryController {
     // ─── Stock Out (FIXED) ────────────────────────────────────────────────────
 
     @PostMapping("/stock-out")
-    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
+    @PreAuthorize("hasAuthority('inventory:stock_out')")
     public ResponseEntity<Map<String, Object>> stockOut(@RequestBody Map<String, Object> data, Authentication auth) {
         try {
             // Null-safe field extraction
@@ -215,6 +222,7 @@ public class InventoryController {
     // ─── Stock Movements ──────────────────────────────────────────────────────
 
     @GetMapping("/movements/recent")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<List<StockMovement>> getRecentMovements() {
         return ResponseEntity.ok(movementRepository.findAll().stream()
                 .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
@@ -222,6 +230,7 @@ public class InventoryController {
     }
 
     @GetMapping("/movements/item/{itemId}")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<List<StockMovement>> getItemMovements(@PathVariable Long itemId) {
         return ResponseEntity.ok(movementRepository.findByItemId(itemId));
     }
@@ -229,17 +238,20 @@ public class InventoryController {
     // ─── Purchase Orders ──────────────────────────────────────────────────────
 
     @GetMapping("/purchase-orders")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<List<PurchaseOrder>> getPurchaseOrders() {
         return ResponseEntity.ok(purchaseOrderRepository.findAll());
     }
 
     @PostMapping("/purchase-orders")
+    @PreAuthorize("hasAuthority('inventory:po')")
     public ResponseEntity<PurchaseOrder> createPurchaseOrder(@RequestBody PurchaseOrder po, Authentication auth) {
         po.setCreatedBy(getUser(auth));
         return ResponseEntity.ok(purchaseOrderRepository.save(po));
     }
 
     @PutMapping("/purchase-orders/{id}/send")
+    @PreAuthorize("hasAuthority('inventory:po')")
     public ResponseEntity<PurchaseOrder> sendPO(@PathVariable Long id) {
         return purchaseOrderRepository.findById(id).map(po -> {
             po.setStatus("Sent");
@@ -248,6 +260,7 @@ public class InventoryController {
     }
 
     @PutMapping("/purchase-orders/{id}/receive")
+    @PreAuthorize("hasAuthority('inventory:po')")
     public ResponseEntity<PurchaseOrder> receivePO(@PathVariable Long id) {
         return purchaseOrderRepository.findById(id).map(po -> {
             po.setStatus("Received");
@@ -259,7 +272,7 @@ public class InventoryController {
     // ─── Cycle Count ──────────────────────────────────────────────────────────
 
     @PostMapping("/count")
-    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
+    @PreAuthorize("hasAuthority('inventory:update')")
     public ResponseEntity<Map<String, Object>> recordCount(@RequestBody Map<String, Object> data, Authentication auth) {
         try {
             if (data.get("itemId") == null || data.get("countedQty") == null) {
@@ -276,6 +289,7 @@ public class InventoryController {
     // ─── Forecasting ──────────────────────────────────────────────────────────
 
     @GetMapping("/forecast/{itemId}")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<Map<String, Object>> getForecast(@PathVariable Long itemId) {
         return ResponseEntity.ok(inventoryService.generateForecast(itemId));
     }
@@ -283,6 +297,7 @@ public class InventoryController {
     // ─── Batches ──────────────────────────────────────────────────────────────
 
     @GetMapping("/batches/{itemId}")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<List<StockBatch>> getBatches(@PathVariable Long itemId) {
         return ResponseEntity.ok(batchRepository.findAvailableBatchesFEFO(itemId, LocalDate.now()));
     }
@@ -290,6 +305,7 @@ public class InventoryController {
     // ─── Sellable Items for Pharmacy ──────────────────────────────────────────
 
     @GetMapping("/sellable-items")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<List<InventoryItem>> getSellableItems() {
         return ResponseEntity.ok(itemRepository.findAll().stream()
                 .filter(i -> i.getStatus() == ItemStatus.ACTIVE && i.getCurrentStock() != null && i.getCurrentStock() > 0)
@@ -302,6 +318,7 @@ public class InventoryController {
      * Returns only drug/vaccine items with stock > 0 for the pharmacy POS.
      */
     @GetMapping("/pharmacy-items")
+    @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<List<InventoryItemResponse>> getPharmacyItems() {
         return ResponseEntity.ok(inventoryService.getPharmacyCatalog().stream()
                 .filter(i -> i.getCurrentStock() != null && i.getCurrentStock() > 0)
@@ -312,6 +329,7 @@ public class InventoryController {
      * Called by PharmacyService on each sale to deduct from inventory stock.
      */
     @PostMapping("/pharmacy-deduct")
+    @PreAuthorize("hasAnyAuthority('pharmacy:sale','pharmacy:dispense')")
     public ResponseEntity<Map<String, Object>> pharmacyDeduct(@RequestBody Map<String, Object> data, Authentication auth) {
         try {
             if (data.get("itemId") == null || data.get("quantity") == null) {
@@ -334,7 +352,7 @@ public class InventoryController {
     }
 
     @PostMapping("/transfer")
-    @PreAuthorize("hasRole('INVENTORY_MANAGER')")
+    @PreAuthorize("hasAuthority('inventory:transfer')")
     public ResponseEntity<Map<String, Object>> transferStock(@RequestBody Map<String, Object> data, Authentication auth) {
         Long itemId = Long.valueOf(data.get("itemId").toString());
         String fromZone = data.get("fromZone").toString();

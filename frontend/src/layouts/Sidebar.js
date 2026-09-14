@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { hasPermission } from '../lib/permissions';
+import { hasPermissionForUser } from '../lib/permissions';
 import { getRoleMenus } from '../lib/roleMenus';
 import { LogOut, Leaf, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -19,7 +19,7 @@ const Sidebar = ({ show, collapsed, onToggleCollapse, onHide }) => {
 
   const isItemVisible = (item) => {
     if (item.alwaysVisible) return true;
-    if (item.permission && !hasPermission(user?.role, item.permission)) return false;
+    if (item.permission && !hasPermissionForUser(user, item.permission)) return false;
     return true;
   };
 

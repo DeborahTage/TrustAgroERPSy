@@ -6,13 +6,11 @@ import StatusBadge from '../../components/shared/StatusBadge';
 import PageHeader from '../../components/shared/PageHeader';
 import StatsCard from '../../components/shared/StatsCard';
 import PageContainer from '../../components/layout/PageContainer';
-import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatDate, formatCurrency } from '../../utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { Card, CardContent } from '../../components/ui/card';
 import {
   Package,
   AlertTriangle,
@@ -20,7 +18,6 @@ import {
   ArrowUp,
   ArrowDown,
   Plus,
-  FileText,
   DollarSign,
   MoreVertical,
   Edit,
@@ -35,8 +32,7 @@ import {
 } from "../../components/ui/dropdown-menu";
 
 const InventoryItemList = () => {
-  const { t } = useLanguage();
-  const { canPerformAction, user } = useAuth();
+  const { canPerformAction } = useAuth();
   const [items, setItems] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [expiry, setExpiry] = useState([]);

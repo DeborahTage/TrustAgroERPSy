@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { pharmacyApi, inventoryApi } from '../../api';
+import { pharmacyApi } from '../../api';
 import EnterprisePage from '../../components/layout/EnterprisePage';
 import DataTable from '../../components/shared/DataTable';
 import StatusBadge from '../../components/shared/StatusBadge';
@@ -13,9 +13,7 @@ import {
     Package,
     AlertTriangle,
     RefreshCw,
-    BadgeAlert,
     ClipboardList,
-    Activity,
     Plus
 } from 'lucide-react';
 import { cn } from '../../lib/utils';

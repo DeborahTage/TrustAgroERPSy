@@ -8,14 +8,12 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'react-toastify';
-import { useLanguage } from '../../context/LanguageContext';
 import { ArrowLeft, Activity, Calendar, AlertTriangle, Users, BookOpen, ShieldAlert, Microscope, Info, CheckCircle2, Link } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const DiseaseCaseForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
   const healthReport = location.state?.healthReport;
 
   const [form, setForm] = useState({

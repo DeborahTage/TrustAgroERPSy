@@ -20,37 +20,37 @@ public class MarketingController {
     private final MarketingService marketingService;
 
     @GetMapping("/dashboard")
-    @PreAuthorize("hasAnyRole('ADMIN','MARKETING','CRM_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('marketing:read','crm:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> dashboard() {
         return ResponseEntity.ok(ApiResponse.success(marketingService.getDashboard()));
     }
 
     @GetMapping("/campaigns")
-    @PreAuthorize("hasAnyRole('ADMIN','MARKETING')")
+    @PreAuthorize("hasAuthority('marketing:read')")
     public ResponseEntity<ApiResponse<List<MarketingCampaign>>> campaigns() {
         return ResponseEntity.ok(ApiResponse.success(marketingService.getCampaigns()));
     }
 
     @PostMapping("/campaigns")
-    @PreAuthorize("hasAnyRole('ADMIN','MARKETING')")
+    @PreAuthorize("hasAuthority('marketing:create')")
     public ResponseEntity<ApiResponse<MarketingCampaign>> createCampaign(@RequestBody MarketingCampaign campaign) {
         return ResponseEntity.ok(ApiResponse.success("Campaign created", marketingService.createCampaign(campaign)));
     }
 
     @GetMapping("/leads")
-    @PreAuthorize("hasAnyRole('ADMIN','MARKETING','CRM_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('marketing:read','crm:read')")
     public ResponseEntity<ApiResponse<List<MarketingLead>>> leads() {
         return ResponseEntity.ok(ApiResponse.success(marketingService.getLeads()));
     }
 
     @PostMapping("/leads")
-    @PreAuthorize("hasAnyRole('ADMIN','MARKETING')")
+    @PreAuthorize("hasAuthority('marketing:create')")
     public ResponseEntity<ApiResponse<MarketingLead>> createLead(@RequestBody MarketingLead lead) {
         return ResponseEntity.ok(ApiResponse.success("Lead captured", marketingService.createLead(lead)));
     }
 
     @PostMapping("/leads/{id}/convert")
-    @PreAuthorize("hasAnyRole('ADMIN','MARKETING','CRM_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('marketing:update','crm:create')")
     public ResponseEntity<ApiResponse<MarketingLead>> convertLead(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("Lead converted to CRM", marketingService.convertLeadToCrm(id)));
     }

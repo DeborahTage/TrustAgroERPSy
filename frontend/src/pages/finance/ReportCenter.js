@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { financeApi } from '../../api';
 import EnterprisePage from '../../components/layout/EnterprisePage';
 import { exportToPdf } from '../../lib/exportTable';
@@ -6,37 +6,43 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Table, TableBody, TableCell, TableRow } from '../../components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { formatCurrency } from '../../utils';
-import { Calendar, Download, FileText, Printer, RefreshCw } from 'lucide-react';
+import { Printer, RefreshCw } from 'lucide-react';
 
 const ReportCenter = () => {
     const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
     const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
     const [pnL, setPnL] = useState(null);
     const [balanceSheet, setBalanceSheet] = useState(null);
+    const [cashFlow, setCashFlow] = useState(null);
+    const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    const fetchReports = async () => {
+    const fetchReports = useCallback(async () => {
         setLoading(true);
         try {
-            const [pnlRes, bsRes] = await Promise.all([
+            const [pnlRes, bsRes, cfRes, txRes] = await Promise.all([
                 financeApi.getReports(fromDate, toDate),
-                financeApi.getBalanceSheet()
+                financeApi.getBalanceSheet(),
+                financeApi.getCashFlow(fromDate, toDate).catch(() => ({ data: { data: null } })),
+                financeApi.getTransactions().catch(() => ({ data: { data: [] } })),
             ]);
             setPnL(pnlRes.data.data);
             setBalanceSheet(bsRes.data.data);
+            setCashFlow(cfRes.data?.data || null);
+            setTransactions(txRes.data?.data || []);
         } catch (e) {
             console.error('Failed to fetch reports', e);
         } finally {
             setLoading(false);
         }
-    };
+    }, [fromDate, toDate]);
 
     useEffect(() => {
         fetchReports();
-    }, [fromDate, toDate]);
+    }, [fetchReports]);
 
     return (
         <EnterprisePage
@@ -74,6 +80,7 @@ const ReportCenter = () => {
                 <TabsList className="bg-white border p-1">
                     <TabsTrigger value="pnl">Profit & Loss</TabsTrigger>
                     <TabsTrigger value="bs">Balance Sheet</TabsTrigger>
+                    <TabsTrigger value="cash">Cash Flow</TabsTrigger>
                     <TabsTrigger value="ledger">General Ledger</TabsTrigger>
                 </TabsList>
 
@@ -138,6 +145,22 @@ const ReportCenter = () => {
                                         {formatCurrency(pnL?.netProfit || 0)}
                                     </span>
                                 </div>
+                                {pnL?.limitationNote && (
+                                    <p className="text-xs text-slate-500 mt-3 px-2 leading-relaxed">{pnL.limitationNote}</p>
+                                )}
+                                {pnL?.revenueByModule && Object.keys(pnL.revenueByModule).length > 0 && (
+                                    <div className="mt-4 px-2">
+                                        <p className="text-[10px] font-bold uppercase text-slate-400 mb-2">Revenue by source module</p>
+                                        <div className="space-y-1">
+                                            {Object.entries(pnL.revenueByModule).map(([mod, val]) => (
+                                                <div key={mod} className="flex justify-between text-xs">
+                                                    <span className="font-mono">{mod}</span>
+                                                    <span>{formatCurrency(val)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -214,15 +237,57 @@ const ReportCenter = () => {
                     </Card>
                 </TabsContent>
 
+                <TabsContent value="cash" className="mt-6">
+                    <Card className="border-none shadow-sm">
+                        <CardHeader className="text-center border-b mb-6">
+                            <CardTitle className="text-2xl font-serif">Cash Flow</CardTitle>
+                            <p className="text-sm text-slate-500 font-mono uppercase tracking-widest pt-2">
+                                Period: {fromDate} to {toDate}
+                            </p>
+                        </CardHeader>
+                        <CardContent className="max-w-2xl mx-auto space-y-4">
+                            <div className="flex justify-between text-sm border-b py-2">
+                                <span>Cash / bank inflows</span>
+                                <span className="font-mono text-emerald-700">{formatCurrency(cashFlow?.cashInflows || 0)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm border-b py-2">
+                                <span>Cash / bank outflows</span>
+                                <span className="font-mono text-rose-700">{formatCurrency(cashFlow?.cashOutflows || 0)}</span>
+                            </div>
+                            <div className="flex justify-between font-bold pt-2">
+                                <span>Net cash change</span>
+                                <span className="font-mono">{formatCurrency(cashFlow?.netCashChange || 0)}</span>
+                            </div>
+                            {cashFlow?.note && <p className="text-xs text-slate-500 pt-4">{cashFlow.note}</p>}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
                 <TabsContent value="ledger">
                     <Card className="border-none shadow-sm">
                         <CardHeader>
                             <CardTitle>General Ledger Stream</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm text-slate-500 p-8 text-center bg-slate-50 rounded-lg border border-dashed">
-                                Detailed transaction log with audit trail coming soon in Phase 4 refinement.
-                            </p>
+                            {transactions.length === 0 ? (
+                                <p className="text-sm text-slate-500 p-8 text-center bg-slate-50 rounded-lg border border-dashed">
+                                    No finance transactions posted yet.
+                                </p>
+                            ) : (
+                                <Table>
+                                    <TableBody>
+                                        {transactions.slice(0, 50).map((tx) => (
+                                            <TableRow key={tx.id}>
+                                                <TableCell className="text-xs font-mono">{tx.transactionDate}</TableCell>
+                                                <TableCell className="text-xs">{tx.description}</TableCell>
+                                                <TableCell className="text-xs font-mono">{tx.sourceModule} / {tx.referenceType}{tx.referenceId != null ? `#${tx.referenceId}` : ''}</TableCell>
+                                                <TableCell className="text-xs">{tx.transactionType}</TableCell>
+                                                <TableCell className="text-right font-mono text-xs">{formatCurrency(tx.amount)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>

@@ -32,7 +32,6 @@ public class FlockObservation {
 
     private Double feedIntakeDropPercentage = 0.0;
     private Double waterIntakeDropPercentage = 0.0;
-    private Double eggProductionDropPercentage = 0.0;
     
     private Integer mortalityCount = 0;
 
@@ -57,8 +56,6 @@ public class FlockObservation {
     public void setFeedIntakeDropPercentage(Double d) { this.feedIntakeDropPercentage = d; }
     public Double getWaterIntakeDropPercentage() { return waterIntakeDropPercentage; }
     public void setWaterIntakeDropPercentage(Double d) { this.waterIntakeDropPercentage = d; }
-    public Double getEggProductionDropPercentage() { return eggProductionDropPercentage; }
-    public void setEggProductionDropPercentage(Double d) { this.eggProductionDropPercentage = d; }
     public Integer getRespiratoryDistressScore() { return respiratoryDistressScore; }
     public void setRespiratoryDistressScore(Integer i) { this.respiratoryDistressScore = i; }
     public String getDiarrheaType() { return diarrheaType; }

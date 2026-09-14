@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { financeApi } from '../../api';
 import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
@@ -12,12 +12,28 @@ import { Calculator, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const CashReconciliation = () => {
-  const [systemAmount, setSystemAmount] = useState('');
+  const [expectedCash, setExpectedCash] = useState(null);
   const [actualAmount, setActualAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [loadingExpected, setLoadingExpected] = useState(true);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoadingExpected(true);
+      try {
+        const res = await financeApi.getExpectedCash();
+        setExpectedCash(Number(res.data?.data?.expectedCash ?? 0));
+      } catch {
+        setError('Could not load expected cash from ledger account 1000.');
+      } finally {
+        setLoadingExpected(false);
+      }
+    };
+    load();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,12 +41,14 @@ const CashReconciliation = () => {
     setError('');
     try {
       const res = await financeApi.reconcileCash({
-        systemAmount: parseFloat(systemAmount),
+        systemAmount: expectedCash ?? 0,
         actualAmount: parseFloat(actualAmount),
         notes,
       });
       setResult(res.data.data);
       toast.success('Cash reconciliation recorded');
+      const snap = await financeApi.getExpectedCash();
+      setExpectedCash(Number(snap.data?.data?.expectedCash ?? 0));
     } catch (err) {
       setError(err.response?.data?.message || 'Reconciliation failed.');
     } finally {
@@ -38,12 +56,12 @@ const CashReconciliation = () => {
     }
   };
 
-  const variance = (parseFloat(actualAmount) || 0) - (parseFloat(systemAmount) || 0);
+  const variance = (parseFloat(actualAmount) || 0) - (Number(expectedCash) || 0);
 
   return (
     <EnterpriseFormPage
       title="Daily Cash Reconciliation"
-      subtitle="Compare system expected cash vs physical count at shift end"
+      subtitle="Expected cash is Chart of Accounts account 1000 — not a typed dashboard figure"
       breadcrumbs={['Finance', 'Reconciliation']}
       backTo="/finance"
       error={error}
@@ -52,8 +70,10 @@ const CashReconciliation = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>System Amount (Ledger)</Label>
-              <Input type="number" step="0.01" value={systemAmount} onChange={(e) => setSystemAmount(e.target.value)} required />
+              <Label>Expected Cash (Ledger 1000)</Label>
+              <div className="p-2 bg-slate-50 border rounded-md font-mono text-sm min-h-[40px] flex items-center">
+                {loadingExpected ? 'Loading…' : formatCurrency(expectedCash ?? 0)}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Actual Cash Counted</Label>
@@ -68,7 +88,7 @@ const CashReconciliation = () => {
             <Calculator className="h-5 w-5" />
             <span className="font-semibold">Variance: {formatCurrency(variance)}</span>
           </div>
-          <Button type="submit" disabled={submitting} className="w-full bg-primary hover:bg-primary/90">
+          <Button type="submit" disabled={submitting || loadingExpected} className="w-full bg-primary hover:bg-primary/90">
             {submitting ? 'Submitting...' : 'Submit Reconciliation'}
           </Button>
         </form>
@@ -81,28 +101,15 @@ const CashReconciliation = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between"><span>Expected</span><span className="font-semibold">{formatCurrency(result.expectedCash)}</span></div>
-              <div className="flex justify-between"><span>Actual</span><span className="font-semibold">{formatCurrency(result.actualCash)}</span></div>
-              <div className="flex justify-between border-t pt-2">
-                <span>Variance</span>
-                <Badge className={result.variance === 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
-                  {formatCurrency(result.variance || result.difference)}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {!result && (
-          <Card className="border-none shadow-sm">
-            <CardHeader>
-              <CardTitle>Audit Guidelines</CardTitle>
-              <CardDescription>End-of-day cash control checklist</CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-slate-600 space-y-2">
-              <p className="flex items-start gap-2"><AlertCircle className="h-4 w-4 mt-0.5 text-amber-500" /> Count all cash drawers before entering amounts.</p>
-              <p className="flex items-start gap-2"><AlertCircle className="h-4 w-4 mt-0.5 text-amber-500" /> System amount should match POS and wallet ledger totals.</p>
-              <p className="flex items-start gap-2"><AlertCircle className="h-4 w-4 mt-0.5 text-amber-500" /> Document any variance in the notes field.</p>
+              <div className="flex justify-between"><span>Expected</span><span className="font-mono">{formatCurrency(result.expectedCash)}</span></div>
+              <div className="flex justify-between"><span>Counted</span><span className="font-mono">{formatCurrency(result.actualCash)}</span></div>
+              <div className="flex justify-between"><span>Variance</span><span className="font-mono">{formatCurrency(result.variance)}</span></div>
+              <Badge variant="outline">{result.status}</Badge>
+              {Number(result.variance) !== 0 && (
+                <p className="text-xs text-amber-800 flex items-center gap-1 pt-2">
+                  <AlertCircle className="h-3 w-3" /> Variance posted to the finance ledger against this reconciliation.
+                </p>
+              )}
             </CardContent>
           </Card>
         )}

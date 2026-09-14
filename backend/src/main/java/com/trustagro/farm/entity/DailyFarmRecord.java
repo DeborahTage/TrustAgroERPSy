@@ -46,8 +46,6 @@ public class DailyFarmRecord {
     private BigDecimal feedConsumed;
     private BigDecimal waterConsumed;
     private BigDecimal averageWeight;
-    private Integer eggProduction;
-    private Integer damagedEggs;
     private String symptomsOrRemarks;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -82,8 +80,6 @@ public class DailyFarmRecord {
     public BigDecimal getFeedConsumed() { return feedConsumed; }
     public BigDecimal getWaterConsumed() { return waterConsumed; }
     public BigDecimal getAverageWeight() { return averageWeight; }
-    public Integer getEggProduction() { return eggProduction; }
-    public Integer getDamagedEggs() { return damagedEggs; }
     public String getSymptomsOrRemarks() { return symptomsOrRemarks; }
     public User getRecordedBy() { return recordedBy; }
     public com.trustagro.veterinary.entity.DiseaseCase getDiseaseCase() { return diseaseCase; }
@@ -103,8 +99,6 @@ public class DailyFarmRecord {
     public void setFeedConsumed(BigDecimal feedConsumed) { this.feedConsumed = feedConsumed; }
     public void setWaterConsumed(BigDecimal waterConsumed) { this.waterConsumed = waterConsumed; }
     public void setAverageWeight(BigDecimal averageWeight) { this.averageWeight = averageWeight; }
-    public void setEggProduction(Integer eggProduction) { this.eggProduction = eggProduction; }
-    public void setDamagedEggs(Integer damagedEggs) { this.damagedEggs = damagedEggs; }
     public void setSymptomsOrRemarks(String symptomsOrRemarks) { this.symptomsOrRemarks = symptomsOrRemarks; }
     public void setRecordedBy(User recordedBy) { this.recordedBy = recordedBy; }
     public void setDiseaseCase(com.trustagro.veterinary.entity.DiseaseCase diseaseCase) { this.diseaseCase = diseaseCase; }

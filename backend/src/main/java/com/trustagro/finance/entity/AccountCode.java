@@ -27,6 +27,7 @@ public enum AccountCode {
     EXP_MAINTENANCE("5900", "Maintenance", AccountType.EXPENSE, BusinessUnit.GENERAL),
     EXP_ADMIN("5950", "Administrative Costs", AccountType.EXPENSE, BusinessUnit.GENERAL),
     COGS_POULTRY("5000", "Cost of Goods Sold - Poultry", AccountType.EXPENSE, BusinessUnit.POULTRY_FARM),
+    COGS_PHARMACY("5010", "Cost of Goods Sold - Pharmacy", AccountType.EXPENSE, BusinessUnit.PHARMACY),
 
     // Asset Accounts
     ASSET_CASH("1000", "Cash on Hand", AccountType.ASSET, BusinessUnit.GENERAL),
@@ -37,6 +38,7 @@ public enum AccountCode {
 
     // Liability Accounts
     LIABILITY_VAT("2100", "VAT Payable", AccountType.LIABILITY, BusinessUnit.GENERAL),
+    LIABILITY_AP("2000", "Accounts Payable", AccountType.LIABILITY, BusinessUnit.GENERAL),
     LIABILITY_CREDIT("2200", "Customer Credit Payable", AccountType.LIABILITY, BusinessUnit.GENERAL);
 
     private final String code;

@@ -16,7 +16,7 @@ public class HaccpChecklist {
     private Long id;
 
     @Column(nullable = false)
-    private String processName; // e.g., Poultry Slaughter, Egg Collection
+    private String processName; // e.g., Poultry slaughter, feed handling
 
     private String ccpPoint; // Critical Control Point description
 

@@ -112,8 +112,6 @@ public class DailyFarmRecordService {
         record.setFeedConsumed(req.getFeedConsumed());
         record.setWaterConsumed(req.getWaterConsumed());
         record.setAverageWeight(req.getAverageWeight());
-        record.setEggProduction(req.getEggProduction());
-        record.setDamagedEggs(req.getDamagedEggs());
         record.setSymptomsOrRemarks(req.getSymptomsOrRemarks());
         record.setMortalityCause(req.getMortalityCause());
         record.setMortalityNotes(req.getMortalityNotes());
@@ -148,8 +146,6 @@ public class DailyFarmRecordService {
         res.setFeedConsumed(r.getFeedConsumed());
         res.setWaterConsumed(r.getWaterConsumed());
         res.setAverageWeight(r.getAverageWeight());
-        res.setEggProduction(r.getEggProduction());
-        res.setDamagedEggs(r.getDamagedEggs());
         res.setSymptomsOrRemarks(r.getSymptomsOrRemarks());
         res.setMortalityCause(r.getMortalityCause());
         res.setMortalityNotes(r.getMortalityNotes());

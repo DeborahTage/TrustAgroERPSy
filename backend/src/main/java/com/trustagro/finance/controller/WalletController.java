@@ -20,19 +20,19 @@ public class WalletController {
     private final WalletService walletService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE','GENERAL_MANAGER')")
+    @PreAuthorize("hasAuthority('finance:read')")
     public ResponseEntity<ApiResponse<List<CustomerWallet>>> getAll() {
         return ResponseEntity.ok(ApiResponse.success(walletService.getAllWallets()));
     }
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE','GENERAL_MANAGER')")
+    @PreAuthorize("hasAuthority('finance:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getSummary() {
         return ResponseEntity.ok(ApiResponse.success(walletService.getWalletSummary()));
     }
 
     @PostMapping("/deposit")
-    @PreAuthorize("hasAnyRole('ADMIN','FINANCE')")
+    @PreAuthorize("hasAuthority('finance:create')")
     public ResponseEntity<ApiResponse<CustomerWallet>> deposit(@RequestBody Map<String, Object> req) {
         CustomerWallet wallet = walletService.deposit(
                 Long.valueOf(req.get("clientId").toString()),

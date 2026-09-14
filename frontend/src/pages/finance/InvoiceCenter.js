@@ -6,7 +6,6 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { formatCurrency } from '../../utils';
-import { exportToCsv, exportToPdf } from '../../lib/exportTable';
 import { FileText, Plus } from 'lucide-react';
 import EmptyState from '../../components/shared/EmptyState';
 import POSInvoiceDialog from './components/POSInvoiceDialog';
@@ -48,12 +47,21 @@ const InvoiceCenter = () => {
   const filtered = useMemo(() => {
     if (tab === 'pos') return invoices.filter((i) => i.invoiceType === 'POS');
     if (tab === 'service') return invoices.filter((i) => i.invoiceType === 'SERVICE');
+    if (tab === 'chicken') return invoices.filter((i) => i.invoiceType === 'CHICKEN_SALE' || i.sourceModule === 'CHICKEN_SALE');
+    if (tab === 'training') return invoices.filter((i) => i.invoiceType === 'TRAINING' || i.sourceModule === 'TRAINING');
     if (tab === 'overdue') return invoices.filter((i) => i.status === 'OVERDUE');
     return invoices;
   }, [invoices, tab]);
 
+  const outstandingTotal = invoices
+    .filter((i) => ['SENT', 'PARTIALLY_PAID', 'OVERDUE'].includes(i.status))
+    .reduce((s, i) => s + Math.max(0, (Number(i.totalAmount) || 0) - (Number(i.paidAmount) || 0)), 0);
+
   const columns = [
     { accessorKey: 'invoiceNumber', header: 'Invoice #', cell: ({ row }) => <span className="font-mono font-bold">{row.original.invoiceNumber}</span> },
+    { accessorKey: 'invoiceType', header: 'Type' },
+    { accessorKey: 'sourceModule', header: 'Source', cell: ({ row }) => row.original.sourceModule || row.original.invoiceType || '—' },
+    { accessorKey: 'sourceId', header: 'Source ID', cell: ({ row }) => row.original.sourceId || '—' },
     { accessorKey: 'clientName', header: 'Customer' },
     { accessorKey: 'businessUnit', header: 'Unit', cell: ({ row }) => <Badge variant="outline" className="text-[10px]">{row.original.businessUnit}</Badge> },
     {
@@ -66,19 +74,24 @@ const InvoiceCenter = () => {
       header: 'Total',
       cell: ({ row }) => <span className="font-bold">{formatCurrency(row.original.totalAmount)}</span>,
     },
+    {
+      id: 'outstanding',
+      header: 'Outstanding',
+      cell: ({ row }) => formatCurrency(Math.max(0, (Number(row.original.totalAmount) || 0) - (Number(row.original.paidAmount) || 0))),
+    },
     { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
   ];
 
   const stats = [
     { title: 'Total Invoices', value: invoices.length, icon: FileText, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
     { title: 'Overdue', value: invoices.filter((i) => i.status === 'OVERDUE').length, icon: FileText, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
-    { title: 'Outstanding', value: formatCurrency(invoices.filter((i) => i.status !== 'PAID').reduce((s, i) => s + (Number(i.totalAmount) || 0), 0)), icon: FileText, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { title: 'Outstanding AR', value: formatCurrency(outstandingTotal), icon: FileText, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
   ];
 
   return (
     <EnterprisePage
       title="Invoice Center"
-      subtitle="Multi-stream billing from pharmacy POS, services, training, and consultancy"
+      subtitle="Multi-stream billing from pharmacy POS, chicken sales, and services"
       breadcrumbs={['Finance', 'Invoices']}
       loading={loading}
       error={error}
@@ -101,6 +114,8 @@ const InvoiceCenter = () => {
           <TabsTrigger value="all">All ({invoices.length})</TabsTrigger>
           <TabsTrigger value="pos">POS</TabsTrigger>
           <TabsTrigger value="service">Service</TabsTrigger>
+          <TabsTrigger value="chicken">Chicken Sales</TabsTrigger>
+          <TabsTrigger value="training">Training</TabsTrigger>
           <TabsTrigger value="overdue">Overdue</TabsTrigger>
         </TabsList>
 

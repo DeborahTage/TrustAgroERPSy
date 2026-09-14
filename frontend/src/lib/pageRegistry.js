@@ -18,7 +18,7 @@ export const PAGE_UPGRADE_REGISTRY = [
   { step: 8, path: '/farms/barn-dashboard', name: 'Barn Dashboard', module: 'Farm', status: 'done' },
   { step: 9, path: '/flocks', name: 'Flock List', module: 'Farm', status: 'done' },
   { step: 10, path: '/flocks/new', name: 'Flock Form', module: 'Farm', status: 'done' },
-  { step: 11, path: '/flocks/:id/eggs', name: 'Egg Analytics', module: 'Farm', status: 'done' },
+  { step: 11, path: '/farm/chicken-sales', name: 'Chicken Sales', module: 'Farm', status: 'done' },
   { step: 12, path: '/daily-records', name: 'Daily Records', module: 'Farm', status: 'done' },
   { step: 13, path: '/daily-records/new', name: 'Daily Record Form', module: 'Farm', status: 'done' },
   { step: 14, path: '/feed/silos', name: 'Silo Dashboard', module: 'Feed', status: 'done' },

@@ -28,6 +28,8 @@ import FarmVisitForm from './pages/crm/FarmVisitForm';
 import MarketingPage from './pages/marketing/MarketingPage';
 import BarnDashboard from './pages/farm/BarnDashboard';
 import ChickenSales from './pages/farm/ChickenSales';
+import ChickenSaleForm from './pages/farm/ChickenSaleForm';
+import ChickenSaleDetail from './pages/farm/ChickenSaleDetail';
 import SiloDashboard from './pages/feed/SiloDashboard';
 import FeedRecipeForm from './pages/feed/FeedRecipeForm';
 import OrderDashboard from './pages/crm/OrderDashboard';
@@ -37,10 +39,7 @@ import StockInForm from './pages/inventory/StockInForm';
 import StockOutForm from './pages/inventory/StockOutForm';
 import ExpiryTracking from './pages/inventory/ExpiryTracking';
 import SupplierPage from './pages/inventory/SupplierPage';
-import InventoryOverview from './pages/inventory/InventoryOverview';
 import ScanStation from './pages/inventory/ScanStation';
-import StockIn from './pages/inventory/StockIn';
-import StockOut from './pages/inventory/StockOut';
 import PurchaseOrders from './pages/inventory/PurchaseOrders';
 import CycleCount from './pages/inventory/CycleCount';
 import Forecasting from './pages/inventory/Forecasting';
@@ -74,7 +73,13 @@ import FlockProfitability from './pages/finance/FlockProfitability';
 import TransactionForm from './pages/finance/TransactionForm';
 import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
-import TrainingPage from './pages/training/TrainingPage';
+import TrainingDashboard from './pages/training/TrainingDashboard';
+import TrainingPrograms from './pages/training/TrainingPrograms';
+import TrainingProgramDetail from './pages/training/TrainingProgramDetail';
+import TrainingSessions from './pages/training/TrainingSessions';
+import TrainingRegistrations from './pages/training/TrainingRegistrations';
+import TrainingRegistrationDetail from './pages/training/TrainingRegistrationDetail';
+import TrainingCertificates from './pages/training/TrainingCertificates';
 
 const ModuleRoute = ({ module, children }) => (
   <ProtectedRoute module={module}>{children}</ProtectedRoute>
@@ -114,6 +119,9 @@ function App() {
                 <Route path="flocks/:id/edit" element={<ActionRoute action="edit" resource="flocks"><FlockForm /></ActionRoute>} />
 
                 <Route path="farm/chicken-sales" element={<ModuleRoute module="chickenSales"><ChickenSales /></ModuleRoute>} />
+                <Route path="farm/chicken-sales/new" element={<ActionRoute action="create" resource="chickenSales"><ChickenSaleForm /></ActionRoute>} />
+                <Route path="farm/chicken-sales/:id/edit" element={<ActionRoute action="edit" resource="chickenSales"><ChickenSaleForm /></ActionRoute>} />
+                <Route path="farm/chicken-sales/:id" element={<ModuleRoute module="chickenSales"><ChickenSaleDetail /></ModuleRoute>} />
 
                 <Route path="feed/silos" element={<ModuleRoute module="farms"><SiloDashboard /></ModuleRoute>} />
                 <Route path="feed/recipes" element={<ModuleRoute module="farms"><FeedRecipeForm /></ModuleRoute>} />
@@ -195,10 +203,14 @@ function App() {
 
                 <Route path="consultancy" element={<ModuleRoute module="consultancy"><CrmPage /></ModuleRoute>} />
 
-                <Route path="training" element={<ModuleRoute module="training"><TrainingPage /></ModuleRoute>} />
-                <Route path="training/sessions" element={<ModuleRoute module="training"><TrainingPage /></ModuleRoute>} />
-                <Route path="training/students" element={<ModuleRoute module="training"><TrainingPage /></ModuleRoute>} />
-                <Route path="training/certificates" element={<ModuleRoute module="training"><TrainingPage /></ModuleRoute>} />
+                <Route path="training" element={<ModuleRoute module="training"><TrainingDashboard /></ModuleRoute>} />
+                <Route path="training/programs" element={<ModuleRoute module="training"><TrainingPrograms /></ModuleRoute>} />
+                <Route path="training/programs/:id" element={<ModuleRoute module="training"><TrainingProgramDetail /></ModuleRoute>} />
+                <Route path="training/sessions" element={<ModuleRoute module="training"><TrainingSessions /></ModuleRoute>} />
+                <Route path="training/students" element={<ModuleRoute module="training"><TrainingRegistrations /></ModuleRoute>} />
+                <Route path="training/registrations" element={<ModuleRoute module="training"><TrainingRegistrations /></ModuleRoute>} />
+                <Route path="training/registrations/:id" element={<ModuleRoute module="training"><TrainingRegistrationDetail /></ModuleRoute>} />
+                <Route path="training/certificates" element={<ModuleRoute module="training"><TrainingCertificates /></ModuleRoute>} />
                 <Route path="reports" element={<ModuleRoute module="reports"><Reports /></ModuleRoute>} />
                 <Route path="settings" element={<PermissionRoute permission={PERMISSIONS.VIEW_SETTINGS}><Settings /></PermissionRoute>} />
               </Route>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -25,7 +25,7 @@ const MasterDataTab = () => {
     // Refresh global context when we modify MDM
     const { refresh } = useMasterData(activeCategory);
 
-    const fetchItems = async () => {
+    const fetchItems = useCallback(async () => {
         setLoading(true);
         try {
             const response = await masterDataApi.getByCategory(activeCategory, false);
@@ -37,11 +37,11 @@ const MasterDataTab = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeCategory]);
 
     useEffect(() => {
         fetchItems();
-    }, [activeCategory]);
+    }, [fetchItems]);
 
     const [newItemParams, setNewItemParams] = useState({ value: '', label: '', description: '' });
 

@@ -21,6 +21,7 @@ public class MasterDataController {
     private final MasterDataService masterDataService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('masterdata:read')")
     public ResponseEntity<ApiResponse<List<MasterDataItem>>> getByCategory(
             @RequestParam MasterDataCategory category,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
@@ -28,25 +29,25 @@ public class MasterDataController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER')")
+    @PreAuthorize("hasAuthority('masterdata:update')")
     public ResponseEntity<ApiResponse<MasterDataItem>> create(@Valid @RequestBody MasterDataRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Master data created", masterDataService.create(request)));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER')")
+    @PreAuthorize("hasAuthority('masterdata:update')")
     public ResponseEntity<ApiResponse<MasterDataItem>> update(@PathVariable Long id, @Valid @RequestBody MasterDataRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Master data updated", masterDataService.update(id, request)));
     }
 
     @PatchMapping("/{id}/toggle")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER')")
+    @PreAuthorize("hasAuthority('masterdata:update')")
     public ResponseEntity<ApiResponse<MasterDataItem>> toggleStatus(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("Master data status updated", masterDataService.toggleStatus(id)));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','GENERAL_MANAGER')")
+    @PreAuthorize("hasAuthority('masterdata:update')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         masterDataService.delete(id);
         return ResponseEntity.ok(ApiResponse.success("Master data deleted", null));

@@ -6,16 +6,14 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import { ArrowLeft, ArrowDownRight, Building2, User, FileText, Calendar, Box, Tag, Save, X, Info, Layers, Stethoscope, Syringe } from 'lucide-react';
+import { ArrowDownRight, Building2, User, FileText, Calendar, Box, Tag, Save, Info, Layers, Stethoscope, Syringe } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import api from '../../api/axios';
 import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
 
 const StockOutForm = () => {
-  const { t } = useLanguage();
   const { canPerformAction } = useAuth();
   const canStockOut = canPerformAction('stockOut', 'inventoryItems');
   const navigate = useNavigate();
