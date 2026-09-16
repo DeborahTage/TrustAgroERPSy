@@ -72,11 +72,10 @@ public class MasterDataService {
     public void delete(Long id) {
         MasterDataItem item = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Master data item not found"));
-                
-        // In a real system, we might prevent hard deletes using BusinessException 
-        // if this item is referenced elsewhere, but for MDM we generally soft-delete.
-        auditService.log("DELETE", MODULE, "MASTER_DATA", id, item.getCategory() + ":" + item.getValue(), null);
-        repository.delete(item);
+        item.setActive(false);
+        repository.save(item);
+        auditService.log("DEACTIVATE", MODULE, "MASTER_DATA", id,
+                item.getCategory() + ":" + item.getValue(), "active=false");
     }
 
     public MasterDataItem toggleStatus(Long id) {

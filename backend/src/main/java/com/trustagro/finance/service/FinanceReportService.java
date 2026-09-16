@@ -100,7 +100,7 @@ public class FinanceReportService {
         Map<String, Object> report = new HashMap<>();
         BigDecimal cashIn = BigDecimal.ZERO;
         BigDecimal cashOut = BigDecimal.ZERO;
-        List<FinanceTransaction> periodTx = transactionRepository.findByTransactionDateBetween(from, to);
+        List<FinanceTransaction> periodTx = transactionRepository.findByTransactionDateBetweenWithAccounts(from, to);
         for (FinanceTransaction t : periodTx) {
             String debit = t.getDebitAccount() != null ? t.getDebitAccount().getAccountCode() : null;
             String credit = t.getCreditAccount() != null ? t.getCreditAccount().getAccountCode() : null;

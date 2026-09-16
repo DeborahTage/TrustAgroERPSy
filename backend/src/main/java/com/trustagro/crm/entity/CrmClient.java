@@ -9,7 +9,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "crm_clients")
+@Table(name = "crm_clients", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_crm_client_customer_code", columnNames = "customer_code")
+})
 @Data
 public class CrmClient {
 
@@ -17,14 +19,32 @@ public class CrmClient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "customer_code", length = 40)
+    private String customerCode;
+
     @Column(nullable = false)
     private String clientName;
 
     private String phone;
+    private String email;
+    private String contactPerson;
+    private String address;
+    private String city;
+    private String region;
     private String location;
     private String farmType;
     private String farmSize;
     private Integer numberOfBirds;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private CustomerType customerType;
+
+    @Column(length = 80)
+    private String taxIdentifier;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
 
     @Enumerated(EnumType.STRING)
     private ClientStatus status = ClientStatus.LEAD;
@@ -33,30 +53,13 @@ public class CrmClient {
     @JoinColumn(name = "assigned_extension_worker_id")
     private User assignedExtensionWorker;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_owner_id")
+    private User assignedOwner;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    public Long getId() { return id; }
-    public String getClientName() { return clientName; }
-    public String getPhone() { return phone; }
-    public String getLocation() { return location; }
-    public String getFarmType() { return farmType; }
-    public String getFarmSize() { return farmSize; }
-    public Integer getNumberOfBirds() { return numberOfBirds; }
-    public ClientStatus getStatus() { return status; }
-    public User getAssignedExtensionWorker() { return assignedExtensionWorker; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-
-    public void setClientName(String clientName) { this.clientName = clientName; }
-    public void setPhone(String phone) { this.phone = phone; }
-    public void setLocation(String location) { this.location = location; }
-    public void setFarmType(String farmType) { this.farmType = farmType; }
-    public void setFarmSize(String farmSize) { this.farmSize = farmSize; }
-    public void setNumberOfBirds(Integer numberOfBirds) { this.numberOfBirds = numberOfBirds; }
-    public void setStatus(ClientStatus status) { this.status = status; }
-    public void setAssignedExtensionWorker(User assignedExtensionWorker) { this.assignedExtensionWorker = assignedExtensionWorker; }
 }

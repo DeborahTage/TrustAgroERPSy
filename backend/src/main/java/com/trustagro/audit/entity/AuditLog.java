@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
     @Index(name = "idx_audit_user", columnList = "userId"),
     @Index(name = "idx_audit_entity", columnList = "entityType"),
     @Index(name = "idx_audit_action", columnList = "action"),
-    @Index(name = "idx_audit_created", columnList = "createdAt")
+    @Index(name = "idx_audit_created", columnList = "createdAt"),
+    @Index(name = "idx_audit_module", columnList = "module")
 })
 @Data
 public class AuditLog {
@@ -23,11 +24,11 @@ public class AuditLog {
     private Long userId;
     private String userEmail;
 
-    /** CREATE, UPDATE, DELETE, VIEW */
+    /** CREATE, UPDATE, DELETE, VIEW, LOGIN_SUCCESS, etc. */
     @Column(nullable = false)
     private String action;
 
-    /** High-level module name, e.g. INVENTORY, VETERINARY */
+    /** High-level module name, e.g. INVENTORY, VETERINARY, SECURITY */
     @Column(nullable = false)
     private String module;
 
@@ -43,15 +44,13 @@ public class AuditLog {
     @Column(columnDefinition = "TEXT")
     private String newValue;
 
+    /** SUCCESS or FAILURE — defaults to SUCCESS for existing rows */
+    @Column(length = 16)
+    private String result = "SUCCESS";
+
+    @Column(length = 64)
+    private String ipAddress;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
-
-    public void setUserId(Long userId) { this.userId = userId; }
-    public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
-    public void setAction(String action) { this.action = action; }
-    public void setModule(String module) { this.module = module; }
-    public void setEntityType(String entityType) { this.entityType = entityType; }
-    public void setEntityId(Long entityId) { this.entityId = entityId; }
-    public void setOldValue(String oldValue) { this.oldValue = oldValue; }
-    public void setNewValue(String newValue) { this.newValue = newValue; }
 }

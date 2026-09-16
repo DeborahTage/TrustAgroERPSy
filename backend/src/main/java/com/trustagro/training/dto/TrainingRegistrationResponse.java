@@ -41,6 +41,7 @@ public class TrainingRegistrationResponse {
     private String notes;
     private LocalDateTime createdAt;
     private List<AttendanceResponse> attendance;
+    private Double attendancePercent;
     private CertificateResponse certificate;
     private List<PaymentResponse> payments;
 

@@ -73,6 +73,9 @@ const CrmPage = () => {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => navigate(`/crm/clients/${row.original.id}`)}>
+            360
+          </Button>
           <Button size="sm" variant="outline" onClick={() => navigate(`/crm/clients/${row.original.id}/edit`)}>
             Edit
           </Button>
@@ -109,7 +112,7 @@ const CrmPage = () => {
       exportFilename="crm-clients"
       actions={
         <>
-          {hasPermission(PERMISSIONS.MANAGE_CLIENTS) && (
+          {hasPermission(PERMISSIONS.MANAGE_CRM) && (
             <Button size="sm" onClick={() => navigate('/crm/clients/new')}>
               <Plus className="mr-2 h-4 w-4" /> Add Client
             </Button>

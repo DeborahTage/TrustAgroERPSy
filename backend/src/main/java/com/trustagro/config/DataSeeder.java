@@ -9,6 +9,7 @@ import com.trustagro.user.entity.UserStatus;
 import com.trustagro.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,7 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final MasterDataItemRepository masterDataRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final boolean seedDemoUsers;
 
     private static final List<Map.Entry<String, Role>> DEMO_USERS = List.of(
             Map.entry("admin@trustagro.com", Role.ADMIN),
@@ -43,34 +45,42 @@ public class DataSeeder implements CommandLineRunner {
     );
 
     public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                      MasterDataItemRepository masterDataRepository, JdbcTemplate jdbcTemplate) {
+                      MasterDataItemRepository masterDataRepository, JdbcTemplate jdbcTemplate,
+                      @Value("${app.seed.demo-users:false}") boolean seedDemoUsers) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.masterDataRepository = masterDataRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.seedDemoUsers = seedDemoUsers;
     }
 
     @Override
     public void run(String... args) {
         refreshEnumCheckConstraints();
         migrateLegacyRoles();
-        seedUsers();
+        if (seedDemoUsers) {
+            seedUsers();
+        } else {
+            log.info("Demo user seeding disabled (app.seed.demo-users=false)");
+        }
         seedMasterData();
     }
 
     /**
      * Hibernate/H2 keeps stale CHECK constraints on enum columns after Role values change.
-     * H2 may name them users_role_chk OR opaque names like CONSTRAINT_6A — drop all of them,
-     * widen the column to VARCHAR, then optionally recreate a current-role CHECK.
+     * H2-specific; safely no-ops / warns on PostgreSQL and other dialects.
      */
     private void refreshEnumCheckConstraints() {
-        dropAllCheckConstraints("users");
-        dropAllCheckConstraints("notifications");
-        // Plain VARCHAR — no CHECK. Avoids H2 opaque constraints (CONSTRAINT_6A) blocking new Role values.
-        alterToVarchar("users", "role", 64);
-        alterToVarchar("notifications", "target_role", 64);
-        dropAllCheckConstraints("users");
-        dropAllCheckConstraints("notifications");
+        try {
+            dropAllCheckConstraints("users");
+            dropAllCheckConstraints("notifications");
+            alterToVarchar("users", "role", 64);
+            alterToVarchar("notifications", "target_role", 64);
+            dropAllCheckConstraints("users");
+            dropAllCheckConstraints("notifications");
+        } catch (Exception e) {
+            log.warn("Enum CHECK constraint refresh skipped (non-H2 or unsupported dialect): {}", e.getMessage());
+        }
     }
 
     private void dropAllCheckConstraints(String tableName) {
@@ -81,7 +91,6 @@ public class DataSeeder implements CommandLineRunner {
                     String.class,
                     tableName
             );
-            // H2 also lists constraints here (older metadata)
             try {
                 names.addAll(jdbcTemplate.queryForList(
                         "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.CONSTRAINTS " +
@@ -90,7 +99,7 @@ public class DataSeeder implements CommandLineRunner {
                         tableName
                 ));
             } catch (Exception ignored) {
-                // CONSTRAINTS view may not exist on all H2 versions
+                // CONSTRAINTS view may not exist on all H2 versions / Postgres
             }
             names.stream().distinct().forEach(name -> {
                 try {
@@ -100,7 +109,6 @@ public class DataSeeder implements CommandLineRunner {
                     log.warn("Could not drop constraint {}: {}", name, e.getMessage());
                 }
             });
-            // Explicitly drop the known opaque H2 name from this DB
             try {
                 jdbcTemplate.execute("ALTER TABLE " + tableName + " DROP CONSTRAINT IF EXISTS CONSTRAINT_6A");
             } catch (Exception ignored) {
@@ -182,7 +190,7 @@ public class DataSeeder implements CommandLineRunner {
             user.setRole(role);
             user.setStatus(UserStatus.ACTIVE);
             userRepository.save(user);
-            log.info("Demo user: {} / {} ({})", email, Role.ADMIN.equals(role) ? "Admin@1234" : DEFAULT_PASSWORD, role.name());
+            log.info("Demo user created: {} ({})", email, role.name());
         }
     }
 

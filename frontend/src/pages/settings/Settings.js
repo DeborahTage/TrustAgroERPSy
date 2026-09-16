@@ -14,6 +14,7 @@ import { Badge } from '../../components/ui/badge';
 import MasterDataTab from './MasterDataTab';
 import AuditLogViewer from './AuditLogViewer';
 import { PERMISSIONS } from '../../lib/permissions';
+import { authApi } from '../../api';
 
 const Settings = () => {
   const { user, hasPermission } = useAuth();
@@ -42,12 +43,16 @@ const Settings = () => {
       return;
     }
     setLoading(true);
+    setError('');
     try {
+      await authApi.changePassword({
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+      });
       toast.success(t('settings.passwordUpdated'));
       setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setError('');
     } catch (err) {
-      setError(t('settings.failedToUpdatePassword'));
+      setError(err.response?.data?.message || t('settings.failedToUpdatePassword'));
     } finally {
       setLoading(false);
     }

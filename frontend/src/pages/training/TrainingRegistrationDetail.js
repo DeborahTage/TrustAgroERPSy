@@ -157,6 +157,9 @@ const TrainingRegistrationDetail = () => {
               ))}
               <div className="pt-2 border-t">
                 <div className="flex justify-between"><span>Completed</span><span>{reg.completed ? 'Yes' : 'No'}</span></div>
+                {reg.attendancePercent != null && (
+                  <div className="flex justify-between"><span>Attendance %</span><span>{reg.attendancePercent}%</span></div>
+                )}
                 {reg.certificate ? (
                   <div className="mt-2 space-y-1 text-xs">
                     <p className="font-mono font-bold">{reg.certificate.certificateNumber}</p>

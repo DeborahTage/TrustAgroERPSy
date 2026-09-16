@@ -36,8 +36,14 @@ public class PurchaseOrderItem {
     public void setPurchaseOrder(PurchaseOrder purchaseOrder) { this.purchaseOrder = purchaseOrder; }
     public void setItem(InventoryItem item) { this.item = item; }
     public void setQuantityOrdered(Double quantityOrdered) { this.quantityOrdered = quantityOrdered; }
+    public void setQuantityReceived(Double quantityReceived) { this.quantityReceived = quantityReceived; }
     public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
     public void setLineTotal(BigDecimal lineTotal) { this.lineTotal = lineTotal; }
     public BigDecimal getUnitPrice() { return unitPrice; }
     public Double getQuantityOrdered() { return quantityOrdered; }
+    public Double getQuantityReceived() { return quantityReceived != null ? quantityReceived : 0.0; }
+    public Long getId() { return id; }
+    public PurchaseOrder getPurchaseOrder() { return purchaseOrder; }
+    public InventoryItem getItem() { return item; }
+    public BigDecimal getLineTotal() { return lineTotal; }
 }

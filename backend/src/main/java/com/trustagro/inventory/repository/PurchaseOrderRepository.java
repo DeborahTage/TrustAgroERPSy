@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
+    long countByStatus(com.trustagro.inventory.entity.PurchaseOrderStatus status);
 }

@@ -2,6 +2,8 @@
 
 A modular monolith ERP-style management system for agro-consulting and poultry/farm management.
 
+**Production deployment:** see [docs/production-deployment.md](docs/production-deployment.md) (profiles, required env vars, Docker, backups, JWT rotation).
+
 ---
 
 ## Tech Stack
@@ -9,8 +11,8 @@ A modular monolith ERP-style management system for agro-consulting and poultry/f
 | Layer     | Technology                              |
 |-----------|----------------------------------------|
 | Frontend  | React.js, React Router, Bootstrap 5, Axios|
-| Backend   | Spring Boot 3, Spring Security, JWT |
-| Database  | H2 for local dev, PostgreSQL for full deployment |
+| Backend   | Spring Boot 3, Spring Security, JWT, Actuator |
+| Database  | H2 for local dev, PostgreSQL for production |
 
 ---
 
@@ -40,7 +42,7 @@ powershell -ExecutionPolicy Bypass -File .\start-dev.ps1
 What this does:
 - Starts the backend first using the Spring `local` profile
 - Uses the built-in H2 local database automatically
-- Waits until the backend is reachable on `http://localhost:8081`
+- Waits until the backend is reachable on `http://localhost:8081/actuator/health`
 - Starts the frontend only after the backend is ready
 
 Expected local URLs:
@@ -62,21 +64,23 @@ cd backend
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-**Important:** The backend defaults to the `local` H2 profile. For PostgreSQL deployment, set `SPRING_PROFILES_ACTIVE=` (empty) or configure `DB_PASSWORD` and use a Postgres-compatible profile.
+**Important:** The backend defaults to the `local` H2 profile. For production PostgreSQL, use `SPRING_PROFILES_ACTIVE=prod` with the required env vars documented in [docs/production-deployment.md](docs/production-deployment.md).
 
-On first successful backend startup, demo users are seeded for every role:
+### Demo credentials (local profile only)
+
+On first successful **local** backend startup (`app.seed.demo-users=true`), demo users are seeded. **These accounts are not created in production.**
 
 | Role | Email | Password |
 |------|-------|----------|
 | Admin | `admin@trustagro.com` | `Admin@1234` |
-| General Manager | `gmanager@trustagro.com` | `Trust@1234` |
-| Operations Manager | `ops@trustagro.com` | `Trust@1234` |
 | Farm Manager | `farmmanager@trustagro.com` | `Trust@1234` |
-| Veterinary Officer | `vet@trustagro.com` | `Trust@1234` |
-| Store Keeper | `store@trustagro.com` | `Trust@1234` |
-| Pharmacy Sales | `pharmacy@trustagro.com` | `Trust@1234` |
-| Finance Officer | `finance@trustagro.com` | `Trust@1234` |
-| Extension Worker | `extension@trustagro.com` | `Trust@1234` |
+| Inventory | `inventory@trustagro.com` | `Trust@1234` |
+| Pharmacy | `pharmacy@trustagro.com` | `Trust@1234` |
+| Veterinarian | `vet@trustagro.com` | `Trust@1234` |
+| Finance | `finance@trustagro.com` | `Trust@1234` |
+| CRM | `crm@trustagro.com` | `Trust@1234` |
+| Marketing | `marketing@trustagro.com` | `Trust@1234` |
+| Training | `training@trustagro.com` | `Trust@1234` |
 
 Restart the backend once after updating to create any missing role accounts.
 
@@ -107,26 +111,30 @@ The frontend expects the backend to already be running on **http://localhost:808
 
 ---
 
-## PostgreSQL Setup For Non-Local Environments
+## PostgreSQL / Production
 
-If you want to run against PostgreSQL instead of the local H2 profile:
+Do **not** hardcode DB passwords or JWT secrets in properties files. Use environment variables:
+
+```bash
+export SPRING_PROFILES_ACTIVE=prod
+export DB_URL=jdbc:postgresql://localhost:5432/trust_agro_db
+export DB_USERNAME=trustagro
+export DB_PASSWORD='your-strong-password'
+export APP_JWT_SECRET='your-long-random-secret-at-least-32-chars'
+export APP_CORS_ALLOWED_ORIGINS=https://app.example.com
+```
+
+Or use Docker Compose (see `.env.example` and [docs/production-deployment.md](docs/production-deployment.md)):
+
+```bash
+cp .env.example .env
+docker compose up --build -d
+```
+
+Create the database first if running Postgres outside Compose:
 
 ```sql
 CREATE DATABASE trust_agro_db;
-```
-
-Update credentials in `backend/src/main/resources/application.properties`:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/trust_agro_db
-spring.datasource.username=postgres
-spring.datasource.password=postgres
-```
-
-Then start the backend with PostgreSQL credentials configured:
-
-```bash
-SPRING_PROFILES_ACTIVE= DB_PASSWORD=your_password mvn spring-boot:run
 ```
 
 ---
@@ -149,6 +157,8 @@ Trust ERP/
 │       ├── notification/  # In-app alerts
 │       ├── audit/         # Audit logs
 │       └── common/        # Shared exceptions, responses
+├── docs/
+│   └── production-deployment.md
 └── frontend/
     └── src/
         ├── api/           # Axios API calls
@@ -177,6 +187,8 @@ Each role sees **only its department workspace** in the sidebar. Cross-departmen
 | MARKETING | marketing@trustagro.com | Trust@1234 | Campaigns, Lead Generation, ROI Analytics |
 | TRAINING_OFFICER | training@trustagro.com | Trust@1234 | Training Sessions, Students, Certificates |
 
+> Passwords above apply to **local demo seeding only**. Production must create admins manually with strong credentials.
+
 Legacy accounts (`store@`, `extension@`, `gmanager@`, `ops@`) are auto-migrated to the new roles on backend startup.
 
 ---
@@ -187,6 +199,7 @@ Legacy accounts (`store@`, `extension@`, `gmanager@`, `ops@`) are auto-migrated 
 |--------|-----------------------------------|--------------------------|
 | POST   | /api/auth/login                   | Login                    |
 | GET    | /api/auth/me                      | Current user             |
+| GET    | /actuator/health                  | Liveness/readiness       |
 | GET    | /api/farms                        | List farms               |
 | POST   | /api/farms                        | Create farm              |
 | GET    | /api/flocks                       | List flocks              |
@@ -221,10 +234,11 @@ Legacy accounts (`store@`, `extension@`, `gmanager@`, `ops@`) are auto-migrated 
 
 ## Configuration
 
-Key settings in `application.properties`:
+Key settings in `application.properties` / profiles:
 
 ```properties
 app.alerts.mortality-threshold=5.0      # % mortality rate to trigger alert
 app.alerts.expiry-warning-days=30       # Days before expiry to warn
 app.jwt.expiration=86400000             # JWT expiry: 24 hours
+# Secrets via env: APP_JWT_SECRET, DB_PASSWORD, APP_CORS_ALLOWED_ORIGINS
 ```

@@ -1,5 +1,6 @@
 package com.trustagro.finance.service;
 
+import com.trustagro.audit.service.AuditService;
 import com.trustagro.common.exception.BusinessException;
 import com.trustagro.common.exception.ResourceNotFoundException;
 import com.trustagro.finance.entity.*;
@@ -33,6 +34,7 @@ public class FinanceService {
     private final FinanceAuditLogRepository auditLogRepository;
     private final UserRepository userRepository;
     private final InvoiceRepository invoiceRepository;
+    private final AuditService auditService;
 
     @Transactional
     public FinanceTransaction postRevenue(BigDecimal amount, BusinessUnit unit, String accountCode,
@@ -158,6 +160,15 @@ public class FinanceService {
         log.setReferenceId(referenceId);
         log.setPerformedBy(t.getRecordedBy());
         auditLogRepository.save(log);
+
+        auditService.log("FINANCE_POSTED", "FINANCE", "FinanceTransaction", saved.getId(),
+                null,
+                "amount=" + saved.getAmount()
+                        + ",debit=" + (debitAccountCode != null ? debitAccountCode : "")
+                        + ",credit=" + (creditAccountCode != null ? creditAccountCode : "")
+                        + ",source=" + (sourceModule != null ? sourceModule : "UNKNOWN")
+                        + ",refType=" + (referenceType != null ? referenceType : "")
+                        + ",refId=" + (referenceId != null ? referenceId : ""));
 
         return saved;
     }

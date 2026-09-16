@@ -10,7 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "invoices")
+@Table(name = "invoices", uniqueConstraints = {
+        // Safe: MySQL/H2 allow multiple NULL triples for non-source invoices; CRM always sets all three.
+        @UniqueConstraint(name = "uk_invoice_source_ref", columnNames = {"source_module", "source_type", "source_id"})
+})
 @Data
 public class Invoice {
 

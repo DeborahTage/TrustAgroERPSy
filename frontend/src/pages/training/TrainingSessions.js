@@ -44,8 +44,8 @@ const TrainingSessions = () => {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <Button size="sm" variant="outline" onClick={() => navigate(`/training/programs/${row.original.programId}`)}>
-          Program
+        <Button size="sm" variant="outline" onClick={() => navigate(`/training/sessions/${row.original.id}`)}>
+          Open
         </Button>
       ),
     },

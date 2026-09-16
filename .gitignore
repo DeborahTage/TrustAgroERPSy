@@ -9,12 +9,20 @@ backend/.m2/
 backend/data/
 *.class
 
-# Local env files
+# Local env files / secrets
 frontend/.env.local
 frontend/.env.development.local
 frontend/.env.test.local
 frontend/.env.production.local
+frontend/.env
+frontend/.env.production
 backend/.env
+.env
+
+# Tokens / local scratch (do not commit)
+admin_token.txt
+*_log.txt
+*_token.txt
 
 # Logs
 *.log

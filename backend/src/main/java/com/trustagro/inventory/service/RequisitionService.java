@@ -3,6 +3,7 @@ package com.trustagro.inventory.service;
 import com.trustagro.farm.repository.BarnRepository;
 import com.trustagro.farm.repository.FarmRepository;
 import com.trustagro.farm.repository.FlockRepository;
+import com.trustagro.common.exception.BusinessException;
 import com.trustagro.inventory.entity.InternalRequisition;
 import com.trustagro.inventory.entity.RequisitionItem;
 import com.trustagro.inventory.entity.RequisitionStatus;
@@ -91,6 +92,10 @@ public class RequisitionService {
     @Transactional
     public InternalRequisition approveRequisition(Long reqId, User user) {
         InternalRequisition req = requisitionRepository.findById(reqId).orElseThrow();
+        if (user != null && req.getRequestedBy() != null
+                && req.getRequestedBy().getId().equals(user.getId())) {
+            throw new BusinessException("Cannot self-approve a requisition");
+        }
         req.setStatus(RequisitionStatus.APPROVED);
         req.setApprovedBy(user);
         req.setApprovedAt(LocalDateTime.now());

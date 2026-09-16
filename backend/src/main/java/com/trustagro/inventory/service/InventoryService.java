@@ -1,6 +1,7 @@
 package com.trustagro.inventory.service;
 
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.audit.service.AuditService;
 import com.trustagro.common.exception.ResourceNotFoundException;
 import com.trustagro.inventory.dto.*;
 import com.trustagro.inventory.entity.*;
@@ -38,6 +39,7 @@ public class InventoryService {
     private final FinanceService financeService;
     private final UserRepository userRepository;
     private final InternalRequisitionRepository requisitionRepository;
+    private final AuditService auditService;
 
     public InventoryService(InventoryItemRepository itemRepository, 
                             StockBatchRepository batchRepository,
@@ -48,7 +50,8 @@ public class InventoryService {
                             NotificationRepository notificationRepository,
                             FinanceService financeService,
                             UserRepository userRepository,
-                            InternalRequisitionRepository requisitionRepository) {
+                            InternalRequisitionRepository requisitionRepository,
+                            AuditService auditService) {
         this.itemRepository = itemRepository;
         this.batchRepository = batchRepository;
         this.movementRepository = movementRepository;
@@ -59,6 +62,7 @@ public class InventoryService {
         this.financeService = financeService;
         this.userRepository = userRepository;
         this.requisitionRepository = requisitionRepository;
+        this.auditService = auditService;
     }
 
 
@@ -129,6 +133,15 @@ public class InventoryService {
         batch.setStatus(BatchStatus.AVAILABLE);
         batch.setStorageZone(data.getOrDefault("storageZone", "").toString());
         batch.setShelfLocation(data.getOrDefault("shelfLocation", "").toString());
+        Object poRefObj = data.get("poReference");
+        if (poRefObj != null && !poRefObj.toString().trim().isEmpty()) {
+            batch.setPoReference(poRefObj.toString().trim());
+        }
+        Object mfgObj = data.get("manufactureDate");
+        if (mfgObj != null && !mfgObj.toString().trim().isEmpty()) {
+            batch.setManufacturingDate(LocalDate.parse(mfgObj.toString()));
+        }
+        // StockBatch has no supplier FK — supplierId in data is ignored here (GRN owns the link).
         batchRepository.save(batch);
 
         // Update item stock and weighted avg cost
@@ -153,6 +166,20 @@ public class InventoryService {
         movement.setTotalCost(batch.getUnitCost() != null ? batch.getUnitCost().multiply(BigDecimal.valueOf(quantity)) : null);
         movement.setToLocation(batch.getStorageZone() + "-" + batch.getShelfLocation());
         movement.setCreatedBy(user);
+        Object refTypeObj = data.get("referenceType");
+        Object refIdObj = data.get("referenceId");
+        if (refIdObj == null && data.get("grnId") != null) {
+            refIdObj = data.get("grnId");
+            if (refTypeObj == null) {
+                refTypeObj = com.trustagro.finance.entity.FinanceSourceTypes.REF_PROCUREMENT_GRN;
+            }
+        }
+        if (refTypeObj != null && !refTypeObj.toString().trim().isEmpty()) {
+            movement.setReferenceType(refTypeObj.toString().trim());
+        }
+        if (refIdObj != null && !refIdObj.toString().trim().isEmpty()) {
+            movement.setReferenceId(Long.valueOf(refIdObj.toString()));
+        }
         movementRepository.save(movement);
 
         // Auto-create inventory receipt on AP (asset, not expense). Failures are fatal for integrity.
@@ -168,6 +195,8 @@ public class InventoryService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("batchId", batch.getId());
         result.put("newStock", newStock);
+        auditService.log("STOCK_IN", "INVENTORY", "InventoryItem", itemId,
+                null, "qty=" + quantity + ",newStock=" + newStock + ",batch=" + batch.getId());
         return result;
     }
 
@@ -270,6 +299,8 @@ public class InventoryService {
             result.put("expiryDate", first.getExpiryDate());
             result.put("unitCost", first.getUnitCost());
         }
+        auditService.log("STOCK_OUT", "INVENTORY", "InventoryItem", itemId,
+                null, "qty=" + quantity + ",reason=" + reason + ",newStock=" + newStock);
         return result;
     }
 
@@ -356,7 +387,8 @@ public class InventoryService {
             PurchaseOrder po = new PurchaseOrder();
             po.setPoNumber("AUTO-PO-" + System.currentTimeMillis());
             po.setSupplier(supplier);
-            po.setStatus("Draft");
+            po.setStatus(PurchaseOrderStatus.DRAFT);
+            po.setOrderDate(LocalDate.now());
             po.setCreatedBy(user);
             po = poRepository.save(po);
 

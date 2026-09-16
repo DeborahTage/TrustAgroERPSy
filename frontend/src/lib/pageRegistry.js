@@ -6,7 +6,9 @@ export const PAGE_UPGRADE_REGISTRY = [
   // ── Auth & Dashboard ──
   { step: 1, path: '/login', name: 'Login', module: 'Auth', status: 'done' },
   { step: 2, path: '/dashboard', name: 'Role Dashboard', module: 'Dashboard', status: 'done' },
-  { step: 3, path: '/dashboard', name: 'Executive Dashboard (Admin)', module: 'Dashboard', status: 'done' },
+  { step: 3, path: '/dashboard', name: 'Executive Dashboard (permission-gated)', module: 'Executive', status: 'done' },
+  { step: 3, path: '/executive', name: 'Executive Dashboard alias', module: 'Executive', status: 'done' },
+  { step: 11, path: '/dashboard', name: 'Executive Cross-Module Intelligence', module: 'Executive', status: 'done' },
 
   // ── Administration ──
   { step: 4, path: '/users', name: 'User List', module: 'Users', status: 'done' },
@@ -65,11 +67,28 @@ export const PAGE_UPGRADE_REGISTRY = [
   { step: 47, path: '/finance/new', name: 'Journal Entry', module: 'Finance', status: 'done' },
 
   // ── CRM & Other ──
-  { step: 48, path: '/crm', name: 'CRM Hub', module: 'CRM', status: 'done' },
+  { step: 48, path: '/crm', name: 'CRM Dashboard', module: 'CRM', status: 'done' },
+  { step: 48.1, path: '/crm/leads', name: 'CRM Leads', module: 'CRM', status: 'done' },
+  { step: 48.2, path: '/crm/opportunities', name: 'CRM Opportunities', module: 'CRM', status: 'done' },
+  { step: 48.3, path: '/crm/quotations', name: 'CRM Quotations', module: 'CRM', status: 'done' },
   { step: 49, path: '/crm/orders', name: 'Customer Orders', module: 'CRM', status: 'done' },
+  { step: 49.1, path: '/crm/clients', name: 'CRM Customers', module: 'CRM', status: 'done' },
+  { step: 49.2, path: '/crm/tasks', name: 'CRM Tasks', module: 'CRM', status: 'done' },
+  { step: 49.3, path: '/crm/reports', name: 'CRM Commercial Reports', module: 'CRM', status: 'done' },
   { step: 50, path: '/training', name: 'Training', module: 'Training', status: 'done' },
-  { step: 51, path: '/reports', name: 'Reports', module: 'Reports', status: 'done' },
-  { step: 52, path: '/settings', name: 'Settings & Audit', module: 'Settings', status: 'done' },
+  { step: 51, path: '/consultancy', name: 'Consultancy', module: 'Consultancy', status: 'done' },
+  { step: 52, path: '/hr', name: 'HR & Payroll', module: 'HR', status: 'done' },
+  { step: 53, path: '/procurement', name: 'Procurement Dashboard', module: 'Procurement', status: 'done' },
+  { step: 54, path: '/procurement/suppliers', name: 'Procurement Suppliers', module: 'Procurement', status: 'done' },
+  { step: 55, path: '/procurement/requisitions', name: 'Requisitions', module: 'Procurement', status: 'done' },
+  { step: 56, path: '/procurement/purchase-orders', name: 'Purchase Orders', module: 'Procurement', status: 'done' },
+  { step: 57, path: '/procurement/goods-receipts', name: 'Goods Receipts', module: 'Procurement', status: 'done' },
+  { step: 58, path: '/procurement/supplier-invoices', name: 'Supplier Invoices', module: 'Procurement', status: 'done' },
+  { step: 59, path: '/procurement/ap', name: 'Accounts Payable', module: 'Procurement', status: 'done' },
+  { step: 60, path: '/procurement/reports', name: 'Procurement Reports', module: 'Procurement', status: 'done' },
+  { step: 61, path: '/reports', name: 'Reports', module: 'Reports', status: 'done' },
+  { step: 62, path: '/settings', name: 'Settings & Audit', module: 'Settings', status: 'done' },
+  { step: 63, path: '/governance', name: 'Governance Dashboard', module: 'Governance', status: 'done' },
 ];
 
 export const getUpgradeProgress = () => {

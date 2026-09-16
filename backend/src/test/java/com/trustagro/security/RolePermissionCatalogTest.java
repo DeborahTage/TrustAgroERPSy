@@ -66,6 +66,60 @@ class RolePermissionCatalogTest {
         assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_READ));
         assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_CREATE));
         assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_UPDATE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_LEAD));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_LEAD_CONVERT));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_OPPORTUNITY));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_QUOTATION));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_QUOTATION_APPROVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_CONFIRM));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_INVOICE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_PAY));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_TASK));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_REPORT));
+    }
+
+    @Test
+    void financeCanInvoiceAndPayCrmOrders() {
+        Role r = Role.FINANCE;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_INVOICE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_PAY));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_REPORT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_CONFIRM));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CRM_LEAD_CONVERT));
+    }
+
+    @Test
+    void extensionWorkerHasLimitedCrmCommercialAccess() {
+        Role r = Role.EXTENSION_WORKER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_UPDATE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_LEAD));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_TASK));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CRM_LEAD_CONVERT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_INVOICE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_PAY));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CRM_QUOTATION_APPROVE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_CONFIRM));
+    }
+
+    @Test
+    void unauthorizedRolesCannotPayCrmOrders() {
+        assertFalse(RolePermissionCatalog.hasPermission(Role.PHARMACIST, Permissions.CRM_ORDER_PAY));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.FARM_MANAGER, Permissions.CRM_ORDER_PAY));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.CRM_ORDER_PAY));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.CONSULTANT, Permissions.CRM_ORDER_PAY));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.GENERAL_MANAGER, Permissions.CRM_ORDER_PAY));
+    }
+
+    @Test
+    void generalManagerCanApproveQuotationsAndViewCrmReports() {
+        Role r = Role.GENERAL_MANAGER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_REPORT));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CRM_QUOTATION_APPROVE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CRM_ORDER_PAY));
     }
 
     @Test
@@ -203,5 +257,269 @@ class RolePermissionCatalogTest {
         assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.TRAINING_READ));
         assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.TRAINING_PUBLISH));
         assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.TRAINING_CERTIFICATE));
+    }
+
+    @Test
+    void consultantHasOperationalButNotCommercialFinance() {
+        Role r = Role.CONSULTANT;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_CREATE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_ACTIVITY));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_DELIVERABLE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_INVOICE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_PAYMENT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_APPROVE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_ASSIGN));
+    }
+
+    @Test
+    void financeCanInvoiceAndPayConsultancyButNotApproveDeliverables() {
+        Role r = Role.FINANCE;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_INVOICE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_PAYMENT));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_REPORT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_APPROVE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_ASSIGN));
+    }
+
+    @Test
+    void generalManagerHasConsultancyApproveAssignComplete() {
+        Role r = Role.GENERAL_MANAGER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_APPROVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_ASSIGN));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_COMPLETE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_CANCEL));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.CONSULTANCY_CONTRACT));
+    }
+
+    @Test
+    void adminHasConsultancyReadOnly() {
+        assertTrue(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.CONSULTANCY_READ));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.CONSULTANCY_CREATE));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.CONSULTANCY_INVOICE));
+    }
+
+    @Test
+    void operationsManagerHasConsultancyRead() {
+        assertTrue(RolePermissionCatalog.hasPermission(Role.OPERATIONS_MANAGER, Permissions.CONSULTANCY_READ));
+    }
+
+    @Test
+    void hrOwnsEmployeeLeaveAndPayrollCapabilities() {
+        Role r = Role.HR;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_CREATE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_UPDATE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_TERMINATE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_ATTENDANCE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_LEAVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_LEAVE_APPROVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL_APPROVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL_PROCESS));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_REPORT));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_SELF));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.FINANCE_CREATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.FINANCE_RECONCILE));
+    }
+
+    @Test
+    void financeCanDisbursePayrollButNotHireOrTerminate() {
+        Role r = Role.FINANCE;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL_PROCESS));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_REPORT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_TERMINATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_CREATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_UPDATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL_APPROVE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_LEAVE_APPROVE));
+    }
+
+    @Test
+    void consultantSeesOwnHrRecordOnly() {
+        Role r = Role.CONSULTANT;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_SELF));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_READ));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_CREATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_UPDATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_TERMINATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_ATTENDANCE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_LEAVE_APPROVE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL));
+    }
+
+    @Test
+    void pharmacistHasNoHrRecordAccessBeyondTheirOwn() {
+        Role r = Role.PHARMACIST;
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_READ));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_CREATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_LEAVE_APPROVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_SELF));
+    }
+
+    @Test
+    void generalManagerApprovesLeaveAndPayrollWithoutRunningIt() {
+        Role r = Role.GENERAL_MANAGER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_LEAVE_APPROVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL_APPROVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.HR_REPORT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_PAYROLL_PROCESS));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.HR_TERMINATE));
+    }
+
+    @Test
+    void noRoleCanBothApproveAndProcessPayrollExceptHr() {
+        for (Role role : RolePermissionCatalog.canonicalRoles()) {
+            boolean approves = RolePermissionCatalog.hasPermission(role, Permissions.HR_PAYROLL_APPROVE);
+            boolean processes = RolePermissionCatalog.hasPermission(role, Permissions.HR_PAYROLL_PROCESS);
+            assertTrue(!(approves && processes) || role == Role.HR,
+                    "Payroll approval and disbursement must stay separated for " + role);
+        }
+    }
+
+    // ─── Procurement RBAC ────────────────────────────────────────
+
+    @Test
+    void inventoryManagerCanReceiveAndApproveButNotPaySuppliers() {
+        Role r = Role.INVENTORY_MANAGER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_CREATE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_UPDATE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_RECEIVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_APPROVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_CANCEL));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_REPORT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_PAYMENT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_INVOICE));
+    }
+
+    @Test
+    void financeCanInvoiceAndPayButCannotReceiveGoods() {
+        Role r = Role.FINANCE;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_INVOICE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_PAYMENT));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_REPORT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_RECEIVE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_CREATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_APPROVE));
+    }
+
+    @Test
+    void farmManagerCanCreateRequisitionButNotReceiveOrPay() {
+        Role r = Role.FARM_MANAGER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_CREATE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_RECEIVE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_PAYMENT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_INVOICE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_APPROVE));
+    }
+
+    @Test
+    void generalManagerCanApproveProcurementWithoutWarehouseOrPayment() {
+        Role r = Role.GENERAL_MANAGER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_APPROVE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_REPORT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_RECEIVE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_PAYMENT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.PROCUREMENT_CREATE));
+    }
+
+    @Test
+    void adminHasProcurementReadOnly() {
+        assertTrue(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.PROCUREMENT_READ));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.PROCUREMENT_CREATE));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.PROCUREMENT_RECEIVE));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.PROCUREMENT_PAYMENT));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.PROCUREMENT_INVOICE));
+    }
+
+    @Test
+    void warehouseAndFinanceProcurementDutiesRemainSeparated() {
+        assertTrue(RolePermissionCatalog.hasPermission(Role.INVENTORY_MANAGER, Permissions.PROCUREMENT_RECEIVE));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.INVENTORY_MANAGER, Permissions.PROCUREMENT_PAYMENT));
+        assertTrue(RolePermissionCatalog.hasPermission(Role.FINANCE, Permissions.PROCUREMENT_PAYMENT));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.FINANCE, Permissions.PROCUREMENT_RECEIVE));
+    }
+
+    // ─── Executive RBAC ──────────────────────────────────────────
+
+    @Test
+    void generalManagerHasAllExecutivePermissionsIncludingFinance() {
+        Role r = Role.GENERAL_MANAGER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_DASHBOARD));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_FINANCE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_SALES));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_FARM));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_INVENTORY));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_HR));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_REPORT));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.REPORTS_READ));
+    }
+
+    @Test
+    void operationsManagerLacksExecutiveFinanceAndHr() {
+        Role r = Role.OPERATIONS_MANAGER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_DASHBOARD));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_SALES));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_FARM));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_INVENTORY));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_REPORT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_FINANCE));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_HR));
+    }
+
+    @Test
+    void crmManagerLacksExecutiveHr() {
+        Role r = Role.CRM_MANAGER;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_DASHBOARD));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_SALES));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_HR));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_FINANCE));
+    }
+
+    @Test
+    void financeHasExecutiveFinanceButNotHrScope() {
+        Role r = Role.FINANCE;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_DASHBOARD));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_FINANCE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_REPORT));
+        assertFalse(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_HR));
+    }
+
+    @Test
+    void adminHasAllExecutivePermissions() {
+        Role r = Role.ADMIN;
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_DASHBOARD));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_FINANCE));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_SALES));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_FARM));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_INVENTORY));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_HR));
+        assertTrue(RolePermissionCatalog.hasPermission(r, Permissions.EXECUTIVE_REPORT));
+    }
+
+    @Test
+    void governanceReadGrantedToAdminGmAndFinance() {
+        assertTrue(RolePermissionCatalog.hasPermission(Role.ADMIN, Permissions.GOVERNANCE_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(Role.GENERAL_MANAGER, Permissions.GOVERNANCE_READ));
+        assertTrue(RolePermissionCatalog.hasPermission(Role.FINANCE, Permissions.GOVERNANCE_READ));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.FARM_WORKER, Permissions.GOVERNANCE_READ));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.PHARMACIST, Permissions.GOVERNANCE_READ));
+    }
+
+    @Test
+    void farmRolesDoNotReceiveExecutiveHr() {
+        assertFalse(RolePermissionCatalog.hasPermission(Role.FARM_MANAGER, Permissions.EXECUTIVE_HR));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.FARM_WORKER, Permissions.EXECUTIVE_HR));
+        assertFalse(RolePermissionCatalog.hasPermission(Role.FARM_MANAGER, Permissions.EXECUTIVE_DASHBOARD));
     }
 }

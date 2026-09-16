@@ -87,7 +87,7 @@ public class DashboardController {
     private final MarketingService marketingService;
 
     @GetMapping("/admin")
-    @PreAuthorize("hasAuthority('users:read')")
+    @PreAuthorize("hasAnyAuthority('users:read','executive:dashboard','reports:read')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> adminDashboard() {
         Map<String, Object> data = new HashMap<>();
         data.put("totalFarms", farmRepository.countByStatus(FarmStatus.ACTIVE));

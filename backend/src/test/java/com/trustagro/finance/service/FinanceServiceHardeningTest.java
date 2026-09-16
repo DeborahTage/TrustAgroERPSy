@@ -32,6 +32,7 @@ class FinanceServiceHardeningTest {
     @Mock FinanceAuditLogRepository auditLogRepository;
     @Mock UserRepository userRepository;
     @Mock InvoiceRepository invoiceRepository;
+    @Mock com.trustagro.audit.service.AuditService auditService;
 
     @InjectMocks FinanceService financeService;
 

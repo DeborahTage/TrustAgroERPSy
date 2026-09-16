@@ -21,7 +21,18 @@ import FlockForm from './pages/farm/FlockForm';
 import DailyFarmRecordList from './pages/farm/DailyFarmRecordList';
 import DailyFarmRecordForm from './pages/farm/DailyFarmRecordForm';
 import CrmPage from './pages/crm/CrmPage';
+import CRMDashboard from './pages/crm/CRMDashboard';
 import CrmLeads from './pages/crm/CrmLeads';
+import CrmLeadDetail from './pages/crm/CrmLeadDetail';
+import CrmOpportunities from './pages/crm/CrmOpportunities';
+import CrmOpportunityDetail from './pages/crm/CrmOpportunityDetail';
+import CrmQuotations from './pages/crm/CrmQuotations';
+import CrmQuotationDetail from './pages/crm/CrmQuotationDetail';
+import CrmOrders from './pages/crm/CrmOrders';
+import CrmOrderDetail from './pages/crm/CrmOrderDetail';
+import CrmCustomer360 from './pages/crm/CrmCustomer360';
+import CrmTasks from './pages/crm/CrmTasks';
+import CrmReports from './pages/crm/CrmReports';
 import CrmPipeline from './pages/crm/CrmPipeline';
 import CrmClientForm from './pages/crm/CrmClientForm';
 import FarmVisitForm from './pages/crm/FarmVisitForm';
@@ -32,7 +43,6 @@ import ChickenSaleForm from './pages/farm/ChickenSaleForm';
 import ChickenSaleDetail from './pages/farm/ChickenSaleDetail';
 import SiloDashboard from './pages/feed/SiloDashboard';
 import FeedRecipeForm from './pages/feed/FeedRecipeForm';
-import OrderDashboard from './pages/crm/OrderDashboard';
 import InventoryItemList from './pages/inventory/InventoryItemList';
 import InventoryItemForm from './pages/inventory/InventoryItemForm';
 import StockInForm from './pages/inventory/StockInForm';
@@ -73,13 +83,48 @@ import FlockProfitability from './pages/finance/FlockProfitability';
 import TransactionForm from './pages/finance/TransactionForm';
 import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
+import GovernanceDashboard from './pages/governance/GovernanceDashboard';
 import TrainingDashboard from './pages/training/TrainingDashboard';
 import TrainingPrograms from './pages/training/TrainingPrograms';
 import TrainingProgramDetail from './pages/training/TrainingProgramDetail';
 import TrainingSessions from './pages/training/TrainingSessions';
+import TrainingSessionDetail from './pages/training/TrainingSessionDetail';
 import TrainingRegistrations from './pages/training/TrainingRegistrations';
 import TrainingRegistrationDetail from './pages/training/TrainingRegistrationDetail';
 import TrainingCertificates from './pages/training/TrainingCertificates';
+import ConsultancyDashboard from './pages/consultancy/ConsultancyDashboard';
+import ConsultancyServices from './pages/consultancy/ConsultancyServices';
+import ConsultancyRequests from './pages/consultancy/ConsultancyRequests';
+import ConsultancyProposals from './pages/consultancy/ConsultancyProposals';
+import ConsultancyEngagements from './pages/consultancy/ConsultancyEngagements';
+import ConsultancyEngagementDetail from './pages/consultancy/ConsultancyEngagementDetail';
+import ConsultancyActivities from './pages/consultancy/ConsultancyActivities';
+import ConsultancyContracts from './pages/consultancy/ConsultancyContracts';
+import ConsultancyReports from './pages/consultancy/ConsultancyReports';
+import HrDashboard from './pages/hr/HrDashboard';
+import HrEmployees from './pages/hr/HrEmployees';
+import HrEmployeeDetail from './pages/hr/HrEmployeeDetail';
+import HrDepartments from './pages/hr/HrDepartments';
+import HrPositions from './pages/hr/HrPositions';
+import HrAttendance from './pages/hr/HrAttendance';
+import HrLeaveRequests from './pages/hr/HrLeaveRequests';
+import HrLeaveTypes from './pages/hr/HrLeaveTypes';
+import HrPayroll from './pages/hr/HrPayroll';
+import HrPayrollRunDetail from './pages/hr/HrPayrollRunDetail';
+import HrPayslips from './pages/hr/HrPayslips';
+import HrReports from './pages/hr/HrReports';
+import HrMySelfService from './pages/hr/HrMySelfService';
+import ProcurementDashboard from './pages/procurement/ProcurementDashboard';
+import ProcurementSuppliers from './pages/procurement/ProcurementSuppliers';
+import ProcurementSupplierDetail from './pages/procurement/ProcurementSupplierDetail';
+import ProcurementRequisitions from './pages/procurement/ProcurementRequisitions';
+import ProcurementRequisitionDetail from './pages/procurement/ProcurementRequisitionDetail';
+import ProcurementPurchaseOrders from './pages/procurement/ProcurementPurchaseOrders';
+import ProcurementPurchaseOrderDetail from './pages/procurement/ProcurementPurchaseOrderDetail';
+import ProcurementGoodsReceipts from './pages/procurement/ProcurementGoodsReceipts';
+import ProcurementSupplierInvoices from './pages/procurement/ProcurementSupplierInvoices';
+import ProcurementAccountsPayable from './pages/procurement/ProcurementAccountsPayable';
+import ProcurementReports from './pages/procurement/ProcurementReports';
 
 const ModuleRoute = ({ module, children }) => (
   <ProtectedRoute module={module}>{children}</ProtectedRoute>
@@ -104,6 +149,7 @@ function App() {
               <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
+                <Route path="executive" element={<Dashboard />} />
 
                 <Route path="users" element={<ModuleRoute module="users"><UserList /></ModuleRoute>} />
                 <Route path="users/new" element={<PermissionRoute permission={PERMISSIONS.CREATE_USERS}><UserForm /></PermissionRoute>} />
@@ -125,8 +171,6 @@ function App() {
 
                 <Route path="feed/silos" element={<ModuleRoute module="farms"><SiloDashboard /></ModuleRoute>} />
                 <Route path="feed/recipes" element={<ModuleRoute module="farms"><FeedRecipeForm /></ModuleRoute>} />
-
-                <Route path="crm/orders" element={<ModuleRoute module="crm"><OrderDashboard /></ModuleRoute>} />
 
                 <Route path="daily-records" element={<ModuleRoute module="dailyRecords"><DailyFarmRecordList /></ModuleRoute>} />
                 <Route path="daily-records/new" element={<ActionRoute action="create" resource="dailyRecords"><DailyFarmRecordForm /></ActionRoute>} />
@@ -182,15 +226,24 @@ function App() {
                 <Route path="finance/flock-cogs" element={<ModuleRoute module="finance"><FlockProfitability /></ModuleRoute>} />
                 <Route path="finance/new" element={<ProtectedRoute permissions={[PERMISSIONS.CREATE_INCOME, PERMISSIONS.CREATE_EXPENSES]}><TransactionForm /></ProtectedRoute>} />
 
-                <Route path="crm" element={<ModuleRoute module="crm"><CrmPage /></ModuleRoute>} />
+                <Route path="crm" element={<ModuleRoute module="crm"><CRMDashboard /></ModuleRoute>} />
                 <Route path="crm/leads" element={<ModuleRoute module="crm"><CrmLeads /></ModuleRoute>} />
+                <Route path="crm/leads/:id" element={<ModuleRoute module="crm"><CrmLeadDetail /></ModuleRoute>} />
+                <Route path="crm/opportunities" element={<ModuleRoute module="crm"><CrmOpportunities /></ModuleRoute>} />
+                <Route path="crm/opportunities/:id" element={<ModuleRoute module="crm"><CrmOpportunityDetail /></ModuleRoute>} />
+                <Route path="crm/quotations" element={<ModuleRoute module="crm"><CrmQuotations /></ModuleRoute>} />
+                <Route path="crm/quotations/:id" element={<ModuleRoute module="crm"><CrmQuotationDetail /></ModuleRoute>} />
+                <Route path="crm/orders" element={<ModuleRoute module="crm"><CrmOrders /></ModuleRoute>} />
+                <Route path="crm/orders/:id" element={<ModuleRoute module="crm"><CrmOrderDetail /></ModuleRoute>} />
                 <Route path="crm/clients" element={<ModuleRoute module="crm"><CrmPage /></ModuleRoute>} />
+                <Route path="crm/clients/new" element={<PermissionRoute permission={PERMISSIONS.MANAGE_CRM}><CrmClientForm /></PermissionRoute>} />
+                <Route path="crm/clients/:id/edit" element={<PermissionRoute permission={PERMISSIONS.EDIT_CRM}><CrmClientForm /></PermissionRoute>} />
+                <Route path="crm/clients/:id" element={<ModuleRoute module="crm"><CrmCustomer360 /></ModuleRoute>} />
                 <Route path="crm/pipeline" element={<ModuleRoute module="crm"><CrmPipeline /></ModuleRoute>} />
                 <Route path="crm/follow-ups" element={<ModuleRoute module="crm"><CrmPage /></ModuleRoute>} />
-                <Route path="crm/tasks" element={<ModuleRoute module="crm"><CrmPage /></ModuleRoute>} />
-                <Route path="crm/reports" element={<ModuleRoute module="crm"><OrderDashboard /></ModuleRoute>} />
-                <Route path="crm/clients/new" element={<ActionRoute action="create" resource="customers"><CrmClientForm /></ActionRoute>} />
-                <Route path="crm/clients/:id/edit" element={<PermissionRoute permission={PERMISSIONS.MANAGE_CLIENTS}><CrmClientForm /></PermissionRoute>} />
+                <Route path="crm/tasks" element={<ModuleRoute module="crm"><CrmTasks /></ModuleRoute>} />
+                <Route path="crm/activities" element={<ModuleRoute module="crm"><CrmTasks /></ModuleRoute>} />
+                <Route path="crm/reports" element={<PermissionRoute permission={PERMISSIONS.CRM_REPORT}><CrmReports /></PermissionRoute>} />
                 <Route path="crm/visits/new" element={<ActionRoute action="create" resource="farmVisits"><FarmVisitForm /></ActionRoute>} />
 
                 <Route path="marketing" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
@@ -201,17 +254,53 @@ function App() {
                 <Route path="marketing/segments" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
                 <Route path="marketing/reports" element={<ModuleRoute module="marketing"><MarketingPage /></ModuleRoute>} />
 
-                <Route path="consultancy" element={<ModuleRoute module="consultancy"><CrmPage /></ModuleRoute>} />
+                <Route path="consultancy" element={<ModuleRoute module="consultancy"><ConsultancyDashboard /></ModuleRoute>} />
+                <Route path="consultancy/services" element={<ModuleRoute module="consultancy"><ConsultancyServices /></ModuleRoute>} />
+                <Route path="consultancy/requests" element={<ModuleRoute module="consultancy"><ConsultancyRequests /></ModuleRoute>} />
+                <Route path="consultancy/proposals" element={<ModuleRoute module="consultancy"><ConsultancyProposals /></ModuleRoute>} />
+                <Route path="consultancy/engagements" element={<ModuleRoute module="consultancy"><ConsultancyEngagements /></ModuleRoute>} />
+                <Route path="consultancy/engagements/:id" element={<ModuleRoute module="consultancy"><ConsultancyEngagementDetail /></ModuleRoute>} />
+                <Route path="consultancy/activities" element={<ModuleRoute module="consultancy"><ConsultancyActivities /></ModuleRoute>} />
+                <Route path="consultancy/contracts" element={<ModuleRoute module="consultancy"><ConsultancyContracts /></ModuleRoute>} />
+                <Route path="consultancy/reports" element={<ModuleRoute module="consultancy"><ConsultancyReports /></ModuleRoute>} />
 
                 <Route path="training" element={<ModuleRoute module="training"><TrainingDashboard /></ModuleRoute>} />
                 <Route path="training/programs" element={<ModuleRoute module="training"><TrainingPrograms /></ModuleRoute>} />
                 <Route path="training/programs/:id" element={<ModuleRoute module="training"><TrainingProgramDetail /></ModuleRoute>} />
                 <Route path="training/sessions" element={<ModuleRoute module="training"><TrainingSessions /></ModuleRoute>} />
+                <Route path="training/sessions/:id" element={<ModuleRoute module="training"><TrainingSessionDetail /></ModuleRoute>} />
                 <Route path="training/students" element={<ModuleRoute module="training"><TrainingRegistrations /></ModuleRoute>} />
                 <Route path="training/registrations" element={<ModuleRoute module="training"><TrainingRegistrations /></ModuleRoute>} />
                 <Route path="training/registrations/:id" element={<ModuleRoute module="training"><TrainingRegistrationDetail /></ModuleRoute>} />
                 <Route path="training/certificates" element={<ModuleRoute module="training"><TrainingCertificates /></ModuleRoute>} />
+                <Route path="hr" element={<ModuleRoute module="hr"><HrDashboard /></ModuleRoute>} />
+                <Route path="hr/employees" element={<ModuleRoute module="hr"><HrEmployees /></ModuleRoute>} />
+                <Route path="hr/employees/:id" element={<ModuleRoute module="hr"><HrEmployeeDetail /></ModuleRoute>} />
+                <Route path="hr/departments" element={<ModuleRoute module="hr"><HrDepartments /></ModuleRoute>} />
+                <Route path="hr/positions" element={<ModuleRoute module="hr"><HrPositions /></ModuleRoute>} />
+                <Route path="hr/attendance" element={<ModuleRoute module="hr"><HrAttendance /></ModuleRoute>} />
+                <Route path="hr/leave" element={<ModuleRoute module="hr"><HrLeaveRequests /></ModuleRoute>} />
+                <Route path="hr/leave-types" element={<ModuleRoute module="hr"><HrLeaveTypes /></ModuleRoute>} />
+                <Route path="hr/payroll" element={<ModuleRoute module="hr"><HrPayroll /></ModuleRoute>} />
+                <Route path="hr/payroll/runs/:id" element={<ModuleRoute module="hr"><HrPayrollRunDetail /></ModuleRoute>} />
+                <Route path="hr/payslips" element={<ModuleRoute module="hr"><HrPayslips /></ModuleRoute>} />
+                <Route path="hr/reports" element={<ModuleRoute module="hr"><HrReports /></ModuleRoute>} />
+                <Route path="hr/me" element={<PermissionRoute permission={PERMISSIONS.HR_SELF}><HrMySelfService /></PermissionRoute>} />
+
+                <Route path="procurement" element={<ModuleRoute module="procurement"><ProcurementDashboard /></ModuleRoute>} />
+                <Route path="procurement/suppliers" element={<ModuleRoute module="procurement"><ProcurementSuppliers /></ModuleRoute>} />
+                <Route path="procurement/suppliers/:id" element={<ModuleRoute module="procurement"><ProcurementSupplierDetail /></ModuleRoute>} />
+                <Route path="procurement/requisitions" element={<ModuleRoute module="procurement"><ProcurementRequisitions /></ModuleRoute>} />
+                <Route path="procurement/requisitions/:id" element={<ModuleRoute module="procurement"><ProcurementRequisitionDetail /></ModuleRoute>} />
+                <Route path="procurement/purchase-orders" element={<ModuleRoute module="procurement"><ProcurementPurchaseOrders /></ModuleRoute>} />
+                <Route path="procurement/purchase-orders/:id" element={<ModuleRoute module="procurement"><ProcurementPurchaseOrderDetail /></ModuleRoute>} />
+                <Route path="procurement/goods-receipts" element={<ModuleRoute module="procurement"><ProcurementGoodsReceipts /></ModuleRoute>} />
+                <Route path="procurement/supplier-invoices" element={<ModuleRoute module="procurement"><ProcurementSupplierInvoices /></ModuleRoute>} />
+                <Route path="procurement/ap" element={<ModuleRoute module="procurement"><ProcurementAccountsPayable /></ModuleRoute>} />
+                <Route path="procurement/reports" element={<ModuleRoute module="procurement"><ProcurementReports /></ModuleRoute>} />
+
                 <Route path="reports" element={<ModuleRoute module="reports"><Reports /></ModuleRoute>} />
+                <Route path="governance" element={<ModuleRoute module="governance"><GovernanceDashboard /></ModuleRoute>} />
                 <Route path="settings" element={<PermissionRoute permission={PERMISSIONS.VIEW_SETTINGS}><Settings /></PermissionRoute>} />
               </Route>
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

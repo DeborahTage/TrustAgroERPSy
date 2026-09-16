@@ -63,4 +63,14 @@ class FinanceAccountingRulesTest {
         assertEquals(TransactionType.TRANSFER, TransactionType.valueOf("TRANSFER"));
         assertNotEquals(TransactionType.INCOME, TransactionType.TRANSFER);
     }
+
+    @Test
+    void consultancyModuleConstantsAreUnique() {
+        assertEquals("CONSULTANCY", FinanceSourceTypes.MODULE_CONSULTANCY);
+        assertEquals("CONSULTANCY_ENGAGEMENT", FinanceSourceTypes.REF_CONSULTANCY_ENGAGEMENT);
+        assertEquals("CONSULTANCY_MILESTONE", FinanceSourceTypes.REF_CONSULTANCY_MILESTONE);
+        assertNotEquals(FinanceSourceTypes.MODULE_CONSULTANCY, FinanceSourceTypes.MODULE_TRAINING);
+        assertNotEquals(FinanceSourceTypes.REF_CONSULTANCY_ENGAGEMENT, FinanceSourceTypes.REF_CONSULTANCY_MILESTONE);
+        assertNotEquals(FinanceSourceTypes.REF_CONSULTANCY_ENGAGEMENT, FinanceSourceTypes.REF_INVOICE_REVENUE);
+    }
 }

@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { dashboardApi } from '../../api';
 import { ROLES, formatCurrency } from '../../utils';
-import { normalizeRole } from '../../lib/permissions';
+import { normalizeRole, PERMISSIONS } from '../../lib/permissions';
 import AdminDashboard from './AdminDashboard';
 import EnterprisePage from '../../components/layout/EnterprisePage';
 import {
@@ -11,21 +11,25 @@ import {
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { user, hasRole } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLanguage();
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const role = normalizeRole(user?.role);
+  const showExecutive = hasPermission(PERMISSIONS.EXECUTIVE_DASHBOARD);
 
   const fetchDashboard = useCallback(async () => {
+    // Executive Command Center loads its own /api/executive data — skip legacy admin dash fetch.
+    if (showExecutive) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       let res;
-      if (role === ROLES.ADMIN || role === ROLES.GENERAL_MANAGER || role === ROLES.OPERATIONS_MANAGER) {
-        res = await dashboardApi.admin();
-      } else if (role === ROLES.FARM_MANAGER || role === ROLES.FARM_WORKER) {
+      if (role === ROLES.FARM_MANAGER || role === ROLES.FARM_WORKER) {
         res = await dashboardApi.farmManager();
       } else if (role === ROLES.INVENTORY_MANAGER) res = await dashboardApi.store();
       else if (role === ROLES.VETERINARIAN) res = await dashboardApi.vet();
@@ -39,11 +43,11 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [role]);
+  }, [role, showExecutive]);
 
   useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
 
-  if (hasRole(ROLES.ADMIN, ROLES.GENERAL_MANAGER, ROLES.OPERATIONS_MANAGER)) {
+  if (showExecutive) {
     return <AdminDashboard />;
   }
 

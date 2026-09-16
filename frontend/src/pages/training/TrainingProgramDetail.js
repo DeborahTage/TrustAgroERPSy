@@ -134,6 +134,9 @@ const TrainingProgramDetail = () => {
                   <div className="text-right space-y-1">
                     <Badge variant="outline">{s.confirmedCount}/{s.capacity} confirmed</Badge>
                     <div>
+                      <Button size="sm" variant="ghost" onClick={() => navigate(`/training/sessions/${s.id}`)}>
+                        Roster
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => navigate(`/training/registrations?sessionId=${s.id}`)}>
                         Registrations
                       </Button>

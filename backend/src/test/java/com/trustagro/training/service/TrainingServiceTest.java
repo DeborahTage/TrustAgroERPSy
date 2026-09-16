@@ -244,7 +244,7 @@ class TrainingServiceTest {
         var after = service.recordPayment(reg.getId(), pay);
         assertEquals(0, new BigDecimal("6000.00").compareTo(after.getPaidAmount()));
         assertEquals(0, new BigDecimal("4000.00").compareTo(after.getOutstandingAmount()));
-        assertEquals(TrainingPaymentStatus.PARTIAL, after.getPaymentStatus());
+        assertEquals(TrainingPaymentStatus.PARTIALLY_PAID, after.getPaymentStatus());
 
         verify(financeService).postTransaction(eq(TransactionType.TRANSFER), eq(new BigDecimal("6000.00")),
                 eq(BusinessUnit.TRAINING), eq("1000"), eq("1200"), any(), eq("TRAINING"),
@@ -327,6 +327,37 @@ class TrainingServiceTest {
         var cancelled = service.cancelRegistration(reg.getId());
         assertEquals(RegistrationStatus.CANCELLED, cancelled.getStatus());
         assertEquals(0, session.getConfirmedCount());
+    }
+
+    @Test
+    void ensureInvoiceIsIdempotent() {
+        TrainingRegistration reg = confirmedRegistration(new BigDecimal("10000.00"));
+        when(registrationRepository.findById(reg.getId())).thenReturn(Optional.of(reg));
+
+        var first = service.ensureInvoice(reg.getId());
+        var second = service.ensureInvoice(reg.getId());
+        assertEquals(first.getInvoiceNumber(), second.getInvoiceNumber());
+        verify(financeService, never()).postTransaction(any(), any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void concurrentCapacitySecondConfirmFails() {
+        TrainingRegistration reg1 = pendingRegistration();
+        TrainingRegistration reg2 = pendingRegistration();
+        setId(reg2, 101L);
+        reg2.setRegistrationNumber("TR-TEST-2");
+        session.setConfirmedCount(29);
+        session.setCapacity(30);
+
+        when(registrationRepository.findById(reg1.getId())).thenReturn(Optional.of(reg1));
+        when(sessionRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(session));
+        when(invoiceRepository.findBySourceModuleAndSourceId(any(), any())).thenReturn(Optional.empty());
+        service.confirmRegistration(reg1.getId());
+        assertEquals(30, session.getConfirmedCount());
+
+        when(registrationRepository.findById(reg2.getId())).thenReturn(Optional.of(reg2));
+        when(sessionRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(session));
+        assertThrows(BusinessException.class, () -> service.confirmRegistration(reg2.getId()));
     }
 
     @Test

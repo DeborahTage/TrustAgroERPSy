@@ -16,6 +16,10 @@ public class Supplier {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Unique supplier code e.g. SUP-000001. Nullable for legacy rows; generated on create. */
+    @Column(unique = true, length = 32)
+    private String supplierCode;
+
     @Column(nullable = false)
     private String name;
 
@@ -27,8 +31,21 @@ public class Supplier {
     @Column(columnDefinition = "TEXT")
     private String category; // e.g. FEED, DRUGS, EQUIPMENT
 
+    /** CASH, NET_7, NET_15, NET_30, NET_60 */
     private String paymentTerms;
+
     private Integer rating; // 1-5
+
+    private String taxIdentifier;
+
+    @Column(length = 8)
+    private String currency = "ETB";
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -46,6 +63,16 @@ public class Supplier {
     public String getCategory() { return category; }
     public String getPaymentTerms() { return paymentTerms; }
     public Integer getRating() { return rating; }
+    public String getSupplierCode() { return supplierCode; }
+    public void setSupplierCode(String supplierCode) { this.supplierCode = supplierCode; }
+    public String getTaxIdentifier() { return taxIdentifier; }
+    public void setTaxIdentifier(String taxIdentifier) { this.taxIdentifier = taxIdentifier; }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 
     public void setContactPerson(String contactPerson) { this.contactPerson = contactPerson; }
     public void setEmail(String email) { this.email = email; }

@@ -1,6 +1,7 @@
 package com.trustagro.auth.service;
 
 import com.trustagro.user.entity.User;
+import com.trustagro.user.entity.UserStatus;
 import com.trustagro.user.repository.UserRepository;
 import com.trustagro.security.RoleCompatibility;
 import com.trustagro.security.RolePermissionCatalog;
@@ -36,9 +37,14 @@ public class CustomUserDetailsService implements UserDetailsService {
             authorities.add(new SimpleGrantedAuthority(permission));
         }
 
+        boolean enabled = user.getStatus() != UserStatus.INACTIVE;
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
+                enabled,
+                true,
+                true,
+                true,
                 authorities
         );
     }

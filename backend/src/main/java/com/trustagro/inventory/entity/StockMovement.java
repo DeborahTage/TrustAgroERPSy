@@ -80,5 +80,6 @@ public class StockMovement {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
+    public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
     public void setToLocation(String toLocation) { this.toLocation = toLocation; }
 }

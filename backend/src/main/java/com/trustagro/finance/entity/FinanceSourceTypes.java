@@ -19,6 +19,10 @@ public final class FinanceSourceTypes {
     public static final String MODULE_RECONCILIATION = "RECONCILIATION";
     public static final String MODULE_MANUAL = "MANUAL";
     public static final String MODULE_TRAINING = "TRAINING";
+    public static final String MODULE_CONSULTANCY = "CONSULTANCY";
+    public static final String MODULE_HR = "HR";
+    public static final String MODULE_PROCUREMENT = "PROCUREMENT";
+    public static final String MODULE_CRM = "CRM";
 
     // Posting purposes (referenceType) — one posting per (module, type, id)
     public static final String REF_PHARMACY_SALE_REVENUE = "PHARMACY_SALE_REVENUE";
@@ -35,4 +39,27 @@ public final class FinanceSourceTypes {
     public static final String REF_REQUISITION = "REQUISITION";
     public static final String REF_VET_DISPENSE = "VETERINARY_PRESCRIPTION";
     public static final String REF_CASH_REC = "CASH_REC";
+
+    public static final String REF_CONSULTANCY_ENGAGEMENT = "CONSULTANCY_ENGAGEMENT";
+    public static final String REF_CONSULTANCY_MILESTONE = "CONSULTANCY_MILESTONE";
+
+    /** Invoice sourceType for CRM customer orders (sourceId = order.id). */
+    public static final String REF_CRM_ORDER = "CRM_ORDER";
+    /** Prefer REF_INVOICE_REVENUE + invoice.id for revenue posting (like consultancy). */
+    public static final String REF_CRM_ORDER_INVOICE = "CRM_ORDER_INVOICE";
+
+    /** referenceId = payrollRunId — gross salary expense accrual. */
+    public static final String REF_HR_PAYROLL_EXPENSE = "HR_PAYROLL_EXPENSE";
+    /** referenceId = payrollRunId — reclass of withheld deductions out of salary payable. */
+    public static final String REF_HR_PAYROLL_DEDUCTION = "HR_PAYROLL_DEDUCTION";
+    /** referenceId = payrollPaymentId — settlement of salary payable in cash/bank. */
+    public static final String REF_HR_PAYROLL_PAYMENT = "HR_PAYROLL_PAYMENT";
+
+    /** referenceId = supplierPaymentId — Dr AP / Cr cash or bank. Never inventory. */
+    public static final String REF_PROCUREMENT_PAYMENT = "PROCUREMENT_PAYMENT";
+    /**
+     * Optional marker for stock movements / audits.
+     * Inventory + AP recognition still posts as INVENTORY / STOCK_IN / batchId.
+     */
+    public static final String REF_PROCUREMENT_GRN = "PROCUREMENT_GRN";
 }

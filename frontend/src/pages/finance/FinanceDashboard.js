@@ -259,7 +259,7 @@ const FinanceDashboard = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle className="text-lg font-bold">Expense Log</CardTitle>
-                  <CardDescription>Costs from stock consumption, drugs, feed, and maintenance (not payroll until HR exists)</CardDescription>
+                  <CardDescription>Costs from stock consumption, drugs, feed, maintenance, and HR salary expense (5210)</CardDescription>
                 </div>
                 <Badge variant="outline">{expenseTransactions.length} records</Badge>
               </div>

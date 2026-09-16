@@ -161,7 +161,10 @@ const SupplierPage = () => {
                                     <TableRow key={s.id} className="hover:bg-gray-50/30 transition-colors border-b-gray-50">
                                         <TableCell className="pl-8 py-5">
                                             <div className="flex flex-col gap-1">
-                                                <span className="font-black text-gray-900 tracking-tight">{s.name}</span>
+                                                <span className="font-black text-gray-900 tracking-tight">
+                                                    {s.supplierCode ? <span className="font-mono text-primary mr-2">{s.supplierCode}</span> : null}
+                                                    {s.name}
+                                                </span>
                                                 <div className="flex items-center gap-3 mt-1">
                                                     {s.email && <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400 lowercase"><Mail className="h-3 w-3" />{s.email}</span>}
                                                     {s.phone && <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400"><Phone className="h-3 w-3" />{s.phone}</span>}

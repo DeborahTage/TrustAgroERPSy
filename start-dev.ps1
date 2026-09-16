@@ -39,6 +39,19 @@ function Test-PortOpen {
     }
 }
 
+function Test-BackendHealthy {
+    param(
+        [string]$HostName,
+        [int]$Port
+    )
+    try {
+        $response = Invoke-WebRequest -Uri "http://${HostName}:${Port}/actuator/health" -UseBasicParsing -TimeoutSec 2
+        return $response.StatusCode -eq 200
+    } catch {
+        return $false
+    }
+}
+
 if (-not (Test-PortOpen -HostName $backendHost -Port $backendPort)) {
     Write-Host "Starting backend on port $backendPort..."
     if (Test-Path $backendLog) {
@@ -53,7 +66,7 @@ if (-not (Test-PortOpen -HostName $backendHost -Port $backendPort)) {
     $started = $false
     for ($i = 0; $i -lt $backendStartupTimeoutSeconds; $i++) {
         Start-Sleep -Seconds 1
-        if (Test-PortOpen -HostName $backendHost -Port $backendPort) {
+        if ((Test-BackendHealthy -HostName $backendHost -Port $backendPort) -or (Test-PortOpen -HostName $backendHost -Port $backendPort)) {
             $started = $true
             break
         }

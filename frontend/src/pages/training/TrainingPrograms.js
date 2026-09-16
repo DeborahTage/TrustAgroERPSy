@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { trainingApi } from '../../api';
 import EnterprisePage from '../../components/layout/EnterprisePage';
@@ -36,6 +36,9 @@ const TrainingPrograms = () => {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
   const [rows, setRows] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
@@ -103,6 +106,17 @@ const TrainingPrograms = () => {
     },
   ];
 
+  const filtered = useMemo(() => rows.filter((r) => {
+    if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+    if (categoryFilter !== 'all' && r.category !== categoryFilter) return false;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const hay = `${r.programCode || ''} ${r.title || ''} ${r.trainerName || ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  }), [rows, statusFilter, categoryFilter, search]);
+
   return (
     <EnterprisePage
       title="Training Programs"
@@ -116,7 +130,26 @@ const TrainingPrograms = () => {
         <Button size="sm" onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-1" /> New Program</Button>
       )}
     >
-      <DataTable columns={cols} data={rows} />
+      <div className="flex flex-wrap gap-3 mb-4">
+        <Input className="max-w-xs" placeholder="Search code / title…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {Object.keys(STATUS).map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {['PROFESSIONAL', 'AGRICULTURAL', 'VETERINARY', 'WORKSHOP', 'TECHNICAL', 'OTHER'].map((c) => (
+              <SelectItem key={c} value={c}>{c}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <DataTable columns={cols} data={filtered} />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">

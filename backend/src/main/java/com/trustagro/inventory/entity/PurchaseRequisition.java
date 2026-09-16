@@ -7,6 +7,11 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * @deprecated Dead single-item stub. Use {@code com.trustagro.procurement.entity.ProcRequisition}
+ *             ({@code proc_requisitions} / {@code proc_requisition_items}) instead.
+ */
+@Deprecated
 @Entity
 @Table(name = "purchase_requisitions")
 @Data

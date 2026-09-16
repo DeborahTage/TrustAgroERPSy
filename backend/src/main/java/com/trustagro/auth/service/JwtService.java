@@ -2,6 +2,7 @@ package com.trustagro.auth.service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -13,11 +14,24 @@ import java.util.List;
 @Service
 public class JwtService {
 
-    @Value("${app.jwt.secret}")
+    @Value("${app.jwt.secret:}")
     private String secret;
 
     @Value("${app.jwt.expiration}")
     private long expiration;
+
+    @PostConstruct
+    void validateSecret() {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT secret is not configured. Set APP_JWT_SECRET or app.jwt.secret "
+                            + "(local profile supplies a development secret automatically).");
+        }
+        if (secret.length() < 32) {
+            throw new IllegalStateException(
+                    "JWT secret must be at least 32 characters. Set APP_JWT_SECRET or app.jwt.secret.");
+        }
+    }
 
     private Key getKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());

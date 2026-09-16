@@ -71,7 +71,7 @@ public class TrainingService {
         dash.put("confirmedParticipants", registrationRepository.countByStatus(RegistrationStatus.CONFIRMED)
                 + registrationRepository.countByStatus(RegistrationStatus.COMPLETED));
         dash.put("unpaidRegistrations", registrationRepository.countByPaymentStatus(TrainingPaymentStatus.UNPAID)
-                + registrationRepository.countByPaymentStatus(TrainingPaymentStatus.PARTIAL));
+                + registrationRepository.countByPaymentStatus(TrainingPaymentStatus.PARTIALLY_PAID));
         dash.put("outstandingAmount", nvl(registrationRepository.sumOutstanding()));
         dash.put("completedTrainings", registrationRepository.countByCompletedTrue());
         dash.put("certificatesIssued", certificateRepository.countByStatus(CertificateStatus.ISSUED));
@@ -260,6 +260,138 @@ public class TrainingService {
         return toRegistrationResponse(requireRegistration(id), true);
     }
 
+    /**
+     * Idempotent invoice ensure — confirm normally creates the invoice; this reuses existing.
+     */
+    @Transactional
+    public TrainingRegistrationResponse ensureInvoice(Long id) {
+        TrainingRegistration reg = requireRegistration(id);
+        if (reg.getStatus() != RegistrationStatus.CONFIRMED && reg.getStatus() != RegistrationStatus.COMPLETED) {
+            throw new BusinessException("Invoice requires a confirmed registration");
+        }
+        if (reg.getInvoice() != null) {
+            return toRegistrationResponse(reg, true);
+        }
+        Optional<Invoice> existing = invoiceRepository.findBySourceModuleAndSourceId(SOURCE_MODULE, reg.getId());
+        if (existing.isPresent()) {
+            reg.setInvoice(existing.get());
+            registrationRepository.save(reg);
+            return toRegistrationResponse(reg, true);
+        }
+        createInvoiceAndPostRevenue(reg);
+        registrationRepository.save(reg);
+        auditService.log("INVOICE_CREATED", MODULE, "TrainingRegistration", reg.getId(),
+                null, reg.getInvoice() != null ? reg.getInvoice().getInvoiceNumber() : null);
+        return toRegistrationResponse(reg, true);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> clientTrainingHistory(Long clientId) {
+        clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException("CRM client not found"));
+        List<TrainingRegistration> regs = registrationRepository.findByClientIdOrderByCreatedAtDesc(clientId);
+        List<Map<String, Object>> events = new ArrayList<>();
+        for (TrainingRegistration r : regs) {
+            events.add(historyEvent("TRAINING_REGISTRATION", r.getCreatedAt(), r.getId(),
+                    r.getRegistrationNumber() + " · " + r.getSession().getSessionCode() + " · " + r.getStatus()));
+            if (r.getInvoice() != null) {
+                events.add(historyEvent("TRAINING_INVOICE", r.getInvoice().getCreatedAt(), r.getId(),
+                        r.getInvoice().getInvoiceNumber() + " · " + r.getTotalAmount() + " ETB"));
+            }
+            for (TrainingPayment p : paymentRepository.findByRegistrationIdOrderByPaymentDateAsc(r.getId())) {
+                events.add(historyEvent("TRAINING_PAYMENT", p.getCreatedAt(), r.getId(),
+                        p.getAmount() + " ETB via " + p.getPaymentMethod()));
+            }
+            for (TrainingAttendance a : attendanceRepository.findByRegistrationIdOrderBySessionDateAsc(r.getId())) {
+                events.add(historyEvent("TRAINING_ATTENDANCE", a.getCreatedAt(), r.getId(),
+                        a.getSessionDate() + " · " + a.getStatus()));
+            }
+            if (r.isCompleted()) {
+                events.add(historyEvent("TRAINING_COMPLETION", r.getCompletedAt(), r.getId(),
+                        "Completed " + r.getSession().getProgram().getTitle()));
+            }
+            certificateRepository.findByRegistrationId(r.getId()).ifPresent(c ->
+                    events.add(historyEvent("CERTIFICATE_ISSUED", c.getCreatedAt(), c.getId(),
+                            c.getCertificateNumber() + " · " + c.getStatus())));
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("clientId", clientId);
+        result.put("registrationCount", regs.size());
+        result.put("events", events);
+        return result;
+    }
+
+    private Map<String, Object> historyEvent(String type, Object at, Long entityId, String summary) {
+        Map<String, Object> e = new LinkedHashMap<>();
+        e.put("type", type);
+        e.put("at", at);
+        e.put("entityId", entityId);
+        e.put("summary", summary);
+        return e;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> sessionRoster(Long sessionId, LocalDate date) {
+        TrainingSession session = requireSession(sessionId);
+        LocalDate sessionDate = date != null ? date : session.getStartDate();
+        List<TrainingRegistration> regs = registrationRepository.findBySessionIdOrderByCreatedAtDesc(sessionId)
+                .stream()
+                .filter(r -> r.getStatus() == RegistrationStatus.CONFIRMED || r.getStatus() == RegistrationStatus.COMPLETED)
+                .toList();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (TrainingRegistration r : regs) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("registrationId", r.getId());
+            row.put("registrationNumber", r.getRegistrationNumber());
+            row.put("participantName", r.getParticipantName());
+            row.put("clientId", r.getClient().getId());
+            row.put("paymentStatus", r.getPaymentStatus());
+            Optional<TrainingAttendance> att = attendanceRepository
+                    .findByRegistrationIdAndSessionDate(r.getId(), sessionDate);
+            if (att.isPresent()) {
+                row.put("attendanceStatus", att.get().getStatus().name());
+                row.put("checkInTime", att.get().getCheckInTime());
+                row.put("recordedBy", att.get().getRecordedBy() != null
+                        ? att.get().getRecordedBy().getFullName() : null);
+            } else {
+                row.put("attendanceStatus", null);
+                row.put("checkInTime", null);
+                row.put("recordedBy", null);
+            }
+            rows.add(row);
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("session", toSessionResponse(session));
+        result.put("sessionDate", sessionDate);
+        result.put("participants", rows);
+        result.put("capacity", session.getCapacity());
+        result.put("confirmedCount", session.getConfirmedCount());
+        result.put("remainingCapacity", session.remainingCapacity());
+        return result;
+    }
+
+    @Transactional
+    public TrainingSessionResponse updateSession(Long id, TrainingSessionRequest req) {
+        TrainingSession s = requireSession(id);
+        if (s.getStatus() == SessionStatus.CANCELLED || s.getStatus() == SessionStatus.COMPLETED) {
+            throw new BusinessException("Cannot update session in status " + s.getStatus());
+        }
+        if (req.getCapacity() != null) {
+            if (req.getCapacity() < s.getConfirmedCount()) {
+                throw new BusinessException("Capacity cannot be below confirmed count (" + s.getConfirmedCount() + ")");
+            }
+            s.setCapacity(req.getCapacity());
+        }
+        if (req.getStartDate() != null) s.setStartDate(req.getStartDate());
+        if (req.getEndDate() != null) s.setEndDate(req.getEndDate());
+        if (req.getVenue() != null) s.setVenue(req.getVenue());
+        if (req.getTrainerName() != null) s.setTrainerName(req.getTrainerName());
+        if (req.getNotes() != null) s.setNotes(req.getNotes());
+        TrainingSession saved = sessionRepository.save(s);
+        auditService.log("SESSION_UPDATED", MODULE, "TrainingSession", saved.getId(), null, saved.getSessionCode());
+        return toSessionResponse(saved);
+    }
+
     @Transactional
     public TrainingRegistrationResponse register(TrainingRegistrationRequest req) {
         TrainingSession session = requireSession(req.getSessionId());
@@ -336,10 +468,12 @@ public class TrainingService {
         }
 
         if (reg.getInvoice() == null) {
-            if (invoiceRepository.findBySourceModuleAndSourceId(SOURCE_MODULE, reg.getId()).isPresent()) {
-                throw new BusinessException("Invoice already exists for registration " + reg.getRegistrationNumber());
+            Optional<Invoice> existingInv = invoiceRepository.findBySourceModuleAndSourceId(SOURCE_MODULE, reg.getId());
+            if (existingInv.isPresent()) {
+                reg.setInvoice(existingInv.get());
+            } else {
+                createInvoiceAndPostRevenue(reg);
             }
-            createInvoiceAndPostRevenue(reg);
         }
 
         session.setConfirmedCount(session.getConfirmedCount() + 1);
@@ -447,7 +581,7 @@ public class TrainingService {
         reg.setPaidAmount(newPaid);
         reg.setOutstandingAmount(outstanding);
         reg.setPaymentStatus(outstanding.compareTo(BigDecimal.ZERO) == 0
-                ? TrainingPaymentStatus.PAID : TrainingPaymentStatus.PARTIAL);
+                ? TrainingPaymentStatus.PAID : TrainingPaymentStatus.PARTIALLY_PAID);
 
         Invoice invoice = reg.getInvoice();
         invoice.setPaidAmount(nvl(invoice.getPaidAmount()).add(amount));
@@ -751,7 +885,9 @@ public class TrainingService {
                 .notes(r.getNotes())
                 .createdAt(r.getCreatedAt());
         if (detail) {
-            b.attendance(attendanceRepository.findByRegistrationIdOrderBySessionDateAsc(r.getId()).stream()
+            List<TrainingAttendance> attendanceRows =
+                    attendanceRepository.findByRegistrationIdOrderBySessionDateAsc(r.getId());
+            b.attendance(attendanceRows.stream()
                     .map(a -> TrainingRegistrationResponse.AttendanceResponse.builder()
                             .id(a.getId())
                             .sessionDate(a.getSessionDate())
@@ -759,6 +895,12 @@ public class TrainingService {
                             .checkInTime(a.getCheckInTime())
                             .build())
                     .toList());
+            if (!attendanceRows.isEmpty()) {
+                long present = attendanceRows.stream().filter(a -> a.getStatus() == AttendanceStatus.PRESENT).count();
+                b.attendancePercent(Math.round((present * 1000.0) / attendanceRows.size()) / 10.0);
+            } else {
+                b.attendancePercent(null);
+            }
             b.payments(paymentRepository.findByRegistrationIdOrderByPaymentDateAsc(r.getId()).stream()
                     .map(p -> TrainingRegistrationResponse.PaymentResponse.builder()
                             .id(p.getId())

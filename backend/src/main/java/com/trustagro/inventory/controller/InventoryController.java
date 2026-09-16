@@ -1,10 +1,12 @@
 package com.trustagro.inventory.controller;
 
+import com.trustagro.common.exception.BusinessException;
 import com.trustagro.inventory.dto.InventoryItemResponse;
 import com.trustagro.inventory.entity.InventoryItem;
 import com.trustagro.inventory.entity.ItemCategory;
 import com.trustagro.inventory.entity.ItemStatus;
 import com.trustagro.inventory.entity.PurchaseOrder;
+import com.trustagro.inventory.entity.PurchaseOrderStatus;
 import com.trustagro.inventory.entity.StockBatch;
 import com.trustagro.inventory.entity.StockMovement;
 import com.trustagro.inventory.repository.*;
@@ -254,7 +256,7 @@ public class InventoryController {
     @PreAuthorize("hasAuthority('inventory:po')")
     public ResponseEntity<PurchaseOrder> sendPO(@PathVariable Long id) {
         return purchaseOrderRepository.findById(id).map(po -> {
-            po.setStatus("Sent");
+            po.setStatus(PurchaseOrderStatus.SENT);
             return ResponseEntity.ok(purchaseOrderRepository.save(po));
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -262,11 +264,8 @@ public class InventoryController {
     @PutMapping("/purchase-orders/{id}/receive")
     @PreAuthorize("hasAuthority('inventory:po')")
     public ResponseEntity<PurchaseOrder> receivePO(@PathVariable Long id) {
-        return purchaseOrderRepository.findById(id).map(po -> {
-            po.setStatus("Received");
-            po.setActualDelivery(LocalDate.now());
-            return ResponseEntity.ok(purchaseOrderRepository.save(po));
-        }).orElse(ResponseEntity.notFound().build());
+        throw new BusinessException(
+                "Use procurement goods receipt: POST /api/procurement/goods-receipts then POST /api/procurement/goods-receipts/{id}/post");
     }
 
     // ─── Cycle Count ──────────────────────────────────────────────────────────

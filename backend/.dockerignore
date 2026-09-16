@@ -1,0 +1,13 @@
+# Exclude build clutter but allow the release JAR into the image
+target/*
+!target/trust-agro-backend-1.0.0.jar
+.git
+.gitignore
+*.md
+.idea
+*.iml
+data/
+uploads/
+.env
+*.log
+src/

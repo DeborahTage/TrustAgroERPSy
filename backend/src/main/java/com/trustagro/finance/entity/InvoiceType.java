@@ -4,5 +4,7 @@ public enum InvoiceType {
     POS,        // Point-of-sale: pharmacy, farm product sales
     SERVICE,    // Service: consulting, workshops (legacy)
     CHICKEN_SALE,
-    TRAINING
+    TRAINING,
+    CONSULTANCY,
+    CUSTOMER_ORDER  // CRM commercial customer orders
 }

@@ -5,6 +5,8 @@ export { api };
 export const authApi = {
   login: (data) => api.post('/api/auth/login', data),
   me: () => api.get('/api/auth/me'),
+  changePassword: (data) => api.post('/api/auth/change-password', data),
+  logout: () => api.post('/api/auth/logout'),
 };
 
 export const userApi = {
@@ -93,6 +95,52 @@ export const supplierApi = {
   delete: (id) => api.delete(`/api/inventory/suppliers/${id}`),
 };
 
+export const procurementApi = {
+  getDashboard: () => api.get('/api/procurement/dashboard'),
+  getReports: () => api.get('/api/procurement/reports'),
+  getApAging: () => api.get('/api/procurement/ap/aging'),
+  getSupplierStatement: (supplierId) => api.get(`/api/procurement/suppliers/${supplierId}/statement`),
+
+  getRequisitions: (params) => api.get('/api/procurement/requisitions', { params }),
+  getRequisition: (id) => api.get(`/api/procurement/requisitions/${id}`),
+  createRequisition: (data) => api.post('/api/procurement/requisitions', data),
+  updateRequisition: (id, data) => api.put(`/api/procurement/requisitions/${id}`, data),
+  submitRequisition: (id) => api.post(`/api/procurement/requisitions/${id}/submit`),
+  reviewRequisition: (id) => api.post(`/api/procurement/requisitions/${id}/review`),
+  approveRequisition: (id) => api.post(`/api/procurement/requisitions/${id}/approve`),
+  rejectRequisition: (id, data) => api.post(`/api/procurement/requisitions/${id}/reject`, data || {}),
+  cancelRequisition: (id) => api.post(`/api/procurement/requisitions/${id}/cancel`),
+  convertRequisitionToPo: (id, supplierId) => api.post(`/api/procurement/requisitions/${id}/convert-po`, null, { params: { supplierId } }),
+
+  getPurchaseOrders: (params) => api.get('/api/procurement/purchase-orders', { params }),
+  getPurchaseOrder: (id) => api.get(`/api/procurement/purchase-orders/${id}`),
+  createPurchaseOrder: (data) => api.post('/api/procurement/purchase-orders', data),
+  updatePurchaseOrder: (id, data) => api.put(`/api/procurement/purchase-orders/${id}`, data),
+  submitPurchaseOrder: (id) => api.post(`/api/procurement/purchase-orders/${id}/submit`),
+  approvePurchaseOrder: (id) => api.post(`/api/procurement/purchase-orders/${id}/approve`),
+  sendPurchaseOrder: (id) => api.post(`/api/procurement/purchase-orders/${id}/send`),
+  cancelPurchaseOrder: (id) => api.post(`/api/procurement/purchase-orders/${id}/cancel`),
+  closePurchaseOrder: (id) => api.post(`/api/procurement/purchase-orders/${id}/close`),
+
+  getGoodsReceipts: (params) => api.get('/api/procurement/goods-receipts', { params }),
+  getGoodsReceipt: (id) => api.get(`/api/procurement/goods-receipts/${id}`),
+  createGoodsReceipt: (data) => api.post('/api/procurement/goods-receipts', data),
+  postGoodsReceipt: (id) => api.post(`/api/procurement/goods-receipts/${id}/post`),
+  cancelGoodsReceipt: (id) => api.post(`/api/procurement/goods-receipts/${id}/cancel`),
+
+  getSupplierInvoices: (params) => api.get('/api/procurement/supplier-invoices', { params }),
+  getSupplierInvoice: (id) => api.get(`/api/procurement/supplier-invoices/${id}`),
+  createSupplierInvoice: (data) => api.post('/api/procurement/supplier-invoices', data),
+  submitSupplierInvoice: (id) => api.post(`/api/procurement/supplier-invoices/${id}/submit`),
+  matchSupplierInvoice: (id) => api.post(`/api/procurement/supplier-invoices/${id}/match`),
+  approveSupplierInvoice: (id) => api.post(`/api/procurement/supplier-invoices/${id}/approve`),
+  cancelSupplierInvoice: (id) => api.post(`/api/procurement/supplier-invoices/${id}/cancel`),
+
+  getPayments: () => api.get('/api/procurement/supplier-payments'),
+  getPayment: (id) => api.get(`/api/procurement/supplier-payments/${id}`),
+  createPayment: (data) => api.post('/api/procurement/supplier-payments', data),
+};
+
 export const vetApi = {
   getDashboardStats: () => api.get('/api/vet/dashboard-stats'),
   getVaccinations: () => api.get('/api/vet/vaccinations'),
@@ -169,17 +217,188 @@ export const financeApi = {
 
 
 export const crmApi = {
-  getClients: () => api.get('/api/crm/clients'),
+  getClients: (params) => api.get('/api/crm/clients', { params }),
   getClient: (id) => api.get(`/api/crm/clients/${id}`),
+  getCustomer360: (id) => api.get(`/api/crm/clients/${id}/360`),
   createClient: (data) => api.post('/api/crm/clients', data),
   updateClient: (id, data) => api.put(`/api/crm/clients/${id}`, data),
-  getLeads: () => api.get('/api/crm/leads'),
+  getClientLeads: () => api.get('/api/crm/client-leads'),
+
+  getLeads: (params) => api.get('/api/crm/leads', { params }),
+  getLead: (id) => api.get(`/api/crm/leads/${id}`),
+  createLead: (data) => api.post('/api/crm/leads', data),
+  updateLead: (id, data) => api.put(`/api/crm/leads/${id}`, data),
+  changeLeadStatus: (id, data) => api.patch(`/api/crm/leads/${id}/status`, data),
+  convertLead: (id, data) => api.post(`/api/crm/leads/${id}/convert`, data || {}),
+
+  getOpportunities: (params) => api.get('/api/crm/opportunities', { params }),
+  getOpportunity: (id) => api.get(`/api/crm/opportunities/${id}`),
+  createOpportunity: (data) => api.post('/api/crm/opportunities', data),
+  updateOpportunity: (id, data) => api.put(`/api/crm/opportunities/${id}`, data),
+  changeOpportunityStage: (id, data) => api.patch(`/api/crm/opportunities/${id}/stage`, data),
+
+  getQuotations: (params) => api.get('/api/crm/quotations', { params }),
+  getQuotation: (id) => api.get(`/api/crm/quotations/${id}`),
+  createQuotation: (data) => api.post('/api/crm/quotations', data),
+  updateQuotation: (id, data) => api.put(`/api/crm/quotations/${id}`, data),
+  submitQuotation: (id) => api.post(`/api/crm/quotations/${id}/submit`),
+  approveQuotation: (id) => api.post(`/api/crm/quotations/${id}/approve`),
+  sendQuotation: (id) => api.post(`/api/crm/quotations/${id}/send`),
+  acceptQuotation: (id) => api.post(`/api/crm/quotations/${id}/accept`),
+  rejectQuotation: (id) => api.post(`/api/crm/quotations/${id}/reject`),
+  cancelQuotation: (id) => api.post(`/api/crm/quotations/${id}/cancel`),
+
+  getOrders: (params) => api.get('/api/crm/orders', { params }),
+  getOrder: (id) => api.get(`/api/crm/orders/${id}`),
+  createOrder: (data) => api.post('/api/crm/orders', data),
+  confirmOrder: (id) => api.post(`/api/crm/orders/${id}/confirm`),
+  cancelOrder: (id) => api.post(`/api/crm/orders/${id}/cancel`),
+  fulfillOrder: (id, partial = false) => api.post(`/api/crm/orders/${id}/fulfill`, null, { params: { partial } }),
+  invoiceOrder: (id) => api.post(`/api/crm/orders/${id}/invoice`),
+  recordOrderPayment: (id, data) => api.post(`/api/crm/orders/${id}/payments`, data),
+  getOrderPayments: (id) => api.get(`/api/crm/orders/${id}/payments`),
+  updateOrderStatus: (id, status) => api.patch(`/api/crm/orders/${id}/status`, null, { params: { status } }),
+
+  getTasks: (params) => api.get('/api/crm/tasks', { params }),
+  createTask: (data) => api.post('/api/crm/tasks', data),
+  updateTask: (id, data) => api.put(`/api/crm/tasks/${id}`, data),
+  getActivities: (params) => api.get('/api/crm/activities', { params }),
+  createActivity: (data) => api.post('/api/crm/activities', data),
+
   getPipeline: () => api.get('/api/crm/pipeline'),
   getDashboard: () => api.get('/api/crm/dashboard'),
+  getCommercialReports: () => api.get('/api/crm/reports/commercial'),
+
   getVisits: (params) => api.get('/api/crm/farm-visits', { params }),
   createVisit: (data) => api.post('/api/crm/farm-visits', data),
   getFollowUps: () => api.get('/api/crm/follow-ups'),
-  getOrders: () => api.get('/api/crm/orders'),
+};
+
+export const consultancyApi = {
+  getDashboard: () => api.get('/api/consultancy/dashboard'),
+  getReports: () => api.get('/api/consultancy/reports'),
+  getServices: (params) => api.get('/api/consultancy/services', { params }),
+  getService: (id) => api.get(`/api/consultancy/services/${id}`),
+  createService: (data) => api.post('/api/consultancy/services', data),
+  updateService: (id, data) => api.put(`/api/consultancy/services/${id}`, data),
+  getRequests: (params) => api.get('/api/consultancy/requests', { params }),
+  getRequest: (id) => api.get(`/api/consultancy/requests/${id}`),
+  createRequest: (data) => api.post('/api/consultancy/requests', data),
+  updateRequest: (id, data) => api.put(`/api/consultancy/requests/${id}`, data),
+  assignRequest: (id, data) => api.post(`/api/consultancy/requests/${id}/assign`, data),
+  rejectRequest: (id, data) => api.post(`/api/consultancy/requests/${id}/reject`, data || {}),
+  cancelRequest: (id) => api.post(`/api/consultancy/requests/${id}/cancel`),
+  convertRequestToProposal: (id, data) => api.post(`/api/consultancy/requests/${id}/convert-proposal`, data || {}),
+  convertRequestToEngagement: (id, data) => api.post(`/api/consultancy/requests/${id}/convert-engagement`, data || {}),
+  getProposals: (params) => api.get('/api/consultancy/proposals', { params }),
+  getProposal: (id) => api.get(`/api/consultancy/proposals/${id}`),
+  createProposal: (data) => api.post('/api/consultancy/proposals', data),
+  updateProposal: (id, data) => api.put(`/api/consultancy/proposals/${id}`, data),
+  sendProposal: (id) => api.post(`/api/consultancy/proposals/${id}/send`),
+  acceptProposal: (id) => api.post(`/api/consultancy/proposals/${id}/accept`),
+  rejectProposal: (id, data) => api.post(`/api/consultancy/proposals/${id}/reject`, data || {}),
+  getEngagements: (params) => api.get('/api/consultancy/engagements', { params }),
+  getEngagement: (id) => api.get(`/api/consultancy/engagements/${id}`),
+  createEngagement: (data) => api.post('/api/consultancy/engagements', data),
+  updateEngagement: (id, data) => api.put(`/api/consultancy/engagements/${id}`, data),
+  proposeEngagement: (id) => api.post(`/api/consultancy/engagements/${id}/propose`),
+  approveEngagement: (id) => api.post(`/api/consultancy/engagements/${id}/approve`),
+  activateEngagement: (id) => api.post(`/api/consultancy/engagements/${id}/activate`),
+  holdEngagement: (id) => api.post(`/api/consultancy/engagements/${id}/hold`),
+  resumeEngagement: (id) => api.post(`/api/consultancy/engagements/${id}/resume`),
+  completeEngagement: (id, data) => api.post(`/api/consultancy/engagements/${id}/complete`, data || {}),
+  cancelEngagement: (id) => api.post(`/api/consultancy/engagements/${id}/cancel`),
+  assignConsultant: (id, data) => api.post(`/api/consultancy/engagements/${id}/assign`, data),
+  createEngagementInvoice: (id) => api.post(`/api/consultancy/engagements/${id}/invoice`),
+  recordPayment: (id, data) => api.post(`/api/consultancy/engagements/${id}/payments`, data),
+  getActivities: (engagementId) => api.get(`/api/consultancy/engagements/${engagementId}/activities`),
+  getActivity: (id) => api.get(`/api/consultancy/activities/${id}`),
+  createActivity: (data) => api.post('/api/consultancy/activities', data),
+  updateActivity: (id, data) => api.put(`/api/consultancy/activities/${id}`, data),
+  startActivity: (id) => api.post(`/api/consultancy/activities/${id}/start`),
+  completeActivity: (id, data) => api.post(`/api/consultancy/activities/${id}/complete`, data || {}),
+  getDeliverables: (engagementId) => api.get(`/api/consultancy/engagements/${engagementId}/deliverables`),
+  getDeliverable: (id) => api.get(`/api/consultancy/deliverables/${id}`),
+  createDeliverable: (data) => api.post('/api/consultancy/deliverables', data),
+  startDeliverable: (id) => api.post(`/api/consultancy/deliverables/${id}/start`),
+  submitDeliverable: (id) => api.post(`/api/consultancy/deliverables/${id}/submit`),
+  approveDeliverable: (id) => api.post(`/api/consultancy/deliverables/${id}/approve`),
+  rejectDeliverable: (id, data) => api.post(`/api/consultancy/deliverables/${id}/reject`, data || {}),
+  billMilestone: (id) => api.post(`/api/consultancy/deliverables/${id}/invoice`),
+  getContractByEngagement: (engagementId) => api.get(`/api/consultancy/engagements/${engagementId}/contract`),
+  getContract: (id) => api.get(`/api/consultancy/contracts/${id}`),
+  createContract: (data) => api.post('/api/consultancy/contracts', data),
+  updateContract: (id, data) => api.put(`/api/consultancy/contracts/${id}`, data),
+  activateContract: (id) => api.post(`/api/consultancy/contracts/${id}/activate`),
+  getClientHistory: (clientId) => api.get(`/api/consultancy/clients/${clientId}/history`),
+};
+
+export const hrApi = {
+  getDashboard: () => api.get('/api/hr/dashboard'),
+  getReports: () => api.get('/api/hr/reports'),
+
+  getDepartments: (params) => api.get('/api/hr/departments', { params }),
+  getDepartment: (id) => api.get(`/api/hr/departments/${id}`),
+  createDepartment: (data) => api.post('/api/hr/departments', data),
+  updateDepartment: (id, data) => api.put(`/api/hr/departments/${id}`, data),
+
+  getPositions: (params) => api.get('/api/hr/positions', { params }),
+  getPosition: (id) => api.get(`/api/hr/positions/${id}`),
+  createPosition: (data) => api.post('/api/hr/positions', data),
+  updatePosition: (id, data) => api.put(`/api/hr/positions/${id}`, data),
+
+  getEmployees: (params) => api.get('/api/hr/employees', { params }),
+  getEmployee: (id) => api.get(`/api/hr/employees/${id}`),
+  createEmployee: (data) => api.post('/api/hr/employees', data),
+  updateEmployee: (id, data) => api.put(`/api/hr/employees/${id}`, data),
+  changeEmployeeStatus: (id, data) => api.post(`/api/hr/employees/${id}/status`, data),
+  terminateEmployee: (id, data) => api.post(`/api/hr/employees/${id}/terminate`, data),
+  getSalaryHistory: (id) => api.get(`/api/hr/employees/${id}/salary`),
+  changeSalary: (id, data) => api.post(`/api/hr/employees/${id}/salary`, data),
+  getEmployeeLeaveBalances: (id, params) => api.get(`/api/hr/employees/${id}/leave-balances`, { params }),
+
+  getAttendance: (params) => api.get('/api/hr/attendance', { params }),
+  getAttendanceRecord: (id) => api.get(`/api/hr/attendance/${id}`),
+  recordAttendance: (data) => api.post('/api/hr/attendance', data),
+  updateAttendance: (id, data) => api.put(`/api/hr/attendance/${id}`, data),
+
+  getLeaveTypes: (params) => api.get('/api/hr/leave-types', { params }),
+  createLeaveType: (data) => api.post('/api/hr/leave-types', data),
+  updateLeaveType: (id, data) => api.put(`/api/hr/leave-types/${id}`, data),
+
+  getLeaveRequests: (params) => api.get('/api/hr/leave-requests', { params }),
+  getLeaveRequest: (id) => api.get(`/api/hr/leave-requests/${id}`),
+  createLeaveRequest: (data) => api.post('/api/hr/leave-requests', data),
+  approveLeaveRequest: (id) => api.post(`/api/hr/leave-requests/${id}/approve`),
+  rejectLeaveRequest: (id, data) => api.post(`/api/hr/leave-requests/${id}/reject`, data || {}),
+  cancelLeaveRequest: (id) => api.post(`/api/hr/leave-requests/${id}/cancel`),
+
+  getDeductionTypes: (params) => api.get('/api/hr/payroll/deduction-types', { params }),
+  createDeductionType: (data) => api.post('/api/hr/payroll/deduction-types', data),
+  updateDeductionType: (id, data) => api.put(`/api/hr/payroll/deduction-types/${id}`, data),
+
+  getPayrollPeriods: (params) => api.get('/api/hr/payroll/periods', { params }),
+  getPayrollPeriod: (id) => api.get(`/api/hr/payroll/periods/${id}`),
+  createPayrollPeriod: (data) => api.post('/api/hr/payroll/periods', data),
+  calculatePayroll: (id) => api.post(`/api/hr/payroll/periods/${id}/calculate`),
+  approvePayroll: (id) => api.post(`/api/hr/payroll/periods/${id}/approve`),
+  processPayroll: (id) => api.post(`/api/hr/payroll/periods/${id}/process`),
+  closePayroll: (id) => api.post(`/api/hr/payroll/periods/${id}/close`),
+  cancelPayrollPeriod: (id) => api.post(`/api/hr/payroll/periods/${id}/cancel`),
+
+  getPayrollRuns: (params) => api.get('/api/hr/payroll/runs', { params }),
+  getPayrollRun: (id) => api.get(`/api/hr/payroll/runs/${id}`),
+  getPayrollRunItems: (id) => api.get(`/api/hr/payroll/runs/${id}/items`),
+  getPayrollRunPayments: (id) => api.get(`/api/hr/payroll/runs/${id}/payments`),
+  payPayroll: (id, data) => api.post(`/api/hr/payroll/runs/${id}/payments`, data),
+  getPayslip: (id) => api.get(`/api/hr/payroll/payslips/${id}`),
+
+  getMyProfile: () => api.get('/api/hr/me/profile'),
+  getMyAttendance: (params) => api.get('/api/hr/me/attendance', { params }),
+  getMyLeave: () => api.get('/api/hr/me/leave'),
+  submitMyLeave: (data) => api.post('/api/hr/me/leave', data),
+  getMyLeaveBalances: (params) => api.get('/api/hr/me/leave-balances', { params }),
+  getMyPayslips: () => api.get('/api/hr/me/payslips'),
 };
 
 export const trainingApi = {
@@ -198,10 +417,14 @@ export const trainingApi = {
   getSessions: (params) => api.get('/api/training/sessions', { params }),
   getSession: (id) => api.get(`/api/training/sessions/${id}`),
   createSession: (data) => api.post('/api/training/sessions', data),
+  updateSession: (id, data) => api.put(`/api/training/sessions/${id}`, data),
+  getSessionRoster: (id, params) => api.get(`/api/training/sessions/${id}/roster`, { params }),
+  getClientHistory: (clientId) => api.get(`/api/training/clients/${clientId}/history`),
   getRegistrations: (params) => api.get('/api/training/registrations', { params }),
   getRegistration: (id) => api.get(`/api/training/registrations/${id}`),
   register: (data) => api.post('/api/training/registrations', data),
   confirmRegistration: (id) => api.post(`/api/training/registrations/${id}/confirm`),
+  ensureInvoice: (id) => api.post(`/api/training/registrations/${id}/invoice`),
   cancelRegistration: (id) => api.post(`/api/training/registrations/${id}/cancel`),
   pay: (id, data) => api.post(`/api/training/registrations/${id}/payments`, data),
   recordAttendance: (id, data) => api.post(`/api/training/registrations/${id}/attendance`, data),
@@ -210,6 +433,7 @@ export const trainingApi = {
   revokeCertificate: (id) => api.post(`/api/training/registrations/${id}/certificate/revoke`),
   getCertificates: () => api.get('/api/training/certificates'),
   verifyCertificate: (code) => api.get(`/api/public/certificates/verify/${code}`),
+  verifyCertificateAuthed: (code) => api.get(`/api/training/certificates/${code}/verify`),
 };
 
 export const marketingApi = {
@@ -224,6 +448,24 @@ export const marketingApi = {
 export const notificationApi = {
   getAll: () => api.get('/api/notifications'),
   markRead: (id) => api.patch(`/api/notifications/${id}/read`),
+};
+
+export const executiveApi = {
+  getDashboard: (params) => api.get('/api/executive/dashboard', { params }),
+  getFinancialSummary: (params) => api.get('/api/executive/financial-summary', { params }),
+  getRevenue: (params) => api.get('/api/executive/revenue', { params }),
+  getExpenses: (params) => api.get('/api/executive/expenses', { params }),
+  getCashFlow: (params) => api.get('/api/executive/cash-flow', { params }),
+  getReceivables: (params) => api.get('/api/executive/receivables', { params }),
+  getPayables: (params) => api.get('/api/executive/payables', { params }),
+  getSales: (params) => api.get('/api/executive/sales', { params }),
+  getFarm: (params) => api.get('/api/executive/farm', { params }),
+  getInventory: () => api.get('/api/executive/inventory'),
+  getProcurement: () => api.get('/api/executive/procurement'),
+  getServices: () => api.get('/api/executive/services'),
+  getWorkforce: () => api.get('/api/executive/workforce'),
+  getAlerts: (params) => api.get('/api/executive/alerts', { params }),
+  getDefinitions: () => api.get('/api/executive/definitions'),
 };
 
 export const dashboardApi = {
@@ -247,6 +489,13 @@ export const masterDataApi = {
 
 export const auditApi = {
   getAll: (params) => api.get('/api/audit-logs', { params }),
+  getById: (id) => api.get(`/api/audit-logs/${id}`),
+  securityEvents: (params) => api.get('/api/audit-logs/security-events', { params }),
+};
+
+export const governanceApi = {
+  dashboard: () => api.get('/api/governance/dashboard'),
+  controls: () => api.get('/api/governance/controls'),
 };
 
 export const feedApi = {

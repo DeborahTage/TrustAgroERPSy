@@ -52,22 +52,34 @@ public class UserService {
     public UserResponse update(Long id, UserRequest req) {
         User user = findById(id);
         UserResponse before = toResponse(user);
+        Role previousRole = user.getRole();
         user.setFullName(req.getFullName());
         user.setPhone(req.getPhone());
-        user.setRole(RoleCompatibility.normalize(req.getRole()));
+        Role nextRole = RoleCompatibility.normalize(req.getRole());
+        user.setRole(nextRole);
         if (req.getPassword() != null && !req.getPassword().isBlank())
             user.setPassword(passwordEncoder.encode(req.getPassword()));
         User saved = userRepository.save(user);
         auditService.logObject("UPDATE", MODULE, "USER", saved.getId(), before, toResponse(saved));
+        if (previousRole != nextRole) {
+            auditService.log("ROLE_CHANGE", MODULE, "USER", saved.getId(),
+                    previousRole != null ? previousRole.name() : null,
+                    nextRole != null ? nextRole.name() : null);
+        }
         return toResponse(saved);
     }
 
     public UserResponse updateStatus(Long id, UserStatus status) {
         User user = findById(id);
         UserResponse before = toResponse(user);
+        UserStatus previous = user.getStatus();
         user.setStatus(status);
         User saved = userRepository.save(user);
         auditService.logObject("TOGGLE_STATUS", MODULE, "USER", saved.getId(), before, toResponse(saved));
+        if (status == UserStatus.INACTIVE) {
+            auditService.log("USER_DISABLED", MODULE, "USER", saved.getId(),
+                    previous != null ? previous.name() : null, UserStatus.INACTIVE.name());
+        }
         return toResponse(saved);
     }
 

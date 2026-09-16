@@ -114,6 +114,27 @@ public class TrainingController {
         return ResponseEntity.ok(ApiResponse.success(trainingService.createSession(req)));
     }
 
+    @PutMapping("/sessions/{id}")
+    @PreAuthorize("hasAuthority('training:update')")
+    public ResponseEntity<ApiResponse<TrainingSessionResponse>> updateSession(
+            @PathVariable Long id, @RequestBody TrainingSessionRequest req) {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.updateSession(id, req)));
+    }
+
+    @GetMapping("/sessions/{id}/roster")
+    @PreAuthorize("hasAuthority('training:read')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> sessionRoster(
+            @PathVariable Long id,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date) {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.sessionRoster(id, date)));
+    }
+
+    @GetMapping("/clients/{clientId}/history")
+    @PreAuthorize("hasAnyAuthority('training:read','crm:read')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> clientHistory(@PathVariable Long clientId) {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.clientTrainingHistory(clientId)));
+    }
+
     // Registrations
     @GetMapping("/registrations")
     @PreAuthorize("hasAuthority('training:read')")
@@ -139,6 +160,12 @@ public class TrainingController {
     @PreAuthorize("hasAuthority('training:register')")
     public ResponseEntity<ApiResponse<TrainingRegistrationResponse>> confirm(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(trainingService.confirmRegistration(id)));
+    }
+
+    @PostMapping("/registrations/{id}/invoice")
+    @PreAuthorize("hasAnyAuthority('training:register','training:payment','finance:create')")
+    public ResponseEntity<ApiResponse<TrainingRegistrationResponse>> ensureInvoice(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.ensureInvoice(id)));
     }
 
     @PostMapping("/registrations/{id}/cancel")
@@ -184,5 +211,11 @@ public class TrainingController {
     @PreAuthorize("hasAuthority('training:read')")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> certificates() {
         return ResponseEntity.ok(ApiResponse.success(trainingService.listCertificates()));
+    }
+
+    @GetMapping("/certificates/{code}/verify")
+    @PreAuthorize("hasAuthority('training:read')")
+    public ResponseEntity<ApiResponse<CertificateVerificationResponse>> verifyAuthed(@PathVariable String code) {
+        return ResponseEntity.ok(ApiResponse.success(trainingService.verifyCertificate(code)));
     }
 }

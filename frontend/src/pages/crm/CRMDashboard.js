@@ -1,280 +1,168 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { crmApi } from '../../api';
-import StatsCard from '../../components/shared/StatsCard';
-import AlertCard from '../../components/shared/AlertCard';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { 
-  Users, 
-  TrendingUp, 
-  Calendar, 
-  Activity, 
-  AlertTriangle,
-  BarChart3,
-  Phone,
-  Building2,
-  Target
+import EnterprisePage from '../../components/layout/EnterprisePage';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { formatCurrency } from '../../utils';
+import {
+  Users, Target, TrendingUp, FileText, ShoppingCart, ClipboardList, DollarSign, AlertCircle, Percent, Link2,
 } from 'lucide-react';
 
-const CRMDashboard = () => {
-  const { user } = useAuth();
-  const [data, setData] = useState({});
-  const [loading, setLoading] = useState(true);
+const countMap = (obj) => Object.values(obj || {}).reduce((s, n) => s + Number(n || 0), 0);
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const [clientsRes, visitsRes, followUpsRes] = await Promise.all([
-          crmApi.getClients(),
-          crmApi.getVisits({}),
-          crmApi.getFollowUps()
-        ]);
-        
-        const clients = clientsRes.data.data || [];
-        const visits = visitsRes.data.data || [];
-        const followUps = followUpsRes.data.data || [];
-        
-        // Calculate analytics
-        const activeClients = clients.filter(c => c.status === 'ACTIVE').length;
-        const totalBirds = clients.reduce((sum, c) => sum + (Number(c.numberOfBirds) || 0), 0);
-        const upcomingFollowUps = followUps.filter(f => new Date(f.nextFollowUpDate) >= new Date()).length;
-        const visitsThisMonth = visits.filter(v => new Date(v.visitDate).getMonth() === new Date().getMonth()).length;
-        
-        setData({
-          totalClients: clients.length,
-          activeClients,
-          totalBirds,
-          upcomingFollowUps,
-          visitsThisMonth,
-          clients,
-          visits,
-          followUps
-        });
-      } catch (e) {
-        console.error('Failed to fetch CRM dashboard data:', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDashboard();
+const CRMDashboard = () => {
+  const navigate = useNavigate();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await crmApi.getDashboard();
+      setData(res.data.data || {});
+    } catch {
+      setError('Failed to load CRM dashboard.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const kpiCards = [
-    {
-      title: 'Active Clients',
-      value: data.activeClients || 0,
-      icon: Users,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      trend: 'up',
-      trendValue: '+5 new this month'
-    },
-    {
-      title: 'Total Birds',
-      value: (data.totalBirds || 0).toLocaleString(),
-      icon: Building2,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-50',
-      trend: 'up',
-      trendValue: '+12% from last month'
-    },
-    {
-      title: 'Upcoming Follow-ups',
-      value: data.upcomingFollowUps || 0,
-      icon: Calendar,
-      iconColor: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      trend: 'stable',
-      trendValue: 'This week'
-    },
-    {
-      title: 'Visits This Month',
-      value: data.visitsThisMonth || 0,
-      icon: Activity,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      trend: 'up',
-      trendValue: '+8 from last month'
-    }
-  ];
+  useEffect(() => { load(); }, [load]);
 
-  const alerts = [
-    {
-      title: 'Follow-up Due',
-      description: '3 client follow-ups scheduled for today',
-      type: 'warning',
-      icon: AlertTriangle,
-      timestamp: '1 hour ago'
-    },
-    {
-      title: 'New Lead',
-      description: 'Potential client "Green Farms" interested',
-      type: 'info',
-      icon: Target,
-      timestamp: '2 hours ago'
-    }
-  ];
+  const pipelineLeads = data?.pipelineLeads || {};
+  const oppByStage = data?.opportunitiesByStage || {};
+  const quotesByStatus = data?.quotationsByStatus || {};
+  const ordersByStatus = data?.ordersByStatus || {};
 
-  const recentActivities = [
-    {
-      title: 'Client Visit Completed',
-      description: 'Farm visit completed for "Agro Farm"',
-      type: 'success',
-      icon: Activity,
-      timestamp: '30 minutes ago'
-    },
-    {
-      title: 'New Client Added',
-      description: 'Client "Sunrise Poultry" registered',
-      type: 'success',
-      icon: Users,
-      timestamp: '1 hour ago'
-    },
-    {
-      title: 'Follow-up Scheduled',
-      description: 'Follow-up set for "Valley Farms"',
-      type: 'info',
-      icon: Calendar,
-      timestamp: '2 hours ago'
-    }
-  ];
+  const stats = data ? [
+    { title: 'Total Clients', value: data.totalClients || 0, icon: Users, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+    { title: 'Active Clients', value: data.activeClients || 0, icon: Users, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: 'Pipeline Leads', value: countMap(pipelineLeads), icon: Target, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { title: 'Lead Conversion', value: `${Number(data.conversionRate || data.leadConversionRate || 0).toFixed(1)}%`, icon: Percent, iconColor: 'text-teal-600', bgColor: 'bg-teal-50' },
+    { title: 'Open Opp. Value', value: formatCurrency(data.openOpportunityValue || 0), icon: TrendingUp, iconColor: 'text-indigo-600', bgColor: 'bg-indigo-50' },
+    { title: 'Quotations', value: countMap(quotesByStatus), icon: FileText, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
+    { title: 'Orders', value: countMap(ordersByStatus), icon: ShoppingCart, iconColor: 'text-slate-600', bgColor: 'bg-slate-50' },
+    { title: 'Invoiced Revenue', value: formatCurrency(data.totalOrderRevenueInvoiced || 0), icon: DollarSign, iconColor: 'text-emerald-700', bgColor: 'bg-emerald-50' },
+    { title: 'Outstanding AR', value: formatCurrency(data.outstandingAr || 0), icon: DollarSign, iconColor: 'text-amber-700', bgColor: 'bg-amber-50' },
+    { title: 'CRM Contracts', value: data.crmLinkedContracts || 0, icon: Link2, iconColor: 'text-violet-600', bgColor: 'bg-violet-50' },
+    { title: 'Open Tasks', value: data.openTasks || 0, icon: ClipboardList, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
+  ] : [];
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="h-32">
-              <CardContent className="p-6">
-                <div className="animate-pulse space-y-4">
-                  <div className="h-4 bg-gray-200 rounded w-1/3" />
-                  <div className="h-8 bg-gray-200 rounded w-1/2" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const renderBreakdown = (title, map) => (
+    <Card className="border-none shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
+        <CardDescription>Live counts from CRM commercial APIs</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        {Object.keys(map).length === 0 ? (
+          <p className="text-slate-500 py-4 text-center">No data yet.</p>
+        ) : (
+          Object.entries(map).map(([k, v]) => (
+            <div key={k} className="flex justify-between border-b py-2">
+              <span>{k.replace(/_/g, ' ')}</span>
+              <span className="font-mono font-bold">{Number(v)}</span>
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">CRM Dashboard</h1>
-        <p className="text-gray-500 mt-1">
-          Manage client relationships, lead pipeline, and follow-up schedules.
-        </p>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {kpiCards.map((card, index) => (
-          <StatsCard key={index} {...card} />
-        ))}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Activity Feed */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivities.map((activity, index) => (
-                <AlertCard key={index} {...activity} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Alert Center */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {alerts.map((alert, index) => (
-                <AlertCard key={index} {...alert} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Section */}
+    <EnterprisePage
+      title="CRM Dashboard"
+      subtitle="Commercial pipeline, customers, orders, and collections"
+      breadcrumbs={['CRM']}
+      loading={loading}
+      error={error}
+      onRetry={load}
+      onRefresh={load}
+      stats={stats}
+      actions={
+        <>
+          <Button variant="outline" size="sm" onClick={() => navigate('/crm/leads')}>Leads</Button>
+          <Button size="sm" onClick={() => navigate('/crm/orders')}>Orders</Button>
+        </>
+      }
+    >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="border-none shadow-sm">
           <CardHeader>
-            <CardTitle>Lead Pipeline</CardTitle>
+            <CardTitle className="text-lg">Quick Links</CardTitle>
+            <CardDescription>Navigate CRM workflows</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <Target className="h-12 w-12 mx-auto mb-2" />
-                <p>Lead funnel chart</p>
-                <p className="text-sm">(Recharts integration available)</p>
-              </div>
-            </div>
+          <CardContent className="grid grid-cols-2 gap-3">
+            {[
+              ['Leads', '/crm/leads'],
+              ['Opportunities', '/crm/opportunities'],
+              ['Quotations', '/crm/quotations'],
+              ['Orders', '/crm/orders'],
+              ['Customers', '/crm/clients'],
+              ['Tasks', '/crm/tasks'],
+              ['Reports', '/crm/reports'],
+              ['Visits', '/crm/follow-ups'],
+            ].map(([label, path]) => (
+              <Button key={path} variant="outline" className="justify-start" onClick={() => navigate(path)}>{label}</Button>
+            ))}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-sm">
           <CardHeader>
-            <CardTitle>Client Revenue Metrics</CardTitle>
+            <CardTitle className="text-lg">Collections Snapshot</CardTitle>
+            <CardDescription>Order invoicing and payments</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <TrendingUp className="h-12 w-12 mx-auto mb-2" />
-                <p>Revenue by client chart</p>
-                <p className="text-sm">(Recharts integration available)</p>
-              </div>
-            </div>
+          <CardContent className="space-y-3 text-sm">
+            {!data ? (
+              <p className="text-sm text-slate-500 py-6 text-center">No data yet.</p>
+            ) : (
+              <>
+                <div className="flex justify-between border-b py-2">
+                  <span>Invoiced revenue</span>
+                  <span className="font-mono font-bold">{formatCurrency(data.totalOrderRevenueInvoiced || 0)}</span>
+                </div>
+                <div className="flex justify-between border-b py-2">
+                  <span>Total paid</span>
+                  <span className="font-mono text-emerald-700">{formatCurrency(data.totalOrderPaid || 0)}</span>
+                </div>
+                <div className="flex justify-between border-b py-2">
+                  <span>Outstanding AR</span>
+                  <span className="font-mono text-amber-700">{formatCurrency(data.outstandingAr || 0)}</span>
+                </div>
+                <div className="flex justify-between border-b py-2">
+                  <span>CRM invoices</span>
+                  <span className="font-mono">{data.crmInvoices || 0}</span>
+                </div>
+                <div className="flex justify-between border-b py-2">
+                  <span>CRM-linked contracts</span>
+                  <span className="font-mono">{data.crmLinkedContracts || 0}</span>
+                </div>
+                <div className="flex justify-between border-b py-2">
+                  <span>Lead conversion</span>
+                  <span className="font-mono">{Number(data.conversionRate || data.leadConversionRate || 0).toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between border-b py-2">
+                  <span>Due follow-ups</span>
+                  <span className="font-mono flex items-center gap-1">
+                    {(data.dueFollowUps || 0) > 0 && <AlertCircle className="h-3.5 w-3.5 text-amber-600" />}
+                    {data.dueFollowUps || 0}
+                  </span>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Visit Analytics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <Activity className="h-12 w-12 mx-auto mb-2" />
-                <p>Visit frequency chart</p>
-                <p className="text-sm">(Recharts integration available)</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Follow-up Timeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <Calendar className="h-12 w-12 mx-auto mb-2" />
-                <p>Follow-up schedule chart</p>
-                <p className="text-sm">(Recharts integration available)</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {renderBreakdown('Leads by Status', pipelineLeads)}
+        {renderBreakdown('Opportunities by Stage', oppByStage)}
+        {renderBreakdown('Quotations by Status', quotesByStatus)}
+        {renderBreakdown('Orders by Status', ordersByStatus)}
       </div>
-    </div>
+    </EnterprisePage>
   );
 };
 

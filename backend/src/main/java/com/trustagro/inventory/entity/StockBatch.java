@@ -83,4 +83,8 @@ public class StockBatch {
 
     public void setQuantityReceived(Double quantityReceived) { this.quantityReceived = quantityReceived; }
     public void setReceivedDate(LocalDate receivedDate) { this.receivedDate = receivedDate; }
+    public void setPoReference(String poReference) { this.poReference = poReference; }
+    public String getPoReference() { return poReference; }
+    public void setManufacturingDate(LocalDate manufacturingDate) { this.manufacturingDate = manufacturingDate; }
+    public LocalDate getManufacturingDate() { return manufacturingDate; }
 }

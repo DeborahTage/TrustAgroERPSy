@@ -109,11 +109,32 @@ public class InvoiceService {
         return invoiceRepository.save(invoice);
     }
 
-    public List<Invoice> getOpenReceivables() {
+    /**
+     * Open AR rows as maps so Jackson never touches lazy {@code Invoice.items}.
+     */
+    @Transactional(readOnly = true)
+    public List<java.util.Map<String, Object>> getOpenReceivables() {
         return invoiceRepository.findAll().stream()
                 .filter(i -> i.getStatus() == InvoiceStatus.SENT
                         || i.getStatus() == InvoiceStatus.PARTIALLY_PAID
                         || i.getStatus() == InvoiceStatus.OVERDUE)
+                .map(i -> {
+                    java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
+                    row.put("id", i.getId());
+                    row.put("invoiceNumber", i.getInvoiceNumber());
+                    row.put("invoiceType", i.getInvoiceType());
+                    row.put("status", i.getStatus());
+                    row.put("clientId", i.getClientId());
+                    row.put("clientName", i.getClientName());
+                    row.put("totalAmount", i.getTotalAmount());
+                    row.put("paidAmount", i.getPaidAmount());
+                    row.put("outstanding", i.getTotalAmount() != null && i.getPaidAmount() != null
+                            ? i.getTotalAmount().subtract(i.getPaidAmount()) : i.getTotalAmount());
+                    row.put("sourceModule", i.getSourceModule());
+                    row.put("sourceId", i.getSourceId());
+                    row.put("dueDate", i.getDueDate());
+                    return row;
+                })
                 .toList();
     }
 }
