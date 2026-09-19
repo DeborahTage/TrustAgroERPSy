@@ -7,7 +7,7 @@ import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS } from '../../lib/permissions';
-import { formatCurrency, formatDate } from '../../utils';
+import { formatCurrency } from '../../utils';
 
 const STATUS_STYLES = {
   SUBMITTED: 'bg-slate-100 text-slate-700',
