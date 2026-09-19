@@ -111,7 +111,7 @@ public class ChickenSale {
         items.clear();
     }
 
-    public Integer totalBirds() {
+    public Integer totalChickens() {
         return items.stream().mapToInt(i -> i.getQuantity() != null ? i.getQuantity() : 0).sum();
     }
 }

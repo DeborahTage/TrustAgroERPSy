@@ -24,7 +24,7 @@ public class NecropsyRecord {
 
     private LocalDate necropsyDate = LocalDate.now();
 
-    private Integer numBirdsExamined;
+    private Integer numChickensExamined;
 
     @Column(columnDefinition = "TEXT")
     private String heartFindings;
@@ -79,7 +79,7 @@ public class NecropsyRecord {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public User getPerformedBy() { return performedBy; }
     public void setPerformedBy(User u) { this.performedBy = u; }
-    public void setNumBirdsExamined(Integer n) { this.numBirdsExamined = n; }
+    public void setNumChickensExamined(Integer n) { this.numChickensExamined = n; }
     public void setHeartFindings(String s) { this.heartFindings = s; }
     public void setLiverFindings(String s) { this.liverFindings = s; }
     public void setSpleenFindings(String s) { this.spleenFindings = s; }

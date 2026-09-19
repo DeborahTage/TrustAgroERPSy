@@ -68,7 +68,7 @@ const FarmDashboard = () => {
     },
     {
       title: 'Total Capacity',
-      value: `${data.totalCapacity || 0} birds`,
+      value: `${data.totalCapacity || 0} Chickens`,
       icon: Users,
       iconColor: 'text-purple-600',
       bgColor: 'bg-purple-50',
@@ -113,7 +113,7 @@ const FarmDashboard = () => {
     },
     {
       title: 'Capacity Updated',
-      description: 'Farm B capacity increased to 10,000 birds',
+      description: 'Farm B capacity increased to 10,000 Chickens',
       type: 'success',
       icon: TrendingUp,
       timestamp: '2 hours ago'

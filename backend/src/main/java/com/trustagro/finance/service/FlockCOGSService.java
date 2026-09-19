@@ -17,7 +17,7 @@ public class FlockCOGSService {
 
     private final FarmCostAllocationRepository costRepository;
 
-    public Map<String, Object> calculateCOGS(Long flockId, Integer survivingBirds) {
+    public Map<String, Object> calculateCOGS(Long flockId, Integer survivingChickens) {
         List<FarmCostAllocation> costs = costRepository.findByFlockId(flockId);
         BigDecimal totalCost = costs.stream()
                 .map(FarmCostAllocation::getAmount)
@@ -25,10 +25,10 @@ public class FlockCOGSService {
         
         Map<String, Object> report = new HashMap<>();
         report.put("totalCost", totalCost);
-        report.put("survivingBirds", survivingBirds);
+        report.put("survivingChickens", survivingChickens);
         
-        if (survivingBirds != null && survivingBirds > 0) {
-            report.put("costPerBird", totalCost.divide(BigDecimal.valueOf(survivingBirds), 2, RoundingMode.HALF_UP));
+        if (survivingChickens != null && survivingChickens > 0) {
+            report.put("costPerBird", totalCost.divide(BigDecimal.valueOf(survivingChickens), 2, RoundingMode.HALF_UP));
         }
 
         // Categorized costs

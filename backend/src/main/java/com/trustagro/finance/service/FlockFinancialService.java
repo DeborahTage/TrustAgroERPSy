@@ -43,18 +43,18 @@ public class FlockFinancialService {
         report.put("flockId", flockId);
 
         Flock flock = flockRepository.findById(flockId).orElse(null);
-        Integer birds = flock != null ? flock.getCurrentBirdCount() : null;
-        if (birds == null && flock != null) {
-            birds = flock.getInitialBirdCount();
+        Integer Chickens = flock != null ? flock.getCurrentBirdCount() : null;
+        if (Chickens == null && flock != null) {
+            Chickens = flock.getInitialBirdCount();
         }
 
-        Map<String, Object> cogs = flockCOGSService.calculateCOGS(flockId, birds);
+        Map<String, Object> cogs = flockCOGSService.calculateCOGS(flockId, Chickens);
         BigDecimal totalCost = (BigDecimal) cogs.getOrDefault("totalCost", BigDecimal.ZERO);
         report.put("totalCost", totalCost);
         report.put("cogs", totalCost);
         report.put("breakdown", cogs.get("breakdown"));
         report.put("costPerBird", cogs.get("costPerBird"));
-        report.put("survivingBirds", birds);
+        report.put("survivingChickens", Chickens);
         report.put("costKnown", totalCost.compareTo(BigDecimal.ZERO) > 0);
 
         List<ChickenSale> sales = chickenSaleRepository.findByFlockIdOrderBySaleDateDesc(flockId);

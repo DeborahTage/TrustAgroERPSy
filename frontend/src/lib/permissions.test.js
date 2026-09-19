@@ -23,7 +23,7 @@ describe('RBAC permissions alignment', () => {
     expect(hasPermission(ROLES.FINANCE, PERMISSIONS.VIEW_FINANCE)).toBe(true);
   });
 
-  test('farm manager can sell birds but cannot invoice or pay', () => {
+  test('farm manager can sell Chickens but cannot invoice or pay', () => {
     expect(hasPermission(ROLES.FARM_MANAGER, PERMISSIONS.CREATE_CHICKEN_SALES)).toBe(true);
     expect(hasPermission(ROLES.FARM_MANAGER, PERMISSIONS.CONFIRM_CHICKEN_SALES)).toBe(true);
     expect(hasPermission(ROLES.FARM_MANAGER, PERMISSIONS.INVOICE_CHICKEN_SALES)).toBe(false);

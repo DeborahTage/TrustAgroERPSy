@@ -253,7 +253,7 @@ const VaccinationForm = () => {
                 <TrendingUp className="h-4 w-4 text-primary/70" />
               </div>
               <p className="text-2xl font-black">4,200</p>
-              <p className="text-[10px] font-bold text-emerald-300/60 uppercase tracking-widest">Birds Targeted this Week</p>
+              <p className="text-[10px] font-bold text-emerald-300/60 uppercase tracking-widest">Chickens Targeted this Week</p>
             </div>
           </Card>
         </div>

@@ -1065,7 +1065,7 @@
         <version>${jaxen.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.firebirdsql.jdbc</groupId>
+        <groupId>org.fireChickensql.jdbc</groupId>
         <artifactId>jaybird</artifactId>
         <version>${jaybird.version}</version>
       </dependency>

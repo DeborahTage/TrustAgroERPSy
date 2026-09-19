@@ -20,7 +20,7 @@ public class CrmClientResponse {
     private String location;
     private String farmType;
     private String farmSize;
-    private Integer numberOfBirds;
+    private Integer numberOfChickens;
     private CustomerType customerType;
     private String taxIdentifier;
     private String notes;

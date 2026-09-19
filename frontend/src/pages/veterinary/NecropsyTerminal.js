@@ -28,7 +28,7 @@ const NecropsyTerminal = () => {
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     flockId: '',
-    numBirdsExamined: '',
+    numChickensExamined: '',
     generalFindings: '',
     heartFindings: '',
     liverFindings: '',
@@ -55,7 +55,7 @@ const NecropsyTerminal = () => {
       await vetApi.createNecropsy({
         ...form,
         flockId: Number(form.flockId),
-        numBirdsExamined: form.numBirdsExamined ? Number(form.numBirdsExamined) : null,
+        numChickensExamined: form.numChickensExamined ? Number(form.numChickensExamined) : null,
       });
       toast.success('Necropsy report submitted');
       navigate('/vet');
@@ -113,7 +113,7 @@ const NecropsyTerminal = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Specimens Examined</Label>
-                    <Input type="number" min="1" value={form.numBirdsExamined} onChange={(e) => setField('numBirdsExamined', e.target.value)} />
+                    <Input type="number" min="1" value={form.numChickensExamined} onChange={(e) => setField('numChickensExamined', e.target.value)} />
                   </div>
                 </div>
               </CardContent>

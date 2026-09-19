@@ -160,7 +160,7 @@ public class CrmService {
         client.setLocation(req.getLocation());
         client.setFarmType(req.getFarmType());
         client.setFarmSize(req.getFarmSize());
-        client.setNumberOfBirds(req.getNumberOfBirds());
+        client.setNumberOfChickens(req.getNumberOfChickens());
         if (req.getCustomerType() != null) client.setCustomerType(req.getCustomerType());
         client.setTaxIdentifier(req.getTaxIdentifier());
         client.setNotes(req.getNotes());
@@ -192,7 +192,7 @@ public class CrmService {
         r.setLocation(c.getLocation());
         r.setFarmType(c.getFarmType());
         r.setFarmSize(c.getFarmSize());
-        r.setNumberOfBirds(c.getNumberOfBirds());
+        r.setNumberOfChickens(c.getNumberOfChickens());
         r.setCustomerType(c.getCustomerType());
         r.setTaxIdentifier(c.getTaxIdentifier());
         r.setNotes(c.getNotes());

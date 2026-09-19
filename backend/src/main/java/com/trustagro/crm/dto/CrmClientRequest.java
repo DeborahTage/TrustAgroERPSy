@@ -21,7 +21,7 @@ public class CrmClientRequest {
     @Size(max = 180) private String location;
     @Size(max = 80) private String farmType;
     @Size(max = 80) private String farmSize;
-    @PositiveOrZero private Integer numberOfBirds;
+    @PositiveOrZero private Integer numberOfChickens;
     private CustomerType customerType;
     @Size(max = 80) private String taxIdentifier;
     private String notes;

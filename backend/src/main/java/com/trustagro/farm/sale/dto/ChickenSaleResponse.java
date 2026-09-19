@@ -33,7 +33,7 @@ public class ChickenSaleResponse {
     private BigDecimal totalAmount;
     private BigDecimal paidAmount;
     private BigDecimal outstandingAmount;
-    private Integer totalBirds;
+    private Integer totalChickens;
     private Long invoiceId;
     private String invoiceNumber;
     private String createdByName;

@@ -18,6 +18,7 @@ import com.trustagro.farm.sale.repository.ChickenSalePaymentRepository;
 import com.trustagro.farm.sale.repository.ChickenSaleRepository;
 import com.trustagro.farm.sale.repository.FlockPopulationEventRepository;
 import com.trustagro.farm.sale.service.ChickenSaleService;
+import com.trustagro.farm.service.FarmAccessService;
 import com.trustagro.finance.entity.*;
 import com.trustagro.finance.service.FlockCOGSService;
 import com.trustagro.notification.service.NotificationService;
@@ -61,6 +62,7 @@ class GoldenChickenSaleFinanceScenarioTest {
     @Mock WithdrawalService withdrawalService;
     @Mock FlockCOGSService flockCOGSService;
     @Mock NotificationService notificationService;
+    @Mock FarmAccessService farmAccessService;
 
     private QaFinanceHarness finance;
     private ChickenSaleService service;
@@ -112,12 +114,15 @@ class GoldenChickenSaleFinanceScenarioTest {
         lenient().when(paymentRepository.findBySaleIdOrderByPaymentDateAsc(any())).thenReturn(List.of());
         lenient().when(populationEventRepository.findByChickenSaleIdOrderByCreatedAtAsc(any())).thenReturn(List.of());
         lenient().when(flockCOGSService.calculateCOGS(any(), any())).thenReturn(new HashMap<>());
+        lenient().when(farmAccessService.accessibleFarmIdsOrNull()).thenReturn(null);
+        lenient().doNothing().when(farmAccessService).assertCanAccessFarm(any());
+        lenient().doNothing().when(farmAccessService).assertCanAccessFarm(any(), any());
 
         service = new ChickenSaleService(
                 saleRepository, paymentRepository, populationEventRepository, flockRepository,
                 farmRepository, barnRepository, clientRepository, userRepository,
                 finance.invoiceRepository(), finance.finance(), withdrawalService,
-                flockCOGSService, finance.auditService(), notificationService);
+                flockCOGSService, finance.auditService(), notificationService, farmAccessService);
     }
 
     @AfterEach

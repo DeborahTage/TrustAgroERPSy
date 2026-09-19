@@ -22,12 +22,15 @@ public class FarmService {
     private final FarmRepository farmRepository;
     private final UserRepository userRepository;
     private final com.trustagro.farm.repository.BiosecurityProtocolRepository biosecurityRepo;
+    private final FarmAccessService farmAccessService;
 
     public List<com.trustagro.farm.dto.BiosecurityProtocolResponse> getBiosecurityLogs(Long farmId) {
+        farmAccessService.assertCanAccessFarm(farmId);
         return biosecurityRepo.findByFarmIdOrderByTimestampDesc(farmId).stream().map(this::toBiosecurityResponse).collect(Collectors.toList());
     }
 
     public com.trustagro.farm.dto.BiosecurityProtocolResponse logBiosecurity(com.trustagro.farm.dto.BiosecurityProtocolRequest req) {
+        farmAccessService.assertCanAccessFarm(req.getFarmId());
         com.trustagro.farm.entity.BiosecurityProtocol bp = new com.trustagro.farm.entity.BiosecurityProtocol();
         bp.setFarm(findById(req.getFarmId()));
         bp.setFootbathRefreshed(req.isFootbathRefreshed());
@@ -59,10 +62,15 @@ public class FarmService {
     }
 
     public List<FarmResponse> getAll() {
-        return farmRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
+        List<Long> scope = farmAccessService.accessibleFarmIdsOrNull();
+        List<Farm> farms = scope == null
+                ? farmRepository.findAll()
+                : farmRepository.findByIdIn(scope);
+        return farms.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     public FarmResponse getById(Long id) {
+        farmAccessService.assertCanAccessFarm(id);
         return toResponse(findById(id));
     }
 
@@ -73,12 +81,14 @@ public class FarmService {
     }
 
     public FarmResponse update(Long id, FarmRequest req) {
+        farmAccessService.assertCanAccessFarm(id);
         Farm farm = findById(id);
         mapRequest(req, farm);
         return toResponse(farmRepository.save(farm));
     }
 
     public FarmResponse updateStatus(Long id, FarmStatus status) {
+        farmAccessService.assertCanAccessFarm(id);
         Farm farm = findById(id);
         farm.setStatus(status);
         return toResponse(farmRepository.save(farm));

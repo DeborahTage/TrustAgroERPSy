@@ -37,6 +37,8 @@ public final class Permissions {
     public static final String CHICKEN_SALE_CANCEL = "chickensale:cancel";
     public static final String CHICKEN_SALE_INVOICE = "chickensale:invoice";
     public static final String CHICKEN_SALE_PAY = "chickensale:pay";
+    /** Finance payment-verification / release authorization for chicken delivery. */
+    public static final String CHICKEN_SALE_VERIFY = "chickensale:verify";
 
     // Veterinary
     public static final String VETERINARY_READ = "veterinary:read";

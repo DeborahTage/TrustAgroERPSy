@@ -10,6 +10,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "daily_farm_records", uniqueConstraints = {
@@ -42,7 +44,7 @@ public class DailyFarmRecord {
     @Column(columnDefinition = "TEXT")
     private String mortalityNotes;
 
-    private Integer culledBirds;
+    private Integer culledChickens;
     private BigDecimal feedConsumed;
     private BigDecimal waterConsumed;
     private BigDecimal averageWeight;
@@ -62,6 +64,15 @@ public class DailyFarmRecord {
 
     private String barnPhotoUrl;
 
+    @OneToMany(mappedBy = "dailyRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DailyFeedUsageLine> feedLines = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dailyRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DailyMedicationLine> medicationLines = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dailyRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DailyMortalityLine> mortalityLines = new ArrayList<>();
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -76,7 +87,7 @@ public class DailyFarmRecord {
     public Integer getMortality() { return mortality; }
     public MortalityCause getMortalityCause() { return mortalityCause; }
     public String getMortalityNotes() { return mortalityNotes; }
-    public Integer getCulledBirds() { return culledBirds; }
+    public Integer getCulledChickens() { return culledChickens; }
     public BigDecimal getFeedConsumed() { return feedConsumed; }
     public BigDecimal getWaterConsumed() { return waterConsumed; }
     public BigDecimal getAverageWeight() { return averageWeight; }
@@ -95,7 +106,7 @@ public class DailyFarmRecord {
     public void setMortality(Integer mortality) { this.mortality = mortality; }
     public void setMortalityCause(MortalityCause mortalityCause) { this.mortalityCause = mortalityCause; }
     public void setMortalityNotes(String mortalityNotes) { this.mortalityNotes = mortalityNotes; }
-    public void setCulledBirds(Integer culledBirds) { this.culledBirds = culledBirds; }
+    public void setCulledChickens(Integer culledChickens) { this.culledChickens = culledChickens; }
     public void setFeedConsumed(BigDecimal feedConsumed) { this.feedConsumed = feedConsumed; }
     public void setWaterConsumed(BigDecimal waterConsumed) { this.waterConsumed = waterConsumed; }
     public void setAverageWeight(BigDecimal averageWeight) { this.averageWeight = averageWeight; }
@@ -104,4 +115,38 @@ public class DailyFarmRecord {
     public void setDiseaseCase(com.trustagro.veterinary.entity.DiseaseCase diseaseCase) { this.diseaseCase = diseaseCase; }
     public void setSilo(com.trustagro.feed.entity.Silo silo) { this.silo = silo; }
     public void setBarnPhotoUrl(String barnPhotoUrl) { this.barnPhotoUrl = barnPhotoUrl; }
+
+    public List<DailyFeedUsageLine> getFeedLines() { return feedLines; }
+    public List<DailyMedicationLine> getMedicationLines() { return medicationLines; }
+    public List<DailyMortalityLine> getMortalityLines() { return mortalityLines; }
+
+    public void clearFeedLines() {
+        feedLines.forEach(l -> l.setDailyRecord(null));
+        feedLines.clear();
+    }
+
+    public void clearMedicationLines() {
+        medicationLines.forEach(l -> l.setDailyRecord(null));
+        medicationLines.clear();
+    }
+
+    public void clearMortalityLines() {
+        mortalityLines.forEach(l -> l.setDailyRecord(null));
+        mortalityLines.clear();
+    }
+
+    public void addFeedLine(DailyFeedUsageLine line) {
+        feedLines.add(line);
+        line.setDailyRecord(this);
+    }
+
+    public void addMedicationLine(DailyMedicationLine line) {
+        medicationLines.add(line);
+        line.setDailyRecord(this);
+    }
+
+    public void addMortalityLine(DailyMortalityLine line) {
+        mortalityLines.add(line);
+        line.setDailyRecord(this);
+    }
 }

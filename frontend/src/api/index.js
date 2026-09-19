@@ -50,6 +50,43 @@ export const chickenSaleApi = {
   cancel: (id) => api.post(`/api/chicken-sales/${id}/cancel`),
 };
 
+export const chickenReleaseApi = {
+  list: (params) => api.get('/api/chicken-releases', { params }),
+  getById: (id) => api.get(`/api/chicken-releases/${id}`),
+  create: (data) => api.post('/api/chicken-releases', data),
+  verify: (id) => api.post(`/api/chicken-releases/${id}/verify`),
+  reject: (id, data) => api.post(`/api/chicken-releases/${id}/reject`, data),
+  forwardToFarm: (id) => api.post(`/api/chicken-releases/${id}/forward-to-farm`),
+  farmApprove: (id) => api.post(`/api/chicken-releases/${id}/farm-approve`),
+  farmReject: (id, data) => api.post(`/api/chicken-releases/${id}/farm-reject`, data),
+  dispatch: (id, data) => api.post(`/api/chicken-releases/${id}/dispatch`, data),
+  marketingReceive: (id) => api.post(`/api/chicken-releases/${id}/marketing-receive`),
+  updateLogistics: (id, data) => api.post(`/api/chicken-releases/${id}/logistics`, data),
+  markDelivered: (id) => api.post(`/api/chicken-releases/${id}/mark-delivered`),
+};
+
+export const internalDeliveryApi = {
+  list: (params) => api.get('/api/internal-deliveries', { params }),
+  getById: (id) => api.get(`/api/internal-deliveries/${id}`),
+  create: (data) => api.post('/api/internal-deliveries', data),
+  update: (id, data) => api.put(`/api/internal-deliveries/${id}`, data),
+  submit: (id) => api.post(`/api/internal-deliveries/${id}/submit`),
+  approve: (id) => api.post(`/api/internal-deliveries/${id}/approve`),
+  issue: (id) => api.post(`/api/internal-deliveries/${id}/issue`),
+  receive: (id) => api.post(`/api/internal-deliveries/${id}/receive`),
+  cancel: (id) => api.post(`/api/internal-deliveries/${id}/cancel`),
+};
+
+export const farmDocumentApi = {
+  html: (type, id) => api.get(`/api/farm-documents/${type}/${id}`, { responseType: 'text' }),
+};
+
+export const dataImportApi = {
+  templates: () => api.get('/api/data-import/templates'),
+  onboardingSummary: () => api.get('/api/data-import/onboarding-summary'),
+  importData: (data) => api.post('/api/data-import', data),
+};
+
 export const dailyRecordApi = {
   getAll: (params) => api.get('/api/daily-farm-records', { params }),
   getById: (id) => api.get(`/api/daily-farm-records/${id}`),

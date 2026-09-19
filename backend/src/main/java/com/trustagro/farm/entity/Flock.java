@@ -44,11 +44,27 @@ public class Flock {
 
     private LocalDate expectedHarvestDate;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id")
+    private com.trustagro.inventory.entity.Supplier supplier;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsible_person_id")
+    private com.trustagro.user.entity.User responsiblePerson;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    private String sourceDocumentUrl;
+
     @Enumerated(EnumType.STRING)
     private FlockStatus status = FlockStatus.ACTIVE;
 
     private java.time.LocalDate withdrawalHoldUntil;
     private Boolean isUnderWithdrawal = false;
+
+    @Version
+    private Long version;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

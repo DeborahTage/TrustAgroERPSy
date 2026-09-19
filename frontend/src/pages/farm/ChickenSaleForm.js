@@ -157,7 +157,7 @@ const ChickenSaleForm = () => {
   return (
     <EnterpriseFormPage
       title={isEdit ? 'Edit Chicken Sale' : 'New Chicken Sale'}
-      subtitle="Birds are taken from the selected flock population. Totals are calculated from the lines below."
+      subtitle="Chickens are taken from the selected flock population. Totals are calculated from the lines below."
       breadcrumbs={['Farm', 'Chicken Sales', isEdit ? 'Edit' : 'New']}
       backTo="/farm/chicken-sales"
       loading={fetching}
@@ -183,7 +183,7 @@ const ChickenSaleForm = () => {
                 <SelectItem value="none">Select flock</SelectItem>
                 {farmFlocks.map((f) => (
                   <SelectItem key={f.id} value={String(f.id)}>
-                    {f.batchCode} — {Number(f.currentBirdCount || 0).toLocaleString()} birds
+                    {f.batchCode} — {Number(f.currentBirdCount || 0).toLocaleString()} Chickens
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -244,7 +244,7 @@ const ChickenSaleForm = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Quantity (birds)</Label>
+              <Label>Quantity (Chickens)</Label>
               <Input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(idx, { quantity: e.target.value })} required />
             </div>
             {line.pricingMethod === 'PER_BIRD' ? (

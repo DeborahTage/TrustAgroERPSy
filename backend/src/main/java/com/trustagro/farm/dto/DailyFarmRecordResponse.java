@@ -5,6 +5,8 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class DailyFarmRecordResponse {
@@ -16,7 +18,7 @@ public class DailyFarmRecordResponse {
     private String batchCode;
     private Integer openingBirdCount;
     private Integer mortality;
-    private Integer culledBirds;
+    private Integer culledChickens;
     private BigDecimal feedConsumed;
     private BigDecimal waterConsumed;
     private BigDecimal averageWeight;
@@ -28,6 +30,11 @@ public class DailyFarmRecordResponse {
     private String barnPhotoUrl;
     private String recordedBy;
     private Double mortalityRate;
+    private Long ageDays;
+    private Long ageWeeks;
+    private List<DailyFeedUsageLineResponse> feedLines = new ArrayList<>();
+    private List<DailyMedicationLineResponse> medicationLines = new ArrayList<>();
+    private List<DailyMortalityLineResponse> mortalityLines = new ArrayList<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -39,7 +46,7 @@ public class DailyFarmRecordResponse {
     public void setBatchCode(String batchCode) { this.batchCode = batchCode; }
     public void setOpeningBirdCount(Integer openingBirdCount) { this.openingBirdCount = openingBirdCount; }
     public void setMortality(Integer mortality) { this.mortality = mortality; }
-    public void setCulledBirds(Integer culledBirds) { this.culledBirds = culledBirds; }
+    public void setCulledChickens(Integer culledChickens) { this.culledChickens = culledChickens; }
     public void setFeedConsumed(BigDecimal feedConsumed) { this.feedConsumed = feedConsumed; }
     public void setWaterConsumed(BigDecimal waterConsumed) { this.waterConsumed = waterConsumed; }
     public void setAverageWeight(BigDecimal averageWeight) { this.averageWeight = averageWeight; }
@@ -51,6 +58,11 @@ public class DailyFarmRecordResponse {
     public void setBarnPhotoUrl(String barnPhotoUrl) { this.barnPhotoUrl = barnPhotoUrl; }
     public void setRecordedBy(String recordedBy) { this.recordedBy = recordedBy; }
     public void setMortalityRate(Double mortalityRate) { this.mortalityRate = mortalityRate; }
+    public void setAgeDays(Long ageDays) { this.ageDays = ageDays; }
+    public void setAgeWeeks(Long ageWeeks) { this.ageWeeks = ageWeeks; }
+    public void setFeedLines(List<DailyFeedUsageLineResponse> feedLines) { this.feedLines = feedLines; }
+    public void setMedicationLines(List<DailyMedicationLineResponse> medicationLines) { this.medicationLines = medicationLines; }
+    public void setMortalityLines(List<DailyMortalityLineResponse> mortalityLines) { this.mortalityLines = mortalityLines; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

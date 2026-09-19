@@ -47,7 +47,7 @@ const FlockList = () => {
   const stats = useMemo(() => [
     { title: 'Total Flocks', value: flocks.length, icon: Layers, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
     { title: 'Active', value: flocks.filter((f) => f.status === 'ACTIVE').length, icon: Activity, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-    { title: 'Total Birds', value: flocks.reduce((s, f) => s + (Number(f.currentBirdCount) || 0), 0).toLocaleString(), icon: Activity, iconColor: 'text-purple-600', bgColor: 'bg-purple-50' },
+    { title: 'Total Chickens', value: flocks.reduce((s, f) => s + (Number(f.currentBirdCount) || 0), 0).toLocaleString(), icon: Activity, iconColor: 'text-purple-600', bgColor: 'bg-purple-50' },
     { title: 'Closed', value: flocks.filter((f) => f.status === 'CLOSED').length, icon: TrendingDown, iconColor: 'text-gray-600', bgColor: 'bg-gray-50' },
   ], [flocks]);
 

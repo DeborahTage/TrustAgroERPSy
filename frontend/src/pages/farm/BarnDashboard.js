@@ -41,7 +41,7 @@ const BarnDashboard = () => {
   const stats = useMemo(() => [
     { title: 'Total Barns', value: barns.length, icon: Home, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
     { title: 'Total Capacity', value: barns.reduce((s, b) => s + (b.capacity || 0), 0).toLocaleString(), icon: Users, iconColor: 'text-blue-600', bgColor: 'bg-blue-50', description: 'bird slots' },
-    { title: 'Occupied', value: barns.reduce((s, b) => s + (b.currentBirdCount || 0), 0).toLocaleString(), icon: Users, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50', description: 'current birds' },
+    { title: 'Occupied', value: barns.reduce((s, b) => s + (b.currentBirdCount || 0), 0).toLocaleString(), icon: Users, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50', description: 'current Chickens' },
     { title: 'Alerts', value: barns.filter((b) => b.currentAmmonia > 25 || (b.currentTemp != null && (b.currentTemp > 35 || b.currentTemp < 20))).length, icon: Wind, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
   ], [barns]);
 

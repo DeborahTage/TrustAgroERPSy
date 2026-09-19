@@ -10,7 +10,7 @@ const CrmClientForm = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const isEdit = Boolean(id);
-  const [form, setForm] = useState({ clientName: '', phone: '', location: '', farmType: '', farmSize: '', numberOfBirds: '', status: 'LEAD', assignedExtensionWorkerId: '' });
+  const [form, setForm] = useState({ clientName: '', phone: '', location: '', farmType: '', farmSize: '', numberOfChickens: '', status: 'LEAD', assignedExtensionWorkerId: '' });
   const [workers, setWorkers] = useState([]);
   const [sales, setSales] = useState([]);
   const [error, setError] = useState('');
@@ -21,7 +21,7 @@ const CrmClientForm = () => {
     if (isEdit) {
       crmApi.getClient(id).then((r) => {
         const c = r.data.data;
-        setForm({ clientName: c.clientName, phone: c.phone || '', location: c.location || '', farmType: c.farmType || '', farmSize: c.farmSize || '', numberOfBirds: c.numberOfBirds || '', status: c.status, assignedExtensionWorkerId: c.assignedExtensionWorkerId || '' });
+        setForm({ clientName: c.clientName, phone: c.phone || '', location: c.location || '', farmType: c.farmType || '', farmSize: c.farmSize || '', numberOfChickens: c.numberOfChickens || '', status: c.status, assignedExtensionWorkerId: c.assignedExtensionWorkerId || '' });
       });
       chickenSaleApi.getAll({ customerId: id }).then((r) => setSales(r.data.data || [])).catch(() => setSales([]));
     }
@@ -31,7 +31,7 @@ const CrmClientForm = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const payload = { ...form, numberOfBirds: form.numberOfBirds ? Number(form.numberOfBirds) : null, assignedExtensionWorkerId: form.assignedExtensionWorkerId ? Number(form.assignedExtensionWorkerId) : null };
+      const payload = { ...form, numberOfChickens: form.numberOfChickens ? Number(form.numberOfChickens) : null, assignedExtensionWorkerId: form.assignedExtensionWorkerId ? Number(form.assignedExtensionWorkerId) : null };
       if (isEdit) {
         await crmApi.updateClient(id, payload);
         toast.success(t('crmClientForm.successUpdate'));
@@ -60,7 +60,7 @@ const CrmClientForm = () => {
               <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('crmClientForm.location')}</Form.Label><Form.Control value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></Form.Group></Col>
               <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('crmClientForm.farmType')}</Form.Label><Form.Control value={form.farmType} onChange={(e) => setForm({ ...form, farmType: e.target.value })} /></Form.Group></Col>
               <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('crmClientForm.farmSize')}</Form.Label><Form.Control value={form.farmSize} onChange={(e) => setForm({ ...form, farmSize: e.target.value })} /></Form.Group></Col>
-              <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('crmClientForm.numberOfBirds')}</Form.Label><Form.Control type="number" min="0" value={form.numberOfBirds} onChange={(e) => setForm({ ...form, numberOfBirds: e.target.value })} /></Form.Group></Col>
+              <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('crmClientForm.numberOfChickens')}</Form.Label><Form.Control type="number" min="0" value={form.numberOfChickens} onChange={(e) => setForm({ ...form, numberOfChickens: e.target.value })} /></Form.Group></Col>
               <Col xs={6}><Form.Group><Form.Label className="small fw-semibold">{t('crmClientForm.status')}</Form.Label><Form.Select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{['LEAD', 'ACTIVE', 'INACTIVE', 'LOST'].map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}</Form.Select></Form.Group></Col>
               <Col xs={12}><Form.Group><Form.Label className="small fw-semibold">{t('crmClientForm.extensionWorker')}</Form.Label><Form.Select value={form.assignedExtensionWorkerId} onChange={(e) => setForm({ ...form, assignedExtensionWorkerId: e.target.value })}><option value="">{t('forms.none')}</option>{workers.map((w) => <option key={w.id} value={w.id}>{w.fullName}</option>)}</Form.Select></Form.Group></Col>
             </Row>

@@ -14,6 +14,7 @@ import com.trustagro.farm.entity.FlockStatus;
 import com.trustagro.farm.repository.BarnRepository;
 import com.trustagro.farm.repository.FarmRepository;
 import com.trustagro.farm.repository.FlockRepository;
+import com.trustagro.farm.service.FarmAccessService;
 import com.trustagro.farm.sale.dto.*;
 import com.trustagro.farm.sale.entity.*;
 import com.trustagro.farm.sale.repository.ChickenSalePaymentRepository;
@@ -66,9 +67,14 @@ public class ChickenSaleService {
     private final FlockCOGSService flockCOGSService;
     private final AuditService auditService;
     private final NotificationService notificationService;
+    private final FarmAccessService farmAccessService;
 
     @Transactional(readOnly = true)
     public List<ChickenSaleResponse> list(ChickenSaleStatus status, Long customerId, Long flockId, Long farmId) {
+        List<Long> scope = farmAccessService.accessibleFarmIdsOrNull();
+        if (farmId != null) {
+            farmAccessService.assertCanAccessFarm(farmId);
+        }
         List<ChickenSale> sales;
         if (customerId != null) {
             sales = saleRepository.findByCustomerIdOrderBySaleDateDesc(customerId);
@@ -86,17 +92,21 @@ public class ChickenSaleService {
                 .filter(s -> customerId == null || s.getCustomer().getId().equals(customerId))
                 .filter(s -> flockId == null || s.getFlock().getId().equals(flockId))
                 .filter(s -> farmId == null || s.getFarm().getId().equals(farmId))
+                .filter(s -> scope == null || scope.contains(s.getFarm().getId()))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public ChickenSaleResponse getById(Long id) {
-        return toResponse(findSale(id));
+        ChickenSale sale = findSale(id);
+        farmAccessService.assertCanAccessFarm(sale.getFarm().getId());
+        return toResponse(sale);
     }
 
     @Transactional
     public ChickenSaleResponse create(ChickenSaleRequest req) {
+        farmAccessService.assertCanAccessFarm(req.getFarmId());
         ChickenSale sale = new ChickenSale();
         sale.setSaleNumber(nextSaleNumber());
         sale.setStatus(ChickenSaleStatus.DRAFT);
@@ -133,10 +143,10 @@ public class ChickenSaleService {
         assertFlockSellable(flock);
         withdrawalService.validateSalesEligibility(flock.getId());
 
-        int qty = sale.totalBirds();
+        int qty = sale.totalChickens();
         int available = flock.getCurrentBirdCount() != null ? flock.getCurrentBirdCount() : 0;
         if (qty > available) {
-            throw new BusinessException("Cannot sell " + qty + " birds; flock " + flock.getBatchCode()
+            throw new BusinessException("Cannot sell " + qty + " Chickens; flock " + flock.getBatchCode()
                     + " has only " + available + " available");
         }
 
@@ -156,11 +166,11 @@ public class ChickenSaleService {
                 String.valueOf(previous), String.valueOf(remaining));
         notificationService.createRoleNotification(
                 "Chicken sale confirmed",
-                saved.getSaleNumber() + " — " + qty + " birds from " + flock.getBatchCode(),
+                saved.getSaleNumber() + " — " + qty + " Chickens from " + flock.getBatchCode(),
                 Role.FINANCE);
         notificationService.createRoleNotification(
                 "Chicken sale confirmed",
-                saved.getSaleNumber() + " — " + qty + " birds from " + flock.getBatchCode(),
+                saved.getSaleNumber() + " — " + qty + " Chickens from " + flock.getBatchCode(),
                 Role.FARM_MANAGER);
         return toResponse(saved);
     }
@@ -334,7 +344,7 @@ public class ChickenSaleService {
         if (sale.getStatus() == ChickenSaleStatus.CONFIRMED) {
             Flock flock = flockRepository.findByIdForUpdate(sale.getFlock().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Flock not found"));
-            int qty = sale.totalBirds();
+            int qty = sale.totalChickens();
             int previous = flock.getCurrentBirdCount() != null ? flock.getCurrentBirdCount() : 0;
             int restored = previous + qty;
             flock.setCurrentBirdCount(restored);
@@ -386,19 +396,19 @@ public class ChickenSaleService {
         sale.clearItems();
 
         BigDecimal subtotal = ZERO;
-        int birds = 0;
+        int Chickens = 0;
         for (ChickenSaleItemRequest lineReq : req.getItems()) {
             ChickenSaleItem item = buildItem(lineReq, flock);
             sale.addItem(item);
             subtotal = subtotal.add(item.getLineSubtotal());
-            birds += item.getQuantity();
+            Chickens += item.getQuantity();
         }
-        if (birds <= 0) {
+        if (Chickens <= 0) {
             throw new BusinessException("Sale quantity must be greater than zero");
         }
         int available = flock.getCurrentBirdCount() != null ? flock.getCurrentBirdCount() : 0;
-        if (birds > available) {
-            throw new BusinessException("Cannot sell " + birds + " birds; flock " + flock.getBatchCode()
+        if (Chickens > available) {
+            throw new BusinessException("Cannot sell " + Chickens + " Chickens; flock " + flock.getBatchCode()
                     + " has only " + available + " available");
         }
 
@@ -459,8 +469,8 @@ public class ChickenSaleService {
     }
 
     private void assertFlockSellable(Flock flock) {
-        if (flock.getStatus() != FlockStatus.ACTIVE) {
-            throw new BusinessException("Flock " + flock.getBatchCode() + " is not active");
+        if (flock.getStatus() != FlockStatus.ACTIVE && flock.getStatus() != FlockStatus.PARTIALLY_SOLD) {
+            throw new BusinessException("Flock " + flock.getBatchCode() + " is not sellable (status=" + flock.getStatus() + ")");
         }
     }
 
@@ -545,7 +555,7 @@ public class ChickenSaleService {
         r.setTotalAmount(sale.getTotalAmount());
         r.setPaidAmount(sale.getPaidAmount());
         r.setOutstandingAmount(sale.getOutstandingAmount());
-        r.setTotalBirds(sale.totalBirds());
+        r.setTotalChickens(sale.totalChickens());
         if (sale.getInvoice() != null) {
             r.setInvoiceId(sale.getInvoice().getId());
             r.setInvoiceNumber(sale.getInvoice().getInvoiceNumber());
@@ -583,7 +593,7 @@ public class ChickenSaleService {
             boolean hasCost = totalCost instanceof BigDecimal && ((BigDecimal) totalCost).compareTo(BigDecimal.ZERO) > 0;
             if (hasCost && costPerBird instanceof BigDecimal) {
                 BigDecimal cogsAmount = ((BigDecimal) costPerBird)
-                        .multiply(BigDecimal.valueOf(sale.totalBirds()))
+                        .multiply(BigDecimal.valueOf(sale.totalChickens()))
                         .setScale(2, RoundingMode.HALF_UP);
                 r.setCostOfGoodsSold(cogsAmount);
                 r.setProfit(r.getRevenue().subtract(cogsAmount));

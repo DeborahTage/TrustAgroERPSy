@@ -44,7 +44,7 @@ const FlockEMR = () => {
     return (
         <EnterprisePage
             title={emr ? `Flock EMR — ${emr.batchCode}` : 'Flock EMR'}
-            subtitle={emr ? `${emr.breed || 'Flock'} · ${emr.ageDays ?? '—'} days · ${emr.currentBirdCount ?? '—'} birds` : 'Electronic medical record'}
+            subtitle={emr ? `${emr.breed || 'Flock'} · ${emr.ageDays ?? '—'} days · ${emr.currentBirdCount ?? '—'} Chickens` : 'Electronic medical record'}
             breadcrumbs={['Veterinary', 'EMR', emr?.batchCode || id]}
             loading={loading}
             error={error || (!loading && !emr ? 'No medical records found for this flock.' : null)}
@@ -91,7 +91,7 @@ const FlockEMR = () => {
                             </div>
                             <div className="pt-2">
                                 <div className="text-xs text-gray-500 mb-2">Total Mortality</div>
-                                <div className="text-2xl font-black text-gray-900">{emr.totalMortality} Birds</div>
+                                <div className="text-2xl font-black text-gray-900">{emr.totalMortality} Chickens</div>
                             </div>
                         </CardContent>
                     </Card>

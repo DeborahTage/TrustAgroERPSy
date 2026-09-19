@@ -52,14 +52,14 @@ public final class QaEntities {
         return f;
     }
 
-    public static Flock flock(Long id, Farm farm, String batch, int birds) {
+    public static Flock flock(Long id, Farm farm, String batch, int Chickens) {
         Flock fl = new Flock();
         setId(fl, id);
         fl.setFarm(farm);
         fl.setBatchCode(batch);
         fl.setStatus(FlockStatus.ACTIVE);
-        fl.setCurrentBirdCount(birds);
-        fl.setInitialBirdCount(birds);
+        fl.setCurrentBirdCount(Chickens);
+        fl.setInitialBirdCount(Chickens);
         return fl;
     }
 

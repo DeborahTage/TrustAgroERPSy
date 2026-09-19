@@ -21,10 +21,10 @@ public class DiseaseCaseRequest {
     @JsonAlias("diseaseName")
     @Size(max = 120)
     private String suspectedDisease;
-    @JsonAlias("affectedBirds")
+    @JsonAlias("affectedChickens")
     @PositiveOrZero
     private Integer numberAffected;
-    @JsonAlias("deadBirds")
+    @JsonAlias("deadChickens")
     @PositiveOrZero
     private Integer numberDead;
     private DiseaseSeverity severity;

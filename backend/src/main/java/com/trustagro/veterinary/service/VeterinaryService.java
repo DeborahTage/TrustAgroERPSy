@@ -92,7 +92,7 @@ public class VeterinaryService {
     public NecropsyResponse createNecropsy(NecropsyRequest req) {
         NecropsyRecord nr = new NecropsyRecord();
         nr.setFlock(flockRepository.findById(req.getFlockId()).orElseThrow());
-        nr.setNumBirdsExamined(req.getNumBirdsExamined());
+        nr.setNumChickensExamined(req.getNumChickensExamined());
         nr.setHeartFindings(req.getHeartFindings());
         nr.setLiverFindings(req.getLiverFindings());
         nr.setSpleenFindings(req.getSpleenFindings());

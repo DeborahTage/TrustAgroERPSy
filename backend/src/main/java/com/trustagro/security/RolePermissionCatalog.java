@@ -60,7 +60,7 @@ public final class RolePermissionCatalog {
         put(Role.FINANCE,
                 FINANCE_READ, FINANCE_CREATE, FINANCE_APPROVE, FINANCE_RECONCILE,
                 REPORTS_READ, NOTIFICATIONS_READ, SETTINGS_READ, GOVERNANCE_READ,
-                CHICKEN_SALE_READ, CHICKEN_SALE_INVOICE, CHICKEN_SALE_PAY,
+                CHICKEN_SALE_READ, CHICKEN_SALE_INVOICE, CHICKEN_SALE_PAY, CHICKEN_SALE_VERIFY,
                 TRAINING_READ, TRAINING_PAYMENT, TRAINING_REPORT,
                 CONSULTANCY_READ, CONSULTANCY_PAYMENT, CONSULTANCY_INVOICE, CONSULTANCY_REPORT,
                 CRM_READ, CRM_ORDER_INVOICE, CRM_ORDER_PAY, CRM_REPORT,
@@ -125,6 +125,7 @@ public final class RolePermissionCatalog {
 
         put(Role.MARKETING_MANAGER,
                 MARKETING_READ, MARKETING_CREATE, MARKETING_UPDATE,
+                CHICKEN_SALE_READ,
                 CRM_READ, REPORTS_READ, NOTIFICATIONS_READ, SETTINGS_READ
         );
 
@@ -147,9 +148,12 @@ public final class RolePermissionCatalog {
         );
 
         // Every canonical role may read its own HR record. Seeing anyone else's still needs HR_READ.
+        // Shared reference lists (breeds, drug types, etc.) are required by operational forms —
+        // grant MASTERDATA_READ to every role; writes stay ADMIN-only via MASTERDATA_UPDATE.
         for (Role role : canonicalRoles()) {
             Set<String> withSelf = new LinkedHashSet<>(MATRIX.getOrDefault(role, Set.of()));
             withSelf.add(HR_SELF);
+            withSelf.add(MASTERDATA_READ);
             MATRIX.put(role, Collections.unmodifiableSet(withSelf));
         }
 

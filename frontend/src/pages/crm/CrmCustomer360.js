@@ -102,7 +102,7 @@ const CrmCustomer360 = () => {
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div><p className="text-slate-500">Farm Type</p><p className="font-medium">{client.farmType || '—'}</p></div>
-              <div><p className="text-slate-500">Birds</p><p className="font-medium">{client.numberOfBirds != null ? Number(client.numberOfBirds).toLocaleString() : '—'}</p></div>
+              <div><p className="text-slate-500">Chickens</p><p className="font-medium">{client.numberOfChickens != null ? Number(client.numberOfChickens).toLocaleString() : '—'}</p></div>
               <div><p className="text-slate-500">Contact</p><p className="font-medium">{client.contactPerson || '—'}</p></div>
               <div><p className="text-slate-500">Owner</p><p className="font-medium">{client.assignedExtensionWorkerName || client.assignedOwnerName || '—'}</p></div>
             </CardContent>

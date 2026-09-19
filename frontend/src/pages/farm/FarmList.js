@@ -35,7 +35,7 @@ const FarmList = () => {
   const stats = useMemo(() => [
     { title: 'Total Farms', value: farms.length, icon: Building2, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
     { title: 'Active', value: farms.filter((f) => f.status === 'ACTIVE').length, icon: Activity, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-    { title: 'Capacity', value: `${farms.reduce((s, f) => s + (Number(f.capacity) || 0), 0).toLocaleString()} birds`, icon: Users, iconColor: 'text-purple-600', bgColor: 'bg-purple-50' },
+    { title: 'Capacity', value: `${farms.reduce((s, f) => s + (Number(f.capacity) || 0), 0).toLocaleString()} Chickens`, icon: Users, iconColor: 'text-purple-600', bgColor: 'bg-purple-50' },
     { title: 'Active Flocks', value: farms.reduce((s, f) => s + (f.activeFlocks || 0), 0), icon: MapPin, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
   ], [farms]);
 
@@ -43,7 +43,7 @@ const FarmList = () => {
     { accessorKey: 'farmName', header: t('farms.farmName') },
     { accessorKey: 'location', header: t('farms.location') },
     { accessorKey: 'farmType', header: t('farms.type') },
-    { accessorKey: 'capacity', header: t('farms.capacity'), cell: ({ row }) => `${Number(row.original.capacity || 0).toLocaleString()} birds` },
+    { accessorKey: 'capacity', header: t('farms.capacity'), cell: ({ row }) => `${Number(row.original.capacity || 0).toLocaleString()} Chickens` },
     { accessorKey: 'assignedFarmManagerName', header: t('farms.manager') },
     { accessorKey: 'status', header: t('farms.status'), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
     {

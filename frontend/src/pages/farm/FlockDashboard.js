@@ -45,13 +45,13 @@ const FlockDashboard = () => {
         // Calculate analytics
         const totalFlocks = flocks.length;
         const activeFlocks = flocks.filter(f => f.status === 'ACTIVE').length;
-        const totalBirds = flocks.reduce((sum, f) => sum + (Number(f.initialBirdCount) || 0), 0);
+        const totalChickens = flocks.reduce((sum, f) => sum + (Number(f.initialBirdCount) || 0), 0);
         const avgMortality = 2.5; // This would come from actual data
 
         setData({
           totalFlocks,
           activeFlocks,
-          totalBirds,
+          totalChickens,
           avgMortality,
           flocks
         });
@@ -84,8 +84,8 @@ const FlockDashboard = () => {
       trendValue: 'All operational'
     },
     {
-      title: 'Total Birds',
-      value: `${(data.totalBirds || 0).toLocaleString()}`,
+      title: 'Total Chickens',
+      value: `${(data.totalChickens || 0).toLocaleString()}`,
       icon: HeartPulse,
       iconColor: 'text-purple-600',
       bgColor: 'bg-purple-50',
@@ -123,7 +123,7 @@ const FlockDashboard = () => {
   const recentActivities = [
     {
       title: 'New Flock Created',
-      description: 'Flock C-005 added with 5,000 broiler birds',
+      description: 'Flock C-005 added with 5,000 broiler Chickens',
       type: 'info',
       icon: Layers,
       timestamp: '30 minutes ago'

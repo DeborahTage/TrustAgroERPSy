@@ -15,6 +15,9 @@ public interface FlockRepository extends JpaRepository<Flock, Long> {
     List<Flock> findByFarmId(Long farmId);
     List<Flock> findByStatus(FlockStatus status);
     long countByStatus(FlockStatus status);
+    Optional<Flock> findByBatchCodeIgnoreCase(String batchCode);
+    boolean existsByBatchCodeIgnoreCase(String batchCode);
+    List<Flock> findByFarmIdIn(List<Long> farmIds);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT f FROM Flock f WHERE f.id = :id")

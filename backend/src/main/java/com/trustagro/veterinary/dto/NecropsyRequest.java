@@ -6,7 +6,7 @@ import java.time.LocalDate;
 @Data
 public class NecropsyRequest {
     private Long flockId;
-    private Integer numBirdsExamined;
+    private Integer numChickensExamined;
     private String heartFindings;
     private String liverFindings;
     private String spleenFindings;
@@ -20,7 +20,7 @@ public class NecropsyRequest {
     private String photoUrls;
 
     public Long getFlockId() { return flockId; }
-    public Integer getNumBirdsExamined() { return numBirdsExamined; }
+    public Integer getNumChickensExamined() { return numChickensExamined; }
     public String getHeartFindings() { return heartFindings; }
     public String getLiverFindings() { return liverFindings; }
     public String getSpleenFindings() { return spleenFindings; }

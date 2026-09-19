@@ -50,13 +50,13 @@ const CrmPage = () => {
 
   const totalClients = clients.length;
   const activeClients = clients.filter((c) => c.status === 'ACTIVE').length;
-  const totalBirds = clients.reduce((sum, c) => sum + (Number(c.numberOfBirds) || 0), 0);
+  const totalChickens = clients.reduce((sum, c) => sum + (Number(c.numberOfChickens) || 0), 0);
   const upcomingFollowUps = followUps.filter((f) => new Date(f.nextFollowUpDate) >= new Date()).length;
 
   const kpiCards = [
     { title: 'Total Clients', value: totalClients, icon: Users, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
     { title: 'Active Clients', value: activeClients, icon: Activity, iconColor: 'text-green-600', bgColor: 'bg-green-50' },
-    { title: 'Total Birds', value: totalBirds.toLocaleString(), icon: Building2, iconColor: 'text-purple-600', bgColor: 'bg-purple-50' },
+    { title: 'Total Chickens', value: totalChickens.toLocaleString(), icon: Building2, iconColor: 'text-purple-600', bgColor: 'bg-purple-50' },
     { title: 'Upcoming Follow-ups', value: upcomingFollowUps, icon: Calendar, iconColor: 'text-orange-600', bgColor: 'bg-orange-50' },
   ];
 
@@ -65,7 +65,7 @@ const CrmPage = () => {
     { accessorKey: 'phone', header: t('crm.phone') },
     { accessorKey: 'location', header: t('crm.location') },
     { accessorKey: 'farmType', header: t('crm.farmType') },
-    { accessorKey: 'numberOfBirds', header: t('crm.birds'), cell: ({ row }) => Number(row.original.numberOfBirds).toLocaleString() },
+    { accessorKey: 'numberOfChickens', header: t('crm.Chickens'), cell: ({ row }) => Number(row.original.numberOfChickens).toLocaleString() },
     { accessorKey: 'status', header: t('crm.status'), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
     { accessorKey: 'assignedExtensionWorkerName', header: t('crm.extensionWorker') },
     {

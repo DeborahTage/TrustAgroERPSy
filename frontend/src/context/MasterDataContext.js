@@ -5,9 +5,10 @@ import { useAuth } from './AuthContext';
 const MasterDataContext = createContext();
 
 export const MasterDataProvider = ({ children }) => {
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, hasPermission } = useAuth();
     const [data, setData] = useState({});
     const [loading, setLoading] = useState(true);
+    const canReadMasterData = hasPermission('masterdata:read');
 
     const fetchCategory = useCallback(async (category) => {
         try {
@@ -19,7 +20,11 @@ export const MasterDataProvider = ({ children }) => {
                 }));
             }
         } catch (error) {
-            console.error(`Failed to fetch master data for ${category}:`, error);
+            // Do not console.error(Error) — CRA overlays treat that as an uncaught runtime error.
+            const status = error?.response?.status;
+            const message = error?.response?.data?.message || error?.message || 'request failed';
+            // eslint-disable-next-line no-console
+            console.warn(`[master-data] ${category} failed (${status || 'network'}): ${message}`);
         }
     }, []);
 
@@ -36,12 +41,12 @@ export const MasterDataProvider = ({ children }) => {
     }, [fetchCategory]);
 
     useEffect(() => {
-        if (!authLoading && user) {
+        if (!authLoading && user && canReadMasterData) {
             loadAll();
-        } else if (!authLoading && !user) {
+        } else if (!authLoading) {
             setLoading(false);
         }
-    }, [user, authLoading, loadAll]);
+    }, [user, authLoading, canReadMasterData, loadAll]);
 
     const refreshCategory = (category) => fetchCategory(category);
 

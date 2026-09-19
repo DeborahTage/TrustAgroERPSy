@@ -17,7 +17,7 @@ const DailyFarmRecordForm = () => {
   const isEdit = Boolean(id);
   const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
-    farmId: '', flockId: '',     openingBirdCount: '', mortality: 0, culledBirds: 0,
+    farmId: '', flockId: '',     openingBirdCount: '', mortality: 0, culledChickens: 0,
     feedConsumed: '', waterConsumed: '', averageWeight: '',
     symptomsOrRemarks: '', mortalityCause: '', mortalityNotes: '',
   });
@@ -37,7 +37,7 @@ const DailyFarmRecordForm = () => {
           setForm({
             date: d.date, farmId: String(d.farmId), flockId: String(d.flockId),
             openingBirdCount: d.openingBirdCount || '', mortality: d.mortality || 0,
-            culledBirds: d.culledBirds || 0,
+            culledChickens: d.culledChickens || 0,
             feedConsumed: d.feedConsumed || '',
             waterConsumed: d.waterConsumed || '', averageWeight: d.averageWeight || '',
             symptomsOrRemarks: d.symptomsOrRemarks || '', mortalityCause: d.mortalityCause || '',
@@ -71,7 +71,7 @@ const DailyFarmRecordForm = () => {
         flockId: Number(form.flockId),
         openingBirdCount: Number(form.openingBirdCount),
         mortality: Number(form.mortality),
-        culledBirds: Number(form.culledBirds) || 0,
+        culledChickens: Number(form.culledChickens) || 0,
         feedConsumed: Number(form.feedConsumed),
         waterConsumed: Number(form.waterConsumed),
         averageWeight: form.averageWeight ? Number(form.averageWeight) : null,
@@ -128,7 +128,7 @@ const DailyFarmRecordForm = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="space-y-2"><Label>{t('dailyRecordForm.openingCount')}</Label><Input type="number" value={form.openingBirdCount} onChange={(e) => setForm({ ...form, openingBirdCount: e.target.value })} /></div>
           <div className="space-y-2"><Label>{t('dailyRecordForm.mortality')}</Label><Input type="number" min="0" value={form.mortality} onChange={(e) => setForm({ ...form, mortality: e.target.value })} /></div>
-          <div className="space-y-2"><Label>{t('dailyRecordForm.culledBirds')}</Label><Input type="number" min="0" value={form.culledBirds} onChange={(e) => setForm({ ...form, culledBirds: e.target.value })} /></div>
+          <div className="space-y-2"><Label>{t('dailyRecordForm.culledChickens')}</Label><Input type="number" min="0" value={form.culledChickens} onChange={(e) => setForm({ ...form, culledChickens: e.target.value })} /></div>
           <div className="space-y-2"><Label>{t('dailyRecordForm.feedConsumed')}</Label><Input type="number" min="0" step="0.01" value={form.feedConsumed} onChange={(e) => setForm({ ...form, feedConsumed: e.target.value })} /></div>
           <div className="space-y-2"><Label>{t('dailyRecordForm.water')}</Label><Input type="number" min="0" step="0.01" value={form.waterConsumed} onChange={(e) => setForm({ ...form, waterConsumed: e.target.value })} /></div>
           <div className="space-y-2"><Label>{t('dailyRecordForm.averageWeight')}</Label><Input type="number" min="0" step="0.01" value={form.averageWeight} onChange={(e) => setForm({ ...form, averageWeight: e.target.value })} /></div>

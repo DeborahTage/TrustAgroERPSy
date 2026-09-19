@@ -1,5 +1,11 @@
 package com.trustagro.farm.entity;
 
 public enum FlockStatus {
-    ACTIVE, CLOSED, CULLED, HARVESTED, SOLD
+    RECEIVED,
+    ACTIVE,
+    PARTIALLY_SOLD,
+    CLOSED,
+    CULLED,
+    HARVESTED,
+    SOLD
 }

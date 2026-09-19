@@ -54,13 +54,13 @@ public class DiseaseCaseResponse {
         return dateDetected;
     }
 
-    @JsonProperty("affectedBirds")
-    public Integer getAffectedBirds() {
+    @JsonProperty("affectedChickens")
+    public Integer getAffectedChickens() {
         return numberAffected;
     }
 
-    @JsonProperty("deadBirds")
-    public Integer getDeadBirds() {
+    @JsonProperty("deadChickens")
+    public Integer getDeadChickens() {
         return numberDead;
     }
 }

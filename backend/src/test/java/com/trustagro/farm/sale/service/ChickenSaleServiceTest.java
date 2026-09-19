@@ -12,6 +12,7 @@ import com.trustagro.farm.entity.FlockStatus;
 import com.trustagro.farm.repository.BarnRepository;
 import com.trustagro.farm.repository.FarmRepository;
 import com.trustagro.farm.repository.FlockRepository;
+import com.trustagro.farm.service.FarmAccessService;
 import com.trustagro.farm.sale.dto.ChickenSaleItemRequest;
 import com.trustagro.farm.sale.dto.ChickenSalePaymentRequest;
 import com.trustagro.farm.sale.dto.ChickenSaleRequest;
@@ -70,6 +71,7 @@ class ChickenSaleServiceTest {
     @Mock FlockCOGSService flockCOGSService;
     @Mock AuditService auditService;
     @Mock NotificationService notificationService;
+    @Mock FarmAccessService farmAccessService;
 
     @InjectMocks ChickenSaleService service;
 
@@ -88,6 +90,9 @@ class ChickenSaleServiceTest {
         user.setEmail("farm@test.com");
         user.setFullName("Farm Manager");
         lenient().when(userRepository.findByEmail("farm@test.com")).thenReturn(Optional.of(user));
+        lenient().when(farmAccessService.accessibleFarmIdsOrNull()).thenReturn(null);
+        lenient().doNothing().when(farmAccessService).assertCanAccessFarm(any());
+        lenient().doNothing().when(farmAccessService).assertCanAccessFarm(any(), any());
 
         farm = new Farm();
         farm.setFarmName("Main Farm");
@@ -156,7 +161,7 @@ class ChickenSaleServiceTest {
         assertEquals(ChickenSaleStatus.DRAFT, created.getStatus());
         assertEquals(5L, created.getCustomerId());
         assertEquals(10L, created.getFlockId());
-        assertEquals(20, created.getTotalBirds());
+        assertEquals(20, created.getTotalChickens());
         assertEquals(0, new BigDecimal("15000.00").compareTo(created.getTotalAmount()));
         verify(auditService).log(eq("CREATE"), eq("CHICKEN_SALE"), eq("ChickenSale"), any(), any(), any());
     }

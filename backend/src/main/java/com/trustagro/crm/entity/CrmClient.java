@@ -34,7 +34,7 @@ public class CrmClient {
     private String location;
     private String farmType;
     private String farmSize;
-    private Integer numberOfBirds;
+    private Integer numberOfChickens;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 30)

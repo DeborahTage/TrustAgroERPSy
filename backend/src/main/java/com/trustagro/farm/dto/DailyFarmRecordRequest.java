@@ -8,6 +8,8 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class DailyFarmRecordRequest {
@@ -19,7 +21,7 @@ public class DailyFarmRecordRequest {
     private Long flockId;
     private Integer openingBirdCount;
     @Min(0) private Integer mortality;
-    @Min(0) private Integer culledBirds;
+    @Min(0) private Integer culledChickens;
     @Min(0) private BigDecimal feedConsumed;
     @Min(0) private BigDecimal waterConsumed;
     @PositiveOrZero
@@ -32,12 +34,16 @@ public class DailyFarmRecordRequest {
     private Long siloId;
     private String barnPhotoUrl;
 
+    private List<DailyFeedUsageLineRequest> feedLines = new ArrayList<>();
+    private List<DailyMedicationLineRequest> medicationLines = new ArrayList<>();
+    private List<DailyMortalityLineRequest> mortalityLines = new ArrayList<>();
+
     public LocalDate getDate() { return date; }
     public Long getFarmId() { return farmId; }
     public Long getFlockId() { return flockId; }
     public Integer getOpeningBirdCount() { return openingBirdCount; }
     public Integer getMortality() { return mortality; }
-    public Integer getCulledBirds() { return culledBirds; }
+    public Integer getCulledChickens() { return culledChickens; }
     public BigDecimal getFeedConsumed() { return feedConsumed; }
     public BigDecimal getWaterConsumed() { return waterConsumed; }
     public BigDecimal getAverageWeight() { return averageWeight; }
@@ -47,4 +53,7 @@ public class DailyFarmRecordRequest {
     public Long getDiseaseCaseId() { return diseaseCaseId; }
     public Long getSiloId() { return siloId; }
     public String getBarnPhotoUrl() { return barnPhotoUrl; }
+    public List<DailyFeedUsageLineRequest> getFeedLines() { return feedLines; }
+    public List<DailyMedicationLineRequest> getMedicationLines() { return medicationLines; }
+    public List<DailyMortalityLineRequest> getMortalityLines() { return mortalityLines; }
 }

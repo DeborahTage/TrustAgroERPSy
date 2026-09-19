@@ -48,7 +48,7 @@ const ChickenSales = () => {
   const stats = useMemo(() => [
     { title: 'Open Sales', value: sales.filter((s) => !['CANCELLED', 'COMPLETED'].includes(s.status)).length },
     { title: 'Outstanding', value: formatCurrency(sales.reduce((sum, s) => sum + (Number(s.outstandingAmount) || 0), 0)) },
-    { title: 'Birds Sold (confirmed+)', value: sales.filter((s) => !['DRAFT', 'CANCELLED'].includes(s.status)).reduce((sum, s) => sum + (Number(s.totalBirds) || 0), 0).toLocaleString() },
+    { title: 'Chickens Sold (confirmed+)', value: sales.filter((s) => !['DRAFT', 'CANCELLED'].includes(s.status)).reduce((sum, s) => sum + (Number(s.totalChickens) || 0), 0).toLocaleString() },
   ], [sales]);
 
   const cols = [
@@ -57,7 +57,7 @@ const ChickenSales = () => {
     { accessorKey: 'customerName', header: 'Customer' },
     { accessorKey: 'farmName', header: 'Farm' },
     { accessorKey: 'flockBatchCode', header: 'Flock' },
-    { accessorKey: 'totalBirds', header: 'Birds' },
+    { accessorKey: 'totalChickens', header: 'Chickens' },
     { accessorKey: 'totalAmount', header: 'Total', cell: ({ row }) => formatCurrency(row.original.totalAmount) },
     { accessorKey: 'outstandingAmount', header: 'Outstanding', cell: ({ row }) => formatCurrency(row.original.outstandingAmount) },
     {
@@ -81,7 +81,7 @@ const ChickenSales = () => {
   return (
     <EnterprisePage
       title="Chicken Sales"
-      subtitle="Sell birds from managed flocks — invoices and payments post to finance"
+      subtitle="Sell Chickens from managed flocks — invoices and payments post to finance"
       breadcrumbs={['Farm', 'Chicken Sales']}
       loading={loading}
       error={error}

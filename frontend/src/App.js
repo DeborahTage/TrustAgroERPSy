@@ -41,6 +41,9 @@ import BarnDashboard from './pages/farm/BarnDashboard';
 import ChickenSales from './pages/farm/ChickenSales';
 import ChickenSaleForm from './pages/farm/ChickenSaleForm';
 import ChickenSaleDetail from './pages/farm/ChickenSaleDetail';
+import { PaymentVerificationQueue, FarmReleaseApprovalQueue, MarketingDeliveryQueue } from './pages/farm/ChickenReleaseQueues';
+import InternalDeliveryPage from './pages/farm/InternalDeliveryPage';
+import DataOnboardingPage from './pages/admin/DataOnboardingPage';
 import SiloDashboard from './pages/feed/SiloDashboard';
 import FeedRecipeForm from './pages/feed/FeedRecipeForm';
 import InventoryItemList from './pages/inventory/InventoryItemList';
@@ -168,6 +171,11 @@ function App() {
                 <Route path="farm/chicken-sales/new" element={<ActionRoute action="create" resource="chickenSales"><ChickenSaleForm /></ActionRoute>} />
                 <Route path="farm/chicken-sales/:id/edit" element={<ActionRoute action="edit" resource="chickenSales"><ChickenSaleForm /></ActionRoute>} />
                 <Route path="farm/chicken-sales/:id" element={<ModuleRoute module="chickenSales"><ChickenSaleDetail /></ModuleRoute>} />
+                <Route path="farm/payment-verification" element={<PermissionRoute permission={PERMISSIONS.VERIFY_CHICKEN_SALES}><PaymentVerificationQueue /></PermissionRoute>} />
+                <Route path="farm/release-approvals" element={<PermissionRoute permission={PERMISSIONS.EDIT_FARMS}><FarmReleaseApprovalQueue /></PermissionRoute>} />
+                <Route path="farm/internal-deliveries" element={<PermissionRoute permission={PERMISSIONS.VIEW_FARMS}><InternalDeliveryPage /></PermissionRoute>} />
+                <Route path="marketing/chicken-deliveries" element={<ModuleRoute module="chickenSales"><MarketingDeliveryQueue /></ModuleRoute>} />
+                <Route path="admin/data-onboarding" element={<PermissionRoute permission={PERMISSIONS.CREATE_FARMS}><DataOnboardingPage /></PermissionRoute>} />
 
                 <Route path="feed/silos" element={<ModuleRoute module="farms"><SiloDashboard /></ModuleRoute>} />
                 <Route path="feed/recipes" element={<ModuleRoute module="farms"><FeedRecipeForm /></ModuleRoute>} />
