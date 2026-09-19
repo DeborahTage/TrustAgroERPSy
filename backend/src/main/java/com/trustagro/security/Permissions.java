@@ -141,6 +141,16 @@ public final class Permissions {
     public static final String HR_REPORT = "hr:report";
     public static final String HR_SELF = "hr:self";
 
+    // Material requests (Step 17.2)
+    public static final String MATERIAL_REQUEST_READ = "material_request:read";
+    public static final String MATERIAL_REQUEST_CREATE = "material_request:create";
+    public static final String MATERIAL_REQUEST_UPDATE = "material_request:update";
+    public static final String MATERIAL_REQUEST_SUBMIT = "material_request:submit";
+    public static final String MATERIAL_REQUEST_APPROVE = "material_request:approve";
+    public static final String MATERIAL_REQUEST_FULFILL = "material_request:fulfill";
+    public static final String MATERIAL_REQUEST_RECEIVE = "material_request:receive";
+    public static final String MATERIAL_REQUEST_REPORT = "material_request:report";
+
     // Executive (read-only cross-module aggregation)
     public static final String EXECUTIVE_DASHBOARD = "executive:dashboard";
     public static final String EXECUTIVE_FINANCE = "executive:finance";

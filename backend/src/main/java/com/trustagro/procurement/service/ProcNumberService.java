@@ -16,6 +16,11 @@ public class ProcNumberService {
     public static final String SEQ_GRN = "GRN";
     public static final String SEQ_SINV = "SINV";
     public static final String SEQ_SPAY = "SPAY";
+    public static final String SEQ_MR = "MR";
+    public static final String SEQ_FA = "FA";
+    public static final String SEQ_SI = "SI";
+    public static final String SEQ_MD = "MD";
+    public static final String SEQ_MSR = "MSR";
 
     private final ProcNumberSequenceRepository sequenceRepository;
 
@@ -62,5 +67,30 @@ public class ProcNumberService {
     @Transactional
     public String nextPaymentNumber() {
         return next(SEQ_SPAY, "SPAY");
+    }
+
+    @Transactional
+    public String nextMaterialRequest() {
+        return next(SEQ_MR, "MR");
+    }
+
+    @Transactional
+    public String nextFinanceApproval() {
+        return next(SEQ_FA, "FA");
+    }
+
+    @Transactional
+    public String nextStoreIssue() {
+        return next(SEQ_SI, "SI");
+    }
+
+    @Transactional
+    public String nextMaterialDisbursement() {
+        return next(SEQ_MD, "MD");
+    }
+
+    @Transactional
+    public String nextMaterialStoreReceipt() {
+        return next(SEQ_MSR, "MSR");
     }
 }

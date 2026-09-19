@@ -23,6 +23,7 @@ public final class FinanceSourceTypes {
     public static final String MODULE_HR = "HR";
     public static final String MODULE_PROCUREMENT = "PROCUREMENT";
     public static final String MODULE_CRM = "CRM";
+    public static final String MODULE_MATERIALS = "MATERIALS";
 
     // Posting purposes (referenceType) — one posting per (module, type, id)
     public static final String REF_PHARMACY_SALE_REVENUE = "PHARMACY_SALE_REVENUE";
@@ -62,4 +63,11 @@ public final class FinanceSourceTypes {
      * Inventory + AP recognition still posts as INVENTORY / STOCK_IN / batchId.
      */
     public static final String REF_PROCUREMENT_GRN = "PROCUREMENT_GRN";
+
+    /** referenceId = MaterialRequestDisbursement.id — prepayment / disbursement before AP invoice. */
+    public static final String REF_MATERIAL_DISBURSEMENT = "MATERIAL_DISBURSEMENT";
+    /** referenceId = issueEventId * 100000 + lineId — internal consumption GL. */
+    public static final String REF_MATERIAL_ISSUE = "MATERIAL_ISSUE";
+    /** Stock movement / receipt reference for material goods receipt lines. */
+    public static final String REF_MATERIAL_RECEIPT = "MATERIAL_RECEIPT";
 }

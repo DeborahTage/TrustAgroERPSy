@@ -541,3 +541,26 @@ export const feedApi = {
   getSilos: () => api.get('/api/feed/silos'),
   logDelivery: (data) => api.post('/api/feed/deliveries', data),
 };
+
+export const materialRequestApi = {
+  list: (params) => api.get('/api/material-requests', { params }),
+  getById: (id) => api.get(`/api/material-requests/${id}`),
+  create: (data) => api.post('/api/material-requests', data),
+  update: (id, data) => api.put(`/api/material-requests/${id}`, data),
+  submit: (id) => api.post(`/api/material-requests/${id}/submit`),
+  financeApprove: (id, data) => api.post(`/api/material-requests/${id}/finance-approve`, data || {}),
+  financeReject: (id, data) => api.post(`/api/material-requests/${id}/finance-reject`, data),
+  returnForCorrection: (id, data) => api.post(`/api/material-requests/${id}/return`, data),
+  authorizePurchase: (id, data) => api.post(`/api/material-requests/${id}/authorize-purchase`, data || {}),
+  disburse: (id, data) => api.post(`/api/material-requests/${id}/disburse`, data),
+  goodsReceipt: (id, data) => api.post(`/api/material-requests/${id}/goods-receipt`, data),
+  issue: (id, data) => api.post(`/api/material-requests/${id}/issue`, data),
+  acknowledge: (id, data) => api.post(`/api/material-requests/${id}/acknowledge`, data || {}),
+  cancel: (id) => api.post(`/api/material-requests/${id}/cancel`),
+  dashboard: () => api.get('/api/material-requests/dashboard'),
+  reportSummary: (params) => api.get('/api/material-requests/reports/summary', { params }),
+  reportByStatus: (params) => api.get('/api/material-requests/reports/by-status', { params }),
+  reportByDepartment: (params) => api.get('/api/material-requests/reports/by-department', { params }),
+  reportFulfillment: (params) => api.get('/api/material-requests/reports/fulfillment', { params }),
+  documentHtml: (type, id) => api.get(`/api/material-requests/documents/${type}/${id}`, { responseType: 'text' }),
+};

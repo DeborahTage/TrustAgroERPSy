@@ -44,6 +44,12 @@ import ChickenSaleDetail from './pages/farm/ChickenSaleDetail';
 import { PaymentVerificationQueue, FarmReleaseApprovalQueue, MarketingDeliveryQueue } from './pages/farm/ChickenReleaseQueues';
 import InternalDeliveryPage from './pages/farm/InternalDeliveryPage';
 import DataOnboardingPage from './pages/admin/DataOnboardingPage';
+import MaterialRequestList from './pages/materials/MaterialRequestList';
+import MaterialRequestForm from './pages/materials/MaterialRequestForm';
+import MaterialRequestDetail from './pages/materials/MaterialRequestDetail';
+import FinanceMaterialApprovalQueue from './pages/materials/FinanceMaterialApprovalQueue';
+import StoreFulfillmentQueue from './pages/materials/StoreFulfillmentQueue';
+import MaterialRequestReports from './pages/materials/MaterialRequestReports';
 import SiloDashboard from './pages/feed/SiloDashboard';
 import FeedRecipeForm from './pages/feed/FeedRecipeForm';
 import InventoryItemList from './pages/inventory/InventoryItemList';
@@ -174,6 +180,13 @@ function App() {
                 <Route path="farm/payment-verification" element={<PermissionRoute permission={PERMISSIONS.VERIFY_CHICKEN_SALES}><PaymentVerificationQueue /></PermissionRoute>} />
                 <Route path="farm/release-approvals" element={<PermissionRoute permission={PERMISSIONS.EDIT_FARMS}><FarmReleaseApprovalQueue /></PermissionRoute>} />
                 <Route path="farm/internal-deliveries" element={<PermissionRoute permission={PERMISSIONS.VIEW_FARMS}><InternalDeliveryPage /></PermissionRoute>} />
+                <Route path="materials/requests" element={<PermissionRoute permission={PERMISSIONS.VIEW_MATERIAL_REQUESTS}><MaterialRequestList /></PermissionRoute>} />
+                <Route path="materials/requests/new" element={<PermissionRoute permission={PERMISSIONS.CREATE_MATERIAL_REQUESTS}><MaterialRequestForm /></PermissionRoute>} />
+                <Route path="materials/requests/:id/edit" element={<PermissionRoute permission={PERMISSIONS.EDIT_MATERIAL_REQUESTS}><MaterialRequestForm /></PermissionRoute>} />
+                <Route path="materials/requests/:id" element={<PermissionRoute permission={PERMISSIONS.VIEW_MATERIAL_REQUESTS}><MaterialRequestDetail /></PermissionRoute>} />
+                <Route path="materials/finance-queue" element={<PermissionRoute permission={PERMISSIONS.APPROVE_MATERIAL_REQUESTS}><FinanceMaterialApprovalQueue /></PermissionRoute>} />
+                <Route path="materials/store-queue" element={<PermissionRoute permission={PERMISSIONS.FULFILL_MATERIAL_REQUESTS}><StoreFulfillmentQueue /></PermissionRoute>} />
+                <Route path="materials/reports" element={<PermissionRoute permission={PERMISSIONS.REPORT_MATERIAL_REQUESTS}><MaterialRequestReports /></PermissionRoute>} />
                 <Route path="marketing/chicken-deliveries" element={<ModuleRoute module="chickenSales"><MarketingDeliveryQueue /></ModuleRoute>} />
                 <Route path="admin/data-onboarding" element={<PermissionRoute permission={PERMISSIONS.CREATE_FARMS}><DataOnboardingPage /></PermissionRoute>} />
 
