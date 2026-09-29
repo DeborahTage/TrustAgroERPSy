@@ -28,6 +28,14 @@ import java.util.*;
 public class InventoryService {
 
     private static final Logger log = LoggerFactory.getLogger(InventoryService.class);
+    private static final Set<ItemCategory> PHARMACY_POS_CATEGORIES = EnumSet.of(
+            ItemCategory.DRUG,
+            ItemCategory.VACCINE,
+            ItemCategory.VITAMIN,
+            ItemCategory.EQUIPMENT,
+            ItemCategory.FEED,
+            ItemCategory.FARM_MATERIAL
+    );
 
     private final InventoryItemRepository itemRepository;
     private final StockBatchRepository batchRepository;
@@ -658,6 +666,7 @@ public class InventoryService {
     public List<InventoryItemResponse> getPharmacyCatalog() {
         return itemRepository.findAll().stream()
                 .filter(i -> i.getStatus() == ItemStatus.ACTIVE)
+                .filter(i -> PHARMACY_POS_CATEGORIES.contains(i.getCategory()))
                 .map(item -> {
                     InventoryItemResponse r = mapToResponse(item);
                     List<StockBatch> batches = batchRepository.findAvailableBatchesFEFO(item.getId(), LocalDate.now());

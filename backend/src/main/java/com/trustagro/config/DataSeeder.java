@@ -3,6 +3,11 @@ package com.trustagro.config;
 import com.trustagro.masterdata.entity.MasterDataCategory;
 import com.trustagro.masterdata.entity.MasterDataItem;
 import com.trustagro.masterdata.repository.MasterDataItemRepository;
+import com.trustagro.inventory.entity.InventoryItem;
+import com.trustagro.inventory.entity.ItemCategory;
+import com.trustagro.inventory.entity.ItemStatus;
+import com.trustagro.inventory.entity.ItemUnit;
+import com.trustagro.inventory.repository.InventoryItemRepository;
 import com.trustagro.user.entity.Role;
 import com.trustagro.user.entity.User;
 import com.trustagro.user.entity.UserStatus;
@@ -15,6 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +35,7 @@ public class DataSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final MasterDataItemRepository masterDataRepository;
+    private final InventoryItemRepository inventoryItemRepository;
     private final JdbcTemplate jdbcTemplate;
     private final boolean seedDemoUsers;
 
@@ -45,11 +52,13 @@ public class DataSeeder implements CommandLineRunner {
     );
 
     public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                      MasterDataItemRepository masterDataRepository, JdbcTemplate jdbcTemplate,
+                      MasterDataItemRepository masterDataRepository, InventoryItemRepository inventoryItemRepository,
+                      JdbcTemplate jdbcTemplate,
                       @Value("${app.seed.demo-users:false}") boolean seedDemoUsers) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.masterDataRepository = masterDataRepository;
+        this.inventoryItemRepository = inventoryItemRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.seedDemoUsers = seedDemoUsers;
     }
@@ -64,6 +73,7 @@ public class DataSeeder implements CommandLineRunner {
             log.info("Demo user seeding disabled (app.seed.demo-users=false)");
         }
         seedMasterData();
+        seedVeterinaryPharmacyItems();
     }
 
     /**
@@ -252,5 +262,62 @@ public class DataSeeder implements CommandLineRunner {
             item.setActive(true);
             masterDataRepository.save(item);
         }
+    }
+
+    private void seedVeterinaryPharmacyItems() {
+        seedPharmacyItem("PHARM-ASHIENERO-10-ORAL", "ASHIENERO 10% ORAL", ItemCategory.DRUG, ItemUnit.BOTTLE, "Antibiotic", "320.00");
+        seedPharmacyItem("PHARM-LIMOXIN", "LIMOXIN", ItemCategory.DRUG, ItemUnit.BOTTLE, "Antibiotic", "280.00");
+        seedPharmacyItem("PHARM-RESPIMINT-ORAL", "RESPIMINT ORAL", ItemCategory.DRUG, ItemUnit.BOTTLE, "Respiratory treatment", "260.00");
+        seedPharmacyItem("PHARM-TOLTRACOX", "TOLTRACOX", ItemCategory.DRUG, ItemUnit.BOTTLE, "Anticoccidial", "340.00");
+        seedPharmacyItem("PHARM-COXASAN-ORAL", "COXASAN ORAL", ItemCategory.DRUG, ItemUnit.BOTTLE, "Anticoccidial", "300.00");
+        seedPharmacyItem("PHARM-AMPROLIN-300-WS", "AMPROLIN-300 WS", ItemCategory.DRUG, ItemUnit.BOX, "Anticoccidial", "360.00");
+        seedPharmacyItem("PHARM-PIPERIN-WS", "PIPERIN WS", ItemCategory.DRUG, ItemUnit.BOX, "Antiparasitic", "240.00");
+
+        seedPharmacyItem("PHARM-LASOTA-VACCINE", "LASOTA VACCINE", ItemCategory.VACCINE, ItemUnit.VIAL, "Poultry vaccine", "180.00");
+        seedPharmacyItem("PHARM-TYPHOID-VACCINE", "TYPHOID VACCINE", ItemCategory.VACCINE, ItemUnit.VIAL, "Poultry vaccine", "220.00");
+        seedPharmacyItem("PHARM-IB-VACCINE", "IB VACCINE", ItemCategory.VACCINE, ItemUnit.VIAL, "Poultry vaccine", "190.00");
+
+        seedPharmacyItem("PHARM-VITABOOST", "VITABOOST", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Vitamin supplement", "210.00");
+        seedPharmacyItem("PHARM-AMINOVIT", "AMINOVIT", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Amino acid supplement", "230.00");
+        seedPharmacyItem("PHARM-VIT-ADEK", "VIT-ADEK", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Vitamin supplement", "250.00");
+        seedPharmacyItem("PHARM-MAXIVIT", "MAXIVIT", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Vitamin supplement", "240.00");
+        seedPharmacyItem("PHARM-INTROVIT-A-ORAL", "INTROVIT A+ ORAL", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Vitamin supplement", "270.00");
+        seedPharmacyItem("PHARM-INTROVIT-A-WS", "INTROVIT A+ WS", ItemCategory.VITAMIN, ItemUnit.BOX, "Water soluble vitamin", "275.00");
+        seedPharmacyItem("PHARM-CALCIMIN-P-ORAL", "CALCIMIN-P ORAL", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Mineral supplement", "235.00");
+        seedPharmacyItem("PHARM-EGG-STIMULANT", "EGG STIMULANT", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Layer supplement", "245.00");
+        seedPharmacyItem("PHARM-ARMOR", "ARMOR", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Supplement", "255.00");
+        seedPharmacyItem("PHARM-GARVITAL-ORAL", "GARVITAL ORAL", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Supplement", "225.00");
+        seedPharmacyItem("PHARM-SPECIAL-LIQUID", "SPECIAL LIQUID", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Supplement", "215.00");
+        seedPharmacyItem("PHARM-SYNBIOTIC", "SYNBIOTIC", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Gut health supplement", "265.00");
+        seedPharmacyItem("PHARM-TEKNOACID", "TEKNOACID", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Feed additive", "295.00");
+
+        seedPharmacyItem("PHARM-LAYER-FEED", "LAYER FEED", ItemCategory.FEED, ItemUnit.SACK, "Layer feed", "1500.00");
+        seedPharmacyItem("PHARM-PULLET-FEED", "PULLET FEED", ItemCategory.FEED, ItemUnit.SACK, "Pullet feed", "1450.00");
+        seedPharmacyItem("PHARM-MOLASES", "MOLASES", ItemCategory.FEED, ItemUnit.LITER, "Feed ingredient", "120.00");
+        seedPharmacyItem("PHARM-FINISHER", "FINISHER", ItemCategory.FEED, ItemUnit.SACK, "Finisher feed", "1520.00");
+
+        seedPharmacyItem("PHARM-MANUAL-DRINKER", "MANUAL DRINKER", ItemCategory.EQUIPMENT, ItemUnit.PIECE, "Poultry equipment", "450.00");
+        seedPharmacyItem("PHARM-AUTOMATIC-DRINKER", "AUTOMATIC DRINKER", ItemCategory.EQUIPMENT, ItemUnit.PIECE, "Poultry equipment", "950.00");
+        seedPharmacyItem("PHARM-FEEDER", "FEEDER", ItemCategory.EQUIPMENT, ItemUnit.PIECE, "Poultry equipment", "520.00");
+
+        seedPharmacyItem("PHARM-HYDROGEN-PEROXIDE", "HYDROGEN PER OXIDE", ItemCategory.FARM_MATERIAL, ItemUnit.LITER, "Disinfectant and biosecurity", "180.00");
+        seedPharmacyItem("PHARM-EM", "EM", ItemCategory.FARM_MATERIAL, ItemUnit.LITER, "Farm material", "160.00");
+    }
+
+    private void seedPharmacyItem(String sku, String name, ItemCategory category, ItemUnit unit, String subcategory, String retailPrice) {
+        InventoryItem item = inventoryItemRepository.findBySku(sku).orElseGet(InventoryItem::new);
+        item.setSku(sku);
+        item.setItemName(name);
+        item.setCategory(category);
+        item.setSubcategory(subcategory);
+        item.setUnit(unit);
+        item.setCurrentStock(item.getCurrentStock() != null && item.getCurrentStock() > 0 ? item.getCurrentStock() : 25.0);
+        item.setReorderPoint(item.getReorderPoint() != null && item.getReorderPoint() > 0 ? item.getReorderPoint() : 5.0);
+        item.setReorderQty(item.getReorderQty() != null && item.getReorderQty() > 0 ? item.getReorderQty() : 10.0);
+        item.setRetailPrice(new BigDecimal(retailPrice));
+        item.setSellingPrice(new BigDecimal(retailPrice));
+        item.setStatus(ItemStatus.ACTIVE);
+        item.setStorageLocation("Pharmacy POS");
+        inventoryItemRepository.save(item);
     }
 }
