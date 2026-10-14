@@ -39,10 +39,10 @@ const BarnDashboard = () => {
   };
 
   const stats = useMemo(() => [
-    { title: 'Total Barns', value: barns.length, icon: Home, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
-    { title: 'Total Capacity', value: barns.reduce((s, b) => s + (b.capacity || 0), 0).toLocaleString(), icon: Users, iconColor: 'text-blue-600', bgColor: 'bg-blue-50', description: 'bird slots' },
-    { title: 'Occupied', value: barns.reduce((s, b) => s + (b.currentBirdCount || 0), 0).toLocaleString(), icon: Users, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50', description: 'current Chickens' },
-    { title: 'Alerts', value: barns.filter((b) => b.currentAmmonia > 25 || (b.currentTemp != null && (b.currentTemp > 35 || b.currentTemp < 20))).length, icon: Wind, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
+    { title: 'Total Barns', value: barns.length, icon: Home, iconColor: 'text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
+    { title: 'Total Capacity', value: barns.reduce((s, b) => s + (b.capacity || 0), 0).toLocaleString(), icon: Users, iconColor: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10 dark:bg-blue-500/20', description: 'bird slots' },
+    { title: 'Occupied', value: barns.reduce((s, b) => s + (b.currentBirdCount || 0), 0).toLocaleString(), icon: Users, iconColor: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20', description: 'current Chickens' },
+    { title: 'Alerts', value: barns.filter((b) => b.currentAmmonia > 25 || (b.currentTemp != null && (b.currentTemp > 35 || b.currentTemp < 20))).length, icon: Wind, iconColor: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10 dark:bg-rose-500/20' },
   ], [barns]);
 
   const fmt = (val, suffix = '') => (val != null ? `${val}${suffix}` : '—');
@@ -63,7 +63,7 @@ const BarnDashboard = () => {
         {barns.map((barn) => {
           const occupancy = barn.capacity > 0 ? ((barn.currentBirdCount || 0) / barn.capacity) * 100 : 0;
           return (
-            <Card key={barn.id} className="border-none shadow-sm rounded-2xl overflow-hidden bg-white">
+            <Card key={barn.id} className="erp-card overflow-hidden">
               <div className={cn('h-2 w-full', getStatusColor(barn))} />
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
@@ -71,26 +71,26 @@ const BarnDashboard = () => {
                     <CardTitle className="text-lg font-bold flex items-center gap-2">
                       <Home className="h-5 w-5 text-primary" /> {barn.name}
                     </CardTitle>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">{barn.barnType || 'STANDARD'}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">{barn.barnType || 'STANDARD'}</p>
                   </div>
                   <Badge variant="outline">{(barn.capacity || 0) - (barn.currentBirdCount || 0)} free</Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-orange-50 p-3 rounded-xl">
-                    <div className="flex items-center gap-1 text-orange-600 text-[10px] font-bold uppercase"><Thermometer className="h-3 w-3" /> Temp</div>
-                    <div className="text-xl font-bold text-orange-700">{fmt(barn.currentTemp, '°C')}</div>
+                  <div className="bg-orange-500/10 dark:bg-orange-500/20 p-3 rounded-xl border border-orange-500/20">
+                    <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400 text-[10px] font-bold uppercase"><Thermometer className="h-3 w-3" /> Temp</div>
+                    <div className="text-xl font-bold text-orange-700 dark:text-orange-300">{fmt(barn.currentTemp, '°C')}</div>
                   </div>
-                  <div className="bg-blue-50 p-3 rounded-xl">
-                    <div className="flex items-center gap-1 text-blue-600 text-[10px] font-bold uppercase"><Droplets className="h-3 w-3" /> Humidity</div>
-                    <div className="text-xl font-bold text-blue-700">{fmt(barn.currentHumidity, '%')}</div>
+                  <div className="bg-blue-500/10 dark:bg-blue-500/20 p-3 rounded-xl border border-blue-500/20">
+                    <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase"><Droplets className="h-3 w-3" /> Humidity</div>
+                    <div className="text-xl font-bold text-blue-700 dark:text-blue-300">{fmt(barn.currentHumidity, '%')}</div>
                   </div>
-                  <div className="bg-rose-50 p-3 rounded-xl">
-                    <div className="flex items-center gap-1 text-rose-600 text-[10px] font-bold uppercase"><Wind className="h-3 w-3" /> NH₃</div>
-                    <div className="text-xl font-bold text-rose-700">{fmt(barn.currentAmmonia, ' ppm')}</div>
+                  <div className="bg-rose-500/10 dark:bg-rose-500/20 p-3 rounded-xl border border-rose-500/20">
+                    <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 text-[10px] font-bold uppercase"><Wind className="h-3 w-3" /> NH₃</div>
+                    <div className="text-xl font-bold text-rose-700 dark:text-rose-300">{fmt(barn.currentAmmonia, ' ppm')}</div>
                   </div>
-                  <div className="bg-primary/10 p-3 rounded-xl">
+                  <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-xl border border-primary/20">
                     <div className="flex items-center gap-1 text-primary text-[10px] font-bold uppercase"><Zap className="h-3 w-3" /> CO₂</div>
                     <div className="text-xl font-bold text-primary">{fmt(barn.currentCO2, ' ppm')}</div>
                   </div>

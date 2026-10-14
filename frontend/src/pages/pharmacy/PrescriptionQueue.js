@@ -21,7 +21,7 @@ const PrescriptionQueue = ({ prescriptions, loading }) => {
     return (
         <Table>
             <TableHeader>
-                <TableRow className="bg-gray-50/50">
+                <TableRow className="bg-muted/40">
                     <TableHead>ORDER #</TableHead>
                     <TableHead>FARM / FLOCK</TableHead>
                     <TableHead>MEDICATION</TableHead>
@@ -32,26 +32,26 @@ const PrescriptionQueue = ({ prescriptions, loading }) => {
             </TableHeader>
             <TableBody>
                 {prescriptions.map((rx) => (
-                    <TableRow key={rx.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => navigate(`/pharmacy/process-rx?rxId=${rx.id}`)}>
-                        <TableCell className="font-mono text-[11px] font-bold text-gray-500">{rx.prescriptionNumber || `RX-${rx.id}`}</TableCell>
+                    <TableRow key={rx.id} className="hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => navigate(`/pharmacy/process-rx?rxId=${rx.id}`)}>
+                        <TableCell className="font-mono text-[11px] font-bold text-muted-foreground">{rx.prescriptionNumber || `RX-${rx.id}`}</TableCell>
                         <TableCell>
                             <div className="flex flex-col">
-                                <span className="font-bold text-gray-900">{rx.farmName || 'Internal Farm'}</span>
-                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{rx.batchCode || rx.flockName || 'General'}</span>
+                                <span className="font-bold text-foreground">{rx.farmName || 'Internal Farm'}</span>
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{rx.batchCode || rx.flockName || 'General'}</span>
                             </div>
                         </TableCell>
                         <TableCell>
                             <div className="flex flex-col">
-                                <span className="font-medium text-gray-700">{rx.drugName}</span>
-                                <span className="text-[10px] text-gray-400 italic">via {rx.administrationRoute || '—'}</span>
+                                <span className="font-medium text-foreground/90">{rx.drugName}</span>
+                                <span className="text-[10px] text-muted-foreground italic">via {rx.administrationRoute || '—'}</span>
                             </div>
                         </TableCell>
-                        <TableCell className="font-bold text-primary">{rx.quantity} <span className="text-[10px] text-gray-400 font-normal">units</span></TableCell>
+                        <TableCell className="font-bold text-primary">{rx.quantity} <span className="text-[10px] text-muted-foreground font-normal">units</span></TableCell>
                         <TableCell>
                             <div className="flex flex-col gap-1">
-                                <Badge className="w-fit text-[10px] h-5 bg-slate-800">{rx.status}</Badge>
+                                <Badge className="w-fit text-[10px] h-5 bg-slate-800 text-white">{rx.status}</Badge>
                                 <Badge className={cn(
-                                "text-[10px] h-5 w-fit",
+                                "text-[10px] h-5 w-fit text-white",
                                 rx.priority === 'URGENT' || rx.priority === 'HIGH' ? "bg-rose-500" : "bg-amber-500"
                             )}>
                                 {rx.priority || 'NORMAL'}
@@ -73,7 +73,7 @@ const PrescriptionQueue = ({ prescriptions, loading }) => {
                 ))}
                 {prescriptions.length === 0 && (
                     <TableRow>
-                        <TableCell colSpan={6} className="text-center py-12 text-gray-400 italic">
+                        <TableCell colSpan={6} className="text-center py-12 text-muted-foreground italic">
                             No pending medical orders detected in queue.
                         </TableCell>
                     </TableRow>

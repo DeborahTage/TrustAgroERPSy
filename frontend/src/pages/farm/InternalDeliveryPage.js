@@ -11,12 +11,12 @@ import { PERMISSIONS } from '../../lib/permissions';
 import { formatDate } from '../../utils';
 
 const STATUS_STYLES = {
-  DRAFT: 'bg-slate-100 text-slate-700',
-  SUBMITTED: 'bg-blue-100 text-blue-700',
-  APPROVED: 'bg-indigo-100 text-indigo-700',
-  ISSUED: 'bg-amber-100 text-amber-700',
-  RECEIVED: 'bg-emerald-100 text-emerald-700',
-  CANCELLED: 'bg-rose-100 text-rose-700',
+  DRAFT: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+  SUBMITTED: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/40',
+  APPROVED: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800/40',
+  ISSUED: 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/40',
+  RECEIVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/40',
+  CANCELLED: 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800/40',
 };
 
 const InternalDeliveryPage = () => {
@@ -146,7 +146,7 @@ const InternalDeliveryPage = () => {
       onRetry={load}
     >
       {hasPermission(PERMISSIONS.CREATE_FARMS) && (
-        <div className="mb-6 grid gap-2 md:grid-cols-4 border p-4 rounded-md bg-slate-50">
+        <div className="mb-6 grid gap-2 md:grid-cols-4 border border-border/70 p-4 rounded-xl bg-card">
           <Select value={String(form.inventoryItemId)} onValueChange={(v) => setForm((f) => ({ ...f, inventoryItemId: v }))}>
             <SelectTrigger><SelectValue placeholder="Item" /></SelectTrigger>
             <SelectContent>

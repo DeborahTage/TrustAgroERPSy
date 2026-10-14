@@ -88,7 +88,7 @@ export default function RequisitionCenter() {
             accessorKey: 'requisitionNumber',
             header: 'REQUEST ID',
             cell: ({ row }) => (
-                <span className="font-mono text-[11px] font-black text-slate-500">{row.original.requisitionNumber}</span>
+                <span className="font-mono text-[11px] font-black text-muted-foreground">{row.original.requisitionNumber}</span>
             )
         },
         {
@@ -96,8 +96,8 @@ export default function RequisitionCenter() {
             header: 'SOURCE',
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span className="font-bold text-slate-900">{row.original.requestedBy?.role?.replace('_', ' ') || 'Internal'}</span>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{row.original.farm?.name || 'Central'}</span>
+                    <span className="font-bold text-foreground">{row.original.requestedBy?.role?.replace('_', ' ') || 'Internal'}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{row.original.farm?.name || 'Central'}</span>
                 </div>
             )
         },
@@ -109,8 +109,8 @@ export default function RequisitionCenter() {
                 const first = row.original.items?.[0]?.item?.itemName || 'Multiple';
                 return (
                     <div className="flex items-center gap-2">
-                        <span className="font-medium text-slate-700">{first}</span>
-                        {count > 1 && <Badge className="bg-slate-100 text-slate-500 font-black text-[9px] border-none">+{count - 1} more</Badge>}
+                        <span className="font-medium text-foreground/90">{first}</span>
+                        {count > 1 && <Badge className="bg-muted text-muted-foreground font-black text-[9px] border-none">+{count - 1} more</Badge>}
                     </div>
                 )
             }
@@ -119,7 +119,7 @@ export default function RequisitionCenter() {
             accessorKey: 'requestedAt',
             header: 'TIMESTAMP',
             cell: ({ row }) => (
-                <div className="flex items-center gap-2 text-slate-400 font-bold text-[11px]">
+                <div className="flex items-center gap-2 text-muted-foreground font-bold text-[11px]">
                     <Clock className="h-3 w-3" />
                     {format(new Date(row.original.requestedAt), 'dd MMM HH:mm')}
                 </div>
@@ -138,17 +138,17 @@ export default function RequisitionCenter() {
                 return (
                     <div className="flex justify-end gap-2">
                         {isIM && rx.status === 'REQUESTED' && (
-                            <Button size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-700 font-black text-[10px] rounded-lg" onClick={() => approveMutation.mutate(rx.id)}>
+                            <Button size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-700 font-black text-[10px] rounded-lg text-white" onClick={() => approveMutation.mutate(rx.id)}>
                                 APPROVE
                             </Button>
                         )}
                         {isIM && rx.status === 'APPROVED' && (
-                            <Button size="sm" className="h-8 bg-primary hover:bg-primary/90 font-black text-[10px] rounded-lg" onClick={() => issueMutation.mutate(rx.id)}>
+                            <Button size="sm" className="h-8 bg-primary hover:bg-primary/90 font-black text-[10px] rounded-lg text-primary-foreground" onClick={() => issueMutation.mutate(rx.id)}>
                                 ISSUE STOCK
                             </Button>
                         )}
                         {rx.status === 'ISSUED' && (
-                            <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[9px]">FULFILLED</Badge>
+                            <Badge className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-none font-black text-[9px]">FULFILLED</Badge>
                         )}
                     </div>
                 )
@@ -163,14 +163,14 @@ export default function RequisitionCenter() {
             breadcrumbs={['Inventory', 'Requisitions']}
             loading={loadingReqs}
             stats={[
-                { title: 'Pending Approval', value: requisitions.filter(r => r.status === 'REQUESTED').length, icon: Clock, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
-                { title: 'Approved & Ready', value: requisitions.filter(r => r.status === 'APPROVED').length, icon: CheckCircle2, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
-                { title: 'Fulfilled Today', value: requisitions.filter(r => r.status === 'ISSUED' && format(new Date(r.issuedAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, icon: Truck, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+                { title: 'Pending Approval', value: requisitions.filter(r => r.status === 'REQUESTED').length, icon: Clock, iconColor: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500/10 dark:bg-amber-500/20' },
+                { title: 'Approved & Ready', value: requisitions.filter(r => r.status === 'APPROVED').length, icon: CheckCircle2, iconColor: 'text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
+                { title: 'Fulfilled Today', value: requisitions.filter(r => r.status === 'ISSUED' && format(new Date(r.issuedAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length, icon: Truck, iconColor: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
             ]}
             actions={canRequest ? (
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                        <Button className="h-11 rounded-xl bg-primary hover:bg-primary/90">
+                        <Button className="h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground">
                             <Plus className="mr-2 h-5 w-5" />
                             New Request
                         </Button>
@@ -185,15 +185,15 @@ export default function RequisitionCenter() {
                 </Dialog>
             ) : null}
         >
-            <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
-                        <CardHeader className="bg-white py-6 border-b border-slate-50 px-8 flex flex-row items-center justify-between">
+            <Card className="erp-card overflow-hidden">
+                        <CardHeader className="py-6 border-b border-border/60 px-8 flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-lg font-black tracking-tight text-slate-900 flex items-center gap-2">
+                                <CardTitle className="text-lg font-black tracking-tight text-foreground flex items-center gap-2">
                                     <ClipboardList className="h-5 w-5 text-primary" /> Operational Queue
                                 </CardTitle>
-                                <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tracking all cross-module material movements</CardDescription>
+                                <CardDescription className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Tracking all cross-module material movements</CardDescription>
                             </div>
-                            <Badge className="bg-slate-50 text-primary border-none font-bold uppercase tracking-widest text-[9px]">Live Monitoring</Badge>
+                            <Badge className="bg-primary/10 text-primary border-none font-bold uppercase tracking-widest text-[9px]">Live Monitoring</Badge>
                         </CardHeader>
                         <CardContent className="p-0">
                             <DataTable columns={columns} data={requisitions} loading={loadingReqs} pageSize={10} selectable />
@@ -225,9 +225,9 @@ function RequisitionForm({ farms, items, onSubmit, loading }) {
         <form onSubmit={handleFormSubmit} className="space-y-8 pt-6">
             <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Farm Location</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Target Farm Location</Label>
                     <Select onValueChange={setFarmId} required>
-                        <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none shadow-none focus:ring-0">
+                        <SelectTrigger className="h-12 rounded-xl bg-card border border-border shadow-none">
                             <SelectValue placeholder="Select Destination" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
@@ -238,17 +238,17 @@ function RequisitionForm({ farms, items, onSubmit, loading }) {
                     </Select>
                 </div>
                 <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Movement Context</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Movement Context</Label>
                     <Input
                         placeholder="Internal Order #"
-                        className="h-12 rounded-xl bg-slate-50 border-none shadow-none font-bold placeholder:text-slate-300"
+                        className="h-12 rounded-xl bg-card border border-border shadow-none font-bold placeholder:text-muted-foreground/60"
                     />
                 </div>
             </div>
 
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Requested Materials</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Requested Materials</Label>
                     <Button type="button" variant="ghost" size="sm" onClick={addItem} className="h-8 rounded-lg text-[10px] font-black text-primary hover:bg-primary/10">
                         <Plus className="h-3 w-3 mr-1" /> ADD ITEM
                     </Button>
@@ -259,7 +259,7 @@ function RequisitionForm({ farms, items, onSubmit, loading }) {
                         <div key={idx} className="flex gap-4 items-end animate-in slide-in-from-left-2 duration-300">
                             <div className="flex-1 space-y-2">
                                 <Select onValueChange={(val) => updateItem(idx, 'itemId', val)} required>
-                                    <SelectTrigger className="h-12 rounded-xl bg-white border border-slate-100 shadow-none">
+                                    <SelectTrigger className="h-12 rounded-xl bg-card border border-border shadow-none">
                                         <SelectValue placeholder="Identify Product" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -267,7 +267,7 @@ function RequisitionForm({ farms, items, onSubmit, loading }) {
                                             <SelectItem key={item.id} value={item.id.toString()}>
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-bold">{item.itemName}</span>
-                                                    <span className="text-[10px] text-slate-400 font-mono">({item.currentStock} in stock)</span>
+                                                    <span className="text-[10px] text-muted-foreground font-mono">({item.currentStock} in stock)</span>
                                                 </div>
                                             </SelectItem>
                                         ))}
@@ -280,12 +280,12 @@ function RequisitionForm({ farms, items, onSubmit, loading }) {
                                     placeholder="Qty"
                                     value={si.quantity}
                                     onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                                    className="h-12 rounded-xl bg-white border border-slate-100 shadow-none font-black"
+                                    className="h-12 rounded-xl bg-card border border-border shadow-none font-black"
                                     required
                                 />
                             </div>
                             {selectedItems.length > 1 && (
-                                <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-12 w-12 rounded-xl text-rose-500 hover:bg-rose-50">
+                                <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-12 w-12 rounded-xl text-rose-500 hover:bg-rose-500/10">
                                     <Hash className="h-4 w-4 rotate-45" />
                                 </Button>
                             )}
@@ -295,16 +295,16 @@ function RequisitionForm({ farms, items, onSubmit, loading }) {
             </div>
 
             <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Protocol Remarks</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Protocol Remarks</Label>
                 <textarea
-                    className="w-full min-h-[100px] rounded-2xl bg-slate-50 border-none p-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full min-h-[100px] rounded-2xl bg-card border border-border p-4 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                     placeholder="Provide specific clinical or operational justification..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                 />
             </div>
 
-            <Button disabled={loading} className="w-full h-14 rounded-2xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-lg shadow-xl shadow-slate-200 transition-all active:scale-95">
+            <Button disabled={loading} className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-lg shadow-xl shadow-primary/20 transition-all active:scale-95">
                 {loading ? <Activity className="animate-spin h-6 w-6" /> : "Deploy Requisition Order"}
             </Button>
         </form>

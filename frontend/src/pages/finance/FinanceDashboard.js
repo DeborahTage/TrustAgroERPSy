@@ -76,48 +76,48 @@ const FinanceDashboard = () => {
       title: 'Total Revenue',
       value: formatCurrency(data.totalRevenue),
       icon: TrendingUp,
-      iconColor: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20',
       description: 'Posted INCOME (not cash receipts)'
     },
     {
       title: 'Total Expenses',
       value: formatCurrency(data.totalExpenses),
       icon: TrendingDown,
-      iconColor: 'text-rose-600',
-      bgColor: 'bg-rose-50',
+      iconColor: 'text-rose-600 dark:text-rose-400',
+      bgColor: 'bg-rose-500/10 dark:bg-rose-500/20',
       description: 'Posted EXPENSE + COGS'
     },
     {
       title: 'Net Result',
       value: formatCurrency(data.netProfit),
       icon: DollarSign,
-      iconColor: data.netProfit >= 0 ? 'text-primary' : 'text-rose-600',
-      bgColor: 'bg-primary/10',
+      iconColor: data.netProfit >= 0 ? 'text-primary' : 'text-rose-600 dark:text-rose-400',
+      bgColor: 'bg-primary/10 dark:bg-primary/20',
       description: 'Revenue − expenses'
     },
     {
       title: 'Accounts Receivable',
       value: formatCurrency(data.accountsReceivable || 0),
       icon: Clock,
-      iconColor: 'text-amber-600',
-      bgColor: 'bg-amber-50',
+      iconColor: 'text-amber-600 dark:text-amber-400',
+      bgColor: 'bg-amber-500/10 dark:bg-amber-500/20',
       description: 'Open invoice outstanding'
     },
     {
       title: 'Cash + Bank',
       value: formatCurrency((Number(data.cashInHand) || 0) + (Number(data.bankBalance) || 0)),
       icon: Wallet,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-500/10 dark:bg-blue-500/20',
       description: `Cash ${formatCurrency(data.cashInHand || 0)} · Bank ${formatCurrency(data.bankBalance || 0)}`
     },
     {
       title: 'Accounts Payable',
       value: formatCurrency(data.accountsPayable || 0),
       icon: ShieldCheck,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      bgColor: 'bg-purple-500/10 dark:bg-purple-500/20',
       description: 'Inventory receipts on AP'
     }
   ];
@@ -168,22 +168,22 @@ const FinanceDashboard = () => {
     >
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div className="xl:col-span-8 space-y-6">
-          <Card className="border-none shadow-sm">
+          <Card className="erp-card">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-bold">Revenue by Business Unit</CardTitle>
                 <CardDescription>Income distribution across farm and pharmacy units with posted activity</CardDescription>
               </div>
-              <BarChart3 className="text-slate-400 h-5 w-5" />
+              <BarChart3 className="text-muted-foreground h-5 w-5" />
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={unitChartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="stroke-border/40" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'currentColor' }} className="text-muted-foreground" />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'currentColor' }} className="text-muted-foreground" />
+                    <Tooltip contentStyle={{ borderRadius: '1rem', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }} />
                     <Bar dataKey="revenue" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -191,25 +191,25 @@ const FinanceDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm">
+          <Card className="erp-card">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-bold">Expense by Source Module</CardTitle>
                 <CardDescription>Operating costs from inventory, pharmacy COGS, and farm/vet consumption</CardDescription>
               </div>
-              <PieChart className="text-slate-400 h-5 w-5" />
+              <PieChart className="text-muted-foreground h-5 w-5" />
             </CardHeader>
             <CardContent>
               <div className="h-[260px]">
                 {expenseChartData.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-16">No expense transactions recorded yet.</p>
+                  <p className="text-sm text-muted-foreground text-center py-16">No expense transactions recorded yet.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={expenseChartData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                      <Tooltip />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="stroke-border/40" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'currentColor' }} className="text-muted-foreground" />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'currentColor' }} className="text-muted-foreground" />
+                      <Tooltip contentStyle={{ borderRadius: '1rem', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }} />
                       <Bar dataKey="expense" fill="#e11d48" radius={[4, 4, 0, 0]} barSize={36} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -218,7 +218,7 @@ const FinanceDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm">
+          <Card className="erp-card">
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
@@ -231,30 +231,30 @@ const FinanceDashboard = () => {
             <CardContent>
               <div className="space-y-3">
                 {revenueTransactions.length === 0 ? (
-                  <p className="text-sm text-slate-500 py-6 text-center">No revenue transactions yet. Sales and services post here automatically.</p>
+                  <p className="text-sm text-muted-foreground py-6 text-center">No revenue transactions yet. Sales and services post here automatically.</p>
                 ) : revenueTransactions.slice(0, 6).map((tx, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div key={i} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/40 transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="p-2 rounded-full bg-emerald-50 text-emerald-600">
+                      <div className="p-2 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                         <ArrowUpRight className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-800">{tx.description}</p>
+                        <p className="text-sm font-bold text-foreground">{tx.description}</p>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-[10px] font-mono py-0">{tx.sourceModule || tx.businessUnit}</Badge>
-                          <span className="text-[10px] text-slate-400">{tx.referenceType}{tx.referenceId != null ? `#${tx.referenceId}` : ''}</span>
-                          <span className="text-[10px] text-slate-400">{tx.transactionDate}</span>
+                          <span className="text-[10px] text-muted-foreground">{tx.referenceType}{tx.referenceId != null ? `#${tx.referenceId}` : ''}</span>
+                          <span className="text-[10px] text-muted-foreground">{tx.transactionDate}</span>
                         </div>
                       </div>
                     </div>
-                    <p className="text-sm font-bold text-emerald-600">+{formatCurrency(tx.amount)}</p>
+                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(tx.amount)}</p>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm">
+          <Card className="erp-card">
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
@@ -267,30 +267,30 @@ const FinanceDashboard = () => {
             <CardContent>
               <div className="space-y-3">
                 {expenseTransactions.length === 0 ? (
-                  <p className="text-sm text-slate-500 py-6 text-center">No expense transactions yet. Inventory and vet dispense post here automatically.</p>
+                  <p className="text-sm text-muted-foreground py-6 text-center">No expense transactions yet. Inventory and vet dispense post here automatically.</p>
                 ) : expenseTransactions.slice(0, 6).map((tx, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div key={i} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/40 transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="p-2 rounded-full bg-rose-50 text-rose-600">
+                      <div className="p-2 rounded-full bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400">
                         <ArrowDownRight className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-800">{tx.description}</p>
+                        <p className="text-sm font-bold text-foreground">{tx.description}</p>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-[10px] font-mono py-0">{tx.sourceModule || 'MANUAL'}</Badge>
-                          <span className="text-[10px] text-slate-400">{tx.referenceType}{tx.referenceId != null ? `#${tx.referenceId}` : ''}</span>
-                          <span className="text-[10px] text-slate-400">{tx.transactionDate}</span>
+                          <span className="text-[10px] text-muted-foreground">{tx.referenceType}{tx.referenceId != null ? `#${tx.referenceId}` : ''}</span>
+                          <span className="text-[10px] text-muted-foreground">{tx.transactionDate}</span>
                         </div>
                       </div>
                     </div>
-                    <p className="text-sm font-bold text-rose-600">-{formatCurrency(tx.amount)}</p>
+                    <p className="text-sm font-bold text-rose-600 dark:text-rose-400">-{formatCurrency(tx.amount)}</p>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm">
+          <Card className="erp-card">
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
@@ -305,26 +305,26 @@ const FinanceDashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 {(data.transactions || []).length === 0 ? (
-                  <p className="text-sm text-slate-500 py-6 text-center">Ledger is empty. Transactions appear when modules post sales, purchases, or expenses.</p>
+                  <p className="text-sm text-muted-foreground py-6 text-center">Ledger is empty. Transactions appear when modules post sales, purchases, or expenses.</p>
                 ) : data.transactions?.slice(0, 8).map((tx, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div key={i} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/40 transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-full ${tx.transactionType === 'INCOME' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                      <div className={`p-2 rounded-full ${tx.transactionType === 'INCOME' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400'}`}>
                         {tx.transactionType === 'INCOME' ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-800">{tx.description}</p>
+                        <p className="text-sm font-bold text-foreground">{tx.description}</p>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-[10px] font-mono py-0">{tx.businessUnit}</Badge>
-                          <span className="text-[10px] text-slate-400">{tx.transactionDate}</span>
+                          <span className="text-[10px] text-muted-foreground">{tx.transactionDate}</span>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-sm font-bold ${tx.transactionType === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      <p className={`text-sm font-bold ${tx.transactionType === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                         {tx.transactionType === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
                       </p>
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-[10px] text-muted-foreground">
                         {tx.sourceModule || 'MANUAL'} · {tx.referenceType || '—'}
                         {tx.referenceId != null ? ` #${tx.referenceId}` : ''}
                       </p>
@@ -338,7 +338,7 @@ const FinanceDashboard = () => {
 
         {/* Sidebar Space */}
         <div className="xl:col-span-4 space-y-6">
-          <Card className="border-none shadow-sm bg-emerald-900 text-white overflow-hidden">
+          <Card className="erp-card bg-emerald-950/80 border-emerald-800/40 text-white overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest text-emerald-200">
                 Quick Command Center
@@ -366,7 +366,7 @@ const FinanceDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm">
+          <Card className="erp-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-bold flex items-center gap-2">
                 <Clock className="h-4 w-4 text-amber-500" /> Open Receivables
@@ -376,7 +376,7 @@ const FinanceDashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 {openReceivables.length === 0 ? (
-                  <p className="text-sm text-gray-500">No open invoices with outstanding balances.</p>
+                  <p className="text-sm text-muted-foreground">No open invoices with outstanding balances.</p>
                 ) : openReceivables.slice(0, 8).map((inv) => {
                   const outstanding = Math.max(0, (Number(inv.totalAmount) || 0) - (Number(inv.paidAmount) || 0));
                   return (
@@ -385,25 +385,25 @@ const FinanceDashboard = () => {
                         <span className="truncate pr-2">{inv.clientName} · {inv.invoiceNumber}</span>
                         <span>{formatCurrency(outstanding)}</span>
                       </div>
-                      <div className="flex justify-between text-[10px] text-slate-400">
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
                         <span>{inv.sourceModule || inv.invoiceType} · {inv.status}</span>
                         <span>Due {inv.dueDate || '—'}</span>
                       </div>
                     </div>
                   );
                 })}
-                <div className="pt-2 border-t text-xs font-bold text-slate-600 flex justify-between">
+                <div className="pt-2 border-t border-border text-xs font-bold text-foreground flex justify-between">
                   <span>Total AR</span>
                   <span>{formatCurrency(data.accountsReceivable || 0)}</span>
                 </div>
                 {(Number(data.cashInflow) > 0 || Number(data.cashOutflow) > 0) && (
-                  <div className="pt-2 border-t text-[11px] text-slate-500 space-y-1">
+                  <div className="pt-2 border-t border-border text-[11px] text-muted-foreground space-y-1">
                     <div className="flex justify-between"><span>Cash/Bank inflows</span><span>{formatCurrency(data.cashInflow || 0)}</span></div>
                     <div className="flex justify-between"><span>Cash/Bank outflows</span><span>{formatCurrency(data.cashOutflow || 0)}</span></div>
                   </div>
                 )}
                 {data.accountingNote && (
-                  <p className="text-[10px] text-slate-400 pt-2 border-t leading-relaxed">{data.accountingNote}</p>
+                  <p className="text-[10px] text-muted-foreground pt-2 border-t border-border leading-relaxed">{data.accountingNote}</p>
                 )}
               </div>
             </CardContent>

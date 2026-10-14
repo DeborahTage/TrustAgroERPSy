@@ -101,7 +101,7 @@ const Sidebar = ({ show, collapsed, onToggleCollapse, onHide }) => {
     >
       <div className={cn('flex h-16 items-center border-b border-border/60', collapsed ? 'justify-center px-2' : 'px-5')}>
         <button type="button" onClick={() => navigate('/dashboard')} className="flex items-center gap-3 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/25 transition-transform group-hover:scale-105">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/25 transition-transform group-hover:scale-105 dark:bg-primary/20 dark:text-primary dark:border dark:border-primary/30">
             <Leaf className="h-5 w-5" />
           </div>
           {!collapsed && (
@@ -139,7 +139,7 @@ const Sidebar = ({ show, collapsed, onToggleCollapse, onHide }) => {
         </button>
 
         <div className={cn('flex items-center gap-2 rounded-xl bg-muted/50 p-2', collapsed && 'justify-center')}>
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground dark:bg-primary/20 dark:text-primary dark:border dark:border-primary/25">
             {user?.fullName?.charAt(0).toUpperCase() || 'U'}
           </div>
           {!collapsed && (

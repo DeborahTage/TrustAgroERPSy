@@ -421,7 +421,7 @@ public class PharmacyService {
         if (isCredit || "CREDIT".equalsIgnoreCase(paymentMethod)) {
             return com.trustagro.finance.entity.AccountCode.ASSET_RECEIVABLE.getCode();
         }
-        if ("BANK_TRANSFER".equalsIgnoreCase(paymentMethod) || "MOBILE_MONEY".equalsIgnoreCase(paymentMethod)) {
+        if ("BANK_TRANSFER".equalsIgnoreCase(paymentMethod) || "TRANSFER".equalsIgnoreCase(paymentMethod) || "MOBILE_MONEY".equalsIgnoreCase(paymentMethod)) {
             return com.trustagro.finance.entity.AccountCode.ASSET_BANK.getCode();
         }
         return com.trustagro.finance.entity.AccountCode.ASSET_CASH.getCode();
@@ -429,6 +429,7 @@ public class PharmacyService {
 
     private com.trustagro.finance.entity.PaymentMethod mapPaymentMethod(String method) {
         if (method == null) return com.trustagro.finance.entity.PaymentMethod.CASH;
+        if ("TRANSFER".equalsIgnoreCase(method)) return com.trustagro.finance.entity.PaymentMethod.BANK_TRANSFER;
         try {
             return com.trustagro.finance.entity.PaymentMethod.valueOf(method.toUpperCase());
         } catch (Exception e) {

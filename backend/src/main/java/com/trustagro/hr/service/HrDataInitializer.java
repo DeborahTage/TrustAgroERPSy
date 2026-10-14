@@ -67,7 +67,15 @@ public class HrDataInitializer implements ApplicationRunner {
     }
 
     private void seedPositions() {
-        position("GENERAL_MANAGER", "General Manager");
+        position("GENERAL_MANAGER", "General Manager (Trust Agro Consulting & Farming)",
+                "Key Responsibilities:\n" +
+                "- Set direction: Define goals for farming and consulting\n" +
+                "- Oversee operations: Ensure all departments work well\n" +
+                "- Control finance: Monitor cost, revenue, and profit\n" +
+                "- Ensure quality: Maintain farm performance and service standards\n" +
+                "- Lead team: Supervise managers and staff\n" +
+                "- Develop business: Manage clients and grow the company\n" +
+                "- Make decisions: Final authority on major issues");
         position("OPERATIONS_MANAGER", "Operations Manager");
         position("FARM_MANAGER", "Farm Manager");
         position("FARM_WORKER", "Farm Worker");
@@ -116,13 +124,20 @@ public class HrDataInitializer implements ApplicationRunner {
     }
 
     private void position(String code, String name) {
-        if (positionRepository.existsByCode(code)) {
-            return;
-        }
-        HrPosition p = new HrPosition();
-        p.setCode(code);
+        position(code, name, null);
+    }
+
+    private void position(String code, String name, String description) {
+        HrPosition p = positionRepository.findByCode(code).orElseGet(() -> {
+            HrPosition newP = new HrPosition();
+            newP.setCode(code);
+            newP.setActive(true);
+            return newP;
+        });
         p.setName(name);
-        p.setActive(true);
+        if (description != null) {
+            p.setDescription(description);
+        }
         positionRepository.save(p);
     }
 

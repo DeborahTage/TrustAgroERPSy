@@ -77,8 +77,8 @@ const PharmacyOverview = () => {
             value: formatCurrency(dashData.revenue_today || 0),
             description: `${dashData.sales_count_today || 0} successful sales`,
             icon: Wallet,
-            iconColor: 'text-emerald-600',
-            bgColor: 'bg-emerald-50'
+            iconColor: 'text-emerald-600 dark:text-emerald-400',
+            bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20'
         },
         {
             title: 'Monthly Revenue',
@@ -86,23 +86,23 @@ const PharmacyOverview = () => {
             description: `${dashData.sales_count_month || 0} sales this month`,
             icon: TrendingUp,
             iconColor: 'text-primary',
-            bgColor: 'bg-primary/10'
+            bgColor: 'bg-primary/10 dark:bg-primary/20'
         },
         {
             title: 'Inventory Value',
             value: formatCurrency(inventoryValue),
             description: `${items.length} products monitored`,
             icon: Package,
-            iconColor: 'text-blue-600',
-            bgColor: 'bg-blue-50'
+            iconColor: 'text-blue-600 dark:text-blue-400',
+            bgColor: 'bg-blue-500/10 dark:bg-blue-500/20'
         },
         {
             title: 'Alerts',
             value: lowStockCount + expiringCount,
             description: `${lowStockCount} low stock · ${expiringCount} expiring`,
             icon: AlertTriangle,
-            iconColor: 'text-amber-600',
-            bgColor: 'bg-amber-50',
+            iconColor: 'text-amber-600 dark:text-amber-400',
+            bgColor: 'bg-amber-500/10 dark:bg-amber-500/20',
         }
     ];
 
@@ -121,11 +121,11 @@ const PharmacyOverview = () => {
             header: 'Product',
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span className="font-black text-gray-900">{row.original.itemName}</span>
+                    <span className="font-black text-foreground">{row.original.itemName}</span>
                     <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{row.original.sku || 'N/A'}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{row.original.sku || 'N/A'}</span>
                         {row.original.isControlled && (
-                            <Badge className="h-4 px-1.5 bg-rose-100 text-rose-600 text-[9px] font-black uppercase border-none">Controlled</Badge>
+                            <Badge className="h-4 px-1.5 bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[9px] font-black uppercase border-none">Controlled</Badge>
                         )}
                     </div>
                 </div>
@@ -137,7 +137,7 @@ const PharmacyOverview = () => {
             cell: ({ row }) => (
                 <span className={cn(
                     "font-black",
-                    row.original.currentStock <= (row.original.minimumStockLevel || 0) ? "text-rose-600" : "text-gray-900"
+                    row.original.currentStock <= (row.original.minimumStockLevel || 0) ? "text-rose-600 dark:text-rose-400" : "text-foreground"
                 )}>
                     {row.original.currentStock} {row.original.unit}
                 </span>
@@ -151,19 +151,19 @@ const PharmacyOverview = () => {
         {
             id: 'batch',
             header: 'Batch',
-            cell: ({ row }) => <span className="text-xs font-mono text-gray-600">{row.original.batchNumber || '—'}</span>
+            cell: ({ row }) => <span className="text-xs font-mono text-muted-foreground">{row.original.batchNumber || '—'}</span>
         },
         {
             id: 'expiry',
             header: 'Expiry',
-            cell: ({ row }) => <span className="text-xs text-gray-600">{row.original.expiryDate || '—'}</span>
+            cell: ({ row }) => <span className="text-xs text-muted-foreground">{row.original.expiryDate || '—'}</span>
         },
         {
             id: 'invValue',
             header: 'Inv. Value',
             cell: ({ row }) => {
                 const price = Number(row.original.retailPrice || row.original.sellingPrice || 0);
-                return <span className="font-bold text-gray-900">{formatCurrency(price * (row.original.currentStock || 0))}</span>
+                return <span className="font-bold text-foreground">{formatCurrency(price * (row.original.currentStock || 0))}</span>
             }
         },
         {
@@ -201,9 +201,9 @@ const PharmacyOverview = () => {
         >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
-                    <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-                        <CardHeader className="border-b border-gray-50 flex flex-row items-center justify-between px-8 py-6">
-                            <CardTitle className="text-base font-black uppercase tracking-tight text-gray-900 flex items-center gap-2">
+                    <Card className="erp-card overflow-hidden">
+                        <CardHeader className="border-b border-border/60 flex flex-row items-center justify-between px-8 py-6">
+                            <CardTitle className="text-base font-black uppercase tracking-tight text-foreground flex items-center gap-2">
                                 <Package className="h-4.5 w-4.5 text-primary" />
                                 Drugs & Supply Monitoring
                             </CardTitle>
@@ -216,9 +216,9 @@ const PharmacyOverview = () => {
                 </div>
 
                 <div className="space-y-6">
-                    <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-                        <CardHeader className="border-b border-gray-50 px-8 py-6">
-                            <CardTitle className="text-base font-black uppercase tracking-tight text-gray-900 flex items-center gap-2">
+                    <Card className="erp-card overflow-hidden">
+                        <CardHeader className="border-b border-border/60 px-8 py-6">
+                            <CardTitle className="text-base font-black uppercase tracking-tight text-foreground flex items-center gap-2">
                                 <ClipboardList className="h-4.5 w-4.5 text-rose-500" />
                                 Fulfillment Queue
                             </CardTitle>

@@ -68,7 +68,7 @@
 
 @layer components {
   .erp-card {
-    @apply rounded-2xl border border-border/60 bg-card shadow-sm shadow-slate-200/50 transition-all duration-200 hover:shadow-md hover:shadow-slate-200/60;
+    @apply rounded-2xl border border-border/60 bg-card shadow-sm shadow-slate-200/50 dark:shadow-none transition-all duration-200 hover:shadow-md hover:shadow-slate-200/60 dark:hover:shadow-none dark:hover:border-border;
   }
 
   .erp-card-flat {
@@ -80,15 +80,15 @@
   }
 
   .erp-input {
-    @apply h-10 rounded-xl border-border bg-white focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0;
+    @apply h-10 rounded-xl border border-border bg-white dark:bg-slate-900/90 text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0;
   }
 
   .erp-table-head {
-    @apply sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm border-b border-border;
+    @apply sticky top-0 z-10 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-border text-muted-foreground;
   }
 
   .erp-nav-active {
-    @apply bg-primary text-primary-foreground shadow-sm shadow-primary/20;
+    @apply bg-primary text-primary-foreground shadow-sm shadow-primary/20 dark:bg-primary/15 dark:text-primary dark:border dark:border-primary/25 dark:shadow-none dark:font-semibold;
   }
 
   .erp-nav-item {

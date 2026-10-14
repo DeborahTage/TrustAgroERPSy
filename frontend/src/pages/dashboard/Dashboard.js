@@ -52,48 +52,48 @@ const Dashboard = () => {
   }
 
   const farmCards = [
-    { title: t('dashboard.activeFarms'), value: data.totalFarms ?? '—', icon: Building2, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
-    { title: t('dashboard.activeFlocks'), value: data.activeFlocks ?? '—', icon: Users, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
-    { title: t('dashboard.todaysMortality'), value: data.todayMortality ?? 0, icon: Activity, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
-    { title: t('dashboard.upcomingVaccinations'), value: data.upcomingVaccinations ?? 0, icon: HeartPulse, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
+    { title: t('dashboard.activeFarms'), value: data.totalFarms ?? '—', icon: Building2, iconColor: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10 dark:bg-blue-500/20' },
+    { title: t('dashboard.activeFlocks'), value: data.activeFlocks ?? '—', icon: Users, iconColor: 'text-primary dark:text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
+    { title: t('dashboard.todaysMortality'), value: data.todayMortality ?? 0, icon: Activity, iconColor: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10 dark:bg-rose-500/20' },
+    { title: t('dashboard.upcomingVaccinations'), value: data.upcomingVaccinations ?? 0, icon: HeartPulse, iconColor: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10 dark:bg-blue-500/20' },
   ];
 
   const inventoryCards = [
-    { title: t('dashboard.totalItems'), value: data.totalItems ?? '—', icon: Package, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
-    { title: t('dashboard.expiringItems'), value: data.expiringItems ?? 0, icon: AlertTriangle, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
+    { title: t('dashboard.totalItems'), value: data.totalItems ?? '—', icon: Package, iconColor: 'text-primary dark:text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
+    { title: t('dashboard.expiringItems'), value: data.expiringItems ?? 0, icon: AlertTriangle, iconColor: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10 dark:bg-rose-500/20' },
   ];
 
   const vetCards = [
-    { title: t('dashboard.upcomingVaccinations'), value: data.upcomingVaccinations ?? 0, icon: HeartPulse, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-    { title: t('dashboard.missedVaccinations'), value: data.missedVaccinations ?? 0, icon: AlertTriangle, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
-    { title: t('dashboard.activeDiseaseCases'), value: data.activeDiseaseCases ?? 0, icon: Activity, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
-    { title: t('dashboard.pendingPrescriptions'), value: data.pendingPrescriptions ?? 0, icon: TrendingUp, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
+    { title: t('dashboard.upcomingVaccinations'), value: data.upcomingVaccinations ?? 0, icon: HeartPulse, iconColor: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
+    { title: t('dashboard.missedVaccinations'), value: data.missedVaccinations ?? 0, icon: AlertTriangle, iconColor: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10 dark:bg-rose-500/20' },
+    { title: t('dashboard.activeDiseaseCases'), value: data.activeDiseaseCases ?? 0, icon: Activity, iconColor: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10 dark:bg-rose-500/20' },
+    { title: t('dashboard.pendingPrescriptions'), value: data.pendingPrescriptions ?? 0, icon: TrendingUp, iconColor: 'text-primary dark:text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
   ];
 
   const pharmacyCards = [
-    { title: t('dashboard.todaysSales'), value: formatCurrency(data.todaySales), icon: DollarSign, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-    { title: t('dashboard.totalSales'), value: data.totalSalesCount ?? 0, icon: ShoppingCart, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
-    { title: t('dashboard.pendingPrescriptions'), value: data.pendingPrescriptions ?? 0, icon: TrendingUp, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { title: t('dashboard.todaysSales'), value: formatCurrency(data.todaySales), icon: DollarSign, iconColor: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
+    { title: t('dashboard.totalSales'), value: data.totalSalesCount ?? 0, icon: ShoppingCart, iconColor: 'text-primary dark:text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
+    { title: t('dashboard.pendingPrescriptions'), value: data.pendingPrescriptions ?? 0, icon: TrendingUp, iconColor: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500/10 dark:bg-amber-500/20' },
   ];
 
   const financeCards = [
-    { title: t('dashboard.totalIncome'), value: formatCurrency(data.totalIncome), icon: DollarSign, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-    { title: t('dashboard.totalExpenses'), value: formatCurrency(data.totalExpenses), icon: AlertTriangle, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
-    { title: t('dashboard.netProfitLoss'), value: formatCurrency(data.netProfitLoss), icon: TrendingUp, iconColor: (data.netProfitLoss ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-600', bgColor: (data.netProfitLoss ?? 0) >= 0 ? 'bg-emerald-50' : 'bg-rose-50' },
+    { title: t('dashboard.totalIncome'), value: formatCurrency(data.totalIncome), icon: DollarSign, iconColor: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
+    { title: t('dashboard.totalExpenses'), value: formatCurrency(data.totalExpenses), icon: AlertTriangle, iconColor: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10 dark:bg-rose-500/20' },
+    { title: t('dashboard.netProfitLoss'), value: formatCurrency(data.netProfitLoss), icon: TrendingUp, iconColor: (data.netProfitLoss ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400', bgColor: (data.netProfitLoss ?? 0) >= 0 ? 'bg-emerald-500/10 dark:bg-emerald-500/20' : 'bg-rose-500/10 dark:bg-rose-500/20' },
   ];
 
   const crmCards = [
-    { title: 'Total Clients', value: data.totalClients ?? 0, icon: Users, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
-    { title: 'Leads', value: data.leads ?? 0, icon: Target, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
-    { title: 'Active Clients', value: data.activeClients ?? 0, icon: Activity, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-    { title: 'Due Follow-ups', value: data.dueFollowUps ?? 0, icon: AlertTriangle, iconColor: 'text-rose-600', bgColor: 'bg-rose-50' },
+    { title: 'Total Clients', value: data.totalClients ?? 0, icon: Users, iconColor: 'text-primary dark:text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
+    { title: 'Leads', value: data.leads ?? 0, icon: Target, iconColor: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500/10 dark:bg-amber-500/20' },
+    { title: 'Active Clients', value: data.activeClients ?? 0, icon: Activity, iconColor: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
+    { title: 'Due Follow-ups', value: data.dueFollowUps ?? 0, icon: AlertTriangle, iconColor: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-500/10 dark:bg-rose-500/20' },
   ];
 
   const marketingCards = [
-    { title: 'Active Campaigns', value: data.activeCampaigns ?? 0, icon: Megaphone, iconColor: 'text-primary', bgColor: 'bg-primary/10' },
-    { title: 'Total Leads', value: data.totalLeads ?? 0, icon: Target, iconColor: 'text-blue-600', bgColor: 'bg-blue-50' },
-    { title: 'Open Leads', value: data.openLeads ?? 0, icon: Users, iconColor: 'text-amber-600', bgColor: 'bg-amber-50' },
-    { title: 'Conversion Rate', value: `${data.conversionRate ?? 0}%`, icon: TrendingUp, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: 'Active Campaigns', value: data.activeCampaigns ?? 0, icon: Megaphone, iconColor: 'text-primary dark:text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
+    { title: 'Total Leads', value: data.totalLeads ?? 0, icon: Target, iconColor: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10 dark:bg-blue-500/20' },
+    { title: 'Open Leads', value: data.openLeads ?? 0, icon: Users, iconColor: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500/10 dark:bg-amber-500/20' },
+    { title: 'Conversion Rate', value: `${data.conversionRate ?? 0}%`, icon: TrendingUp, iconColor: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
   ];
 
   let cards = [];

@@ -224,15 +224,15 @@ const ChickenSaleForm = () => {
           </div>
         </div>
 
-        <div className="rounded-xl border p-4 bg-slate-50 text-sm grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div><span className="text-slate-500 block">Available flock</span><strong>{available.toLocaleString()}</strong></div>
-          <div><span className="text-slate-500 block">Sale quantity</span><strong>{totals.qty.toLocaleString()}</strong></div>
-          <div><span className="text-slate-500 block">Remaining after sale</span><strong>{totals.remaining.toLocaleString()}</strong></div>
-          <div><span className="text-slate-500 block">Total</span><strong>{formatCurrency(totals.total)}</strong></div>
+        <div className="rounded-xl border border-border/70 p-4 bg-card text-sm grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div><span className="text-muted-foreground block">Available flock</span><strong>{available.toLocaleString()}</strong></div>
+          <div><span className="text-muted-foreground block">Sale quantity</span><strong>{totals.qty.toLocaleString()}</strong></div>
+          <div><span className="text-muted-foreground block">Remaining after sale</span><strong>{totals.remaining.toLocaleString()}</strong></div>
+          <div><span className="text-muted-foreground block">Total</span><strong>{formatCurrency(totals.total)}</strong></div>
         </div>
 
         {form.items.map((line, idx) => (
-          <div key={idx} className="grid grid-cols-1 sm:grid-cols-5 gap-3 border rounded-xl p-4">
+          <div key={idx} className="grid grid-cols-1 sm:grid-cols-5 gap-3 border border-border/70 bg-card rounded-xl p-4">
             <div className="space-y-2">
               <Label>Pricing</Label>
               <Select value={line.pricingMethod} onValueChange={(v) => updateLine(idx, { pricingMethod: v })}>

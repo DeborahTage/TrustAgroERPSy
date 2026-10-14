@@ -45,23 +45,23 @@ export default function InventoryDashboard() {
       description: 'Working capital in stock',
       icon: DollarSign,
       iconColor: 'text-primary',
-      bgColor: 'bg-primary/10',
+      bgColor: 'bg-primary/10 dark:bg-primary/20',
     },
     {
       title: 'Inventory Turnover',
       value: `${(data.inventory_turnover || 0).toFixed(1)}%`,
       description: 'Stock velocity (30d)',
       icon: RefreshCw,
-      iconColor: 'text-emerald-600',
-      bgColor: 'bg-emerald-50'
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20'
     },
     {
       title: 'Pending Requisitions',
       value: data.pending_requisitions || 0,
       description: 'Unfulfilled internal requests',
       icon: FileText,
-      iconColor: 'text-amber-600',
-      bgColor: 'bg-amber-50',
+      iconColor: 'text-amber-600 dark:text-amber-400',
+      bgColor: 'bg-amber-500/10 dark:bg-amber-500/20',
       onClick: () => navigate('/inventory/requisitions')
     },
     {
@@ -69,16 +69,16 @@ export default function InventoryDashboard() {
       value: data.expiring_count || 0,
       description: 'Items expiring in 30 days',
       icon: AlertTriangle,
-      iconColor: 'text-rose-600',
-      bgColor: 'bg-rose-50'
+      iconColor: 'text-rose-600 dark:text-rose-400',
+      bgColor: 'bg-rose-500/10 dark:bg-rose-500/20'
     },
     {
       title: 'Low Stock SKU',
       value: data.low_stock_count || 0,
       description: 'Below replenishment point',
       icon: ShoppingCart,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50'
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-500/10 dark:bg-blue-500/20'
     }
   ];
 
@@ -120,21 +120,21 @@ export default function InventoryDashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Left Column: Movement Analytics */}
         <div className="xl:col-span-2 space-y-8">
-          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-            <CardHeader className="bg-white py-6 border-b border-slate-50 px-8">
+          <Card className="erp-card overflow-hidden">
+            <CardHeader className="py-6 border-b border-border/60 px-8">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-xl font-black tracking-tight text-slate-900">Supply Chain Flow</CardTitle>
-                  <CardDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Inbound vs Outbound Movement Trend</CardDescription>
+                  <CardTitle className="text-xl font-black tracking-tight text-foreground">Supply Chain Flow</CardTitle>
+                  <CardDescription className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Inbound vs Outbound Movement Trend</CardDescription>
                 </div>
                 <div className="flex gap-4">
                   <div className="flex items-center gap-2">
                     <div className="h-3 w-3 rounded-full bg-primary" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Inbound</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inbound</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-3 w-3 rounded-full bg-rose-500" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Outbound</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Outbound</span>
                   </div>
                 </div>
               </div>
@@ -145,19 +145,19 @@ export default function InventoryDashboard() {
                   <AreaChart data={trendData}>
                     <defs>
                       <linearGradient id="colorIn" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15} />
+                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
                         <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorOut" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.15} />
+                        <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2} />
                         <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="stroke-border/40" />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: 'currentColor' }} className="text-muted-foreground" dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: 'currentColor' }} className="text-muted-foreground" />
                     <Tooltip
-                      contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                      contentStyle={{ borderRadius: '1rem', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }}
                       itemStyle={{ fontWeight: 800, fontSize: '12px' }}
                     />
                     <Area type="monotone" dataKey="in" stroke="#4f46e5" strokeWidth={4} fill="url(#colorIn)" fillOpacity={1} />
@@ -169,9 +169,9 @@ export default function InventoryDashboard() {
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-              <CardHeader className="p-6 border-b border-slate-50">
-                <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Stock Distribution</CardTitle>
+            <Card className="erp-card overflow-hidden">
+              <CardHeader className="p-6 border-b border-border/60">
+                <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Stock Distribution</CardTitle>
               </CardHeader>
               <CardContent className="p-8 flex flex-col items-center">
                 <div className="h-[220px] w-full">
@@ -189,35 +189,35 @@ export default function InventoryDashboard() {
                           <Cell key={`cell-${index}`} fill={['#6366f1', '#10b981', '#f59e0b', '#3b82f6'][index % 4]} cornerRadius={8} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip contentStyle={{ borderRadius: '1rem', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-              <CardHeader className="p-6 border-b border-slate-50 flex flex-row justify-between items-center">
-                <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Low Stock Registry</CardTitle>
-                <Badge className="bg-rose-50 text-rose-600 border-none font-black text-[9px] uppercase tracking-tighter">Critical Replenishment</Badge>
+            <Card className="erp-card overflow-hidden">
+              <CardHeader className="p-6 border-b border-border/60 flex flex-row justify-between items-center">
+                <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Low Stock Registry</CardTitle>
+                <Badge className="bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-none font-black text-[9px] uppercase tracking-tighter">Critical Replenishment</Badge>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[280px]">
                   <div className="p-4 space-y-4">
                     {(data.low_stock || []).map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-3 rounded-2xl bg-slate-50">
+                      <div key={idx} className="flex justify-between items-center p-3 rounded-2xl bg-muted/40 dark:bg-slate-800/40 border border-border/40">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                            <Package className="h-5 w-5 text-slate-400" />
+                          <div className="h-10 w-10 rounded-xl bg-card flex items-center justify-center shadow-xs border border-border/40">
+                            <Package className="h-5 w-5 text-muted-foreground" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 text-sm">{item.itemName}</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.sku}</span>
+                            <span className="font-bold text-foreground text-sm">{item.itemName}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{item.sku}</span>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-black text-rose-600">{item.currentStock} / {item.reorderPoint}</div>
-                          <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{item.unit || 'Units'}</div>
+                          <div className="text-sm font-black text-rose-600 dark:text-rose-400">{item.currentStock} / {item.reorderPoint}</div>
+                          <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{item.unit || 'Units'}</div>
                         </div>
                       </div>
                     ))}
@@ -267,33 +267,33 @@ export default function InventoryDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+          <Card className="erp-card overflow-hidden">
             <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-sm font-black text-slate-900 flex items-center gap-3">
+              <CardTitle className="text-sm font-black text-foreground flex items-center gap-3">
                 <History className="h-5 w-5 text-primary" /> Operational Log
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="h-[520px]">
                 <div className="p-8 space-y-8 relative">
-                  <div className="absolute left-[3.15rem] top-12 bottom-8 w-[2px] bg-slate-50" />
+                  <div className="absolute left-[3.15rem] top-12 bottom-8 w-[2px] bg-border" />
                   {data.activity_timeline?.map((log, i) => (
                     <div key={i} className="flex gap-6 relative">
                       <div className={cn(
-                        "h-6 w-6 rounded-full border-[6px] border-white z-10 mt-1 shadow-sm shrink-0",
+                        "h-6 w-6 rounded-full border-[6px] border-card z-10 mt-1 shadow-sm shrink-0",
                         log.action === 'RECEIPT' ? 'bg-emerald-500' :
                           log.action === 'SALE' ? 'bg-primary/100' :
-                            log.action === 'REQUISITION' ? 'bg-amber-500' : 'bg-slate-300'
+                            log.action === 'REQUISITION' ? 'bg-amber-500' : 'bg-slate-500'
                       )} />
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-3">
-                          <span className="text-[11px] font-black text-slate-900 leading-none">{log.action}</span>
-                          <span className="text-[10px] font-bold text-slate-400">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-[11px] font-black text-foreground leading-none">{log.action}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
-                        <p className="text-sm font-medium text-slate-600 leading-tight">
-                          <span className="font-black text-slate-900">{log.qty} Units</span> of {log.item} processed.
+                        <p className="text-sm font-medium text-muted-foreground leading-tight">
+                          <span className="font-black text-foreground">{log.qty} Units</span> of {log.item} processed.
                         </p>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                           <User className="h-3 w-3" /> {log.user}
                         </span>
                       </div>

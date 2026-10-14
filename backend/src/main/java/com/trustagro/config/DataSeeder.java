@@ -41,6 +41,7 @@ public class DataSeeder implements CommandLineRunner {
 
     private static final List<Map.Entry<String, Role>> DEMO_USERS = List.of(
             Map.entry("admin@trustagro.com", Role.ADMIN),
+            Map.entry("gm@trustagro.com", Role.GENERAL_MANAGER),
             Map.entry("farmmanager@trustagro.com", Role.FARM_MANAGER),
             Map.entry("inventory@trustagro.com", Role.INVENTORY_MANAGER),
             Map.entry("pharmacy@trustagro.com", Role.PHARMACIST),
@@ -207,7 +208,7 @@ public class DataSeeder implements CommandLineRunner {
     private String formatRoleName(Role role) {
         return switch (role) {
             case ADMIN -> "System Administrator";
-            case GENERAL_MANAGER -> "General Manager";
+            case GENERAL_MANAGER -> "General Manager (Trust Agro Consulting & Farming)";
             case OPERATIONS_MANAGER -> "Operations Manager";
             case SECRETARY -> "Secretary";
             case FARM_MANAGER -> "Farm Manager";
@@ -265,43 +266,51 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedVeterinaryPharmacyItems() {
-        seedPharmacyItem("PHARM-ASHIENERO-10-ORAL", "ASHIENERO 10% ORAL", ItemCategory.DRUG, ItemUnit.BOTTLE, "Antibiotic", "320.00");
-        seedPharmacyItem("PHARM-LIMOXIN", "LIMOXIN", ItemCategory.DRUG, ItemUnit.BOTTLE, "Antibiotic", "280.00");
-        seedPharmacyItem("PHARM-RESPIMINT-ORAL", "RESPIMINT ORAL", ItemCategory.DRUG, ItemUnit.BOTTLE, "Respiratory treatment", "260.00");
-        seedPharmacyItem("PHARM-TOLTRACOX", "TOLTRACOX", ItemCategory.DRUG, ItemUnit.BOTTLE, "Anticoccidial", "340.00");
-        seedPharmacyItem("PHARM-COXASAN-ORAL", "COXASAN ORAL", ItemCategory.DRUG, ItemUnit.BOTTLE, "Anticoccidial", "300.00");
-        seedPharmacyItem("PHARM-AMPROLIN-300-WS", "AMPROLIN-300 WS", ItemCategory.DRUG, ItemUnit.BOX, "Anticoccidial", "360.00");
-        seedPharmacyItem("PHARM-PIPERIN-WS", "PIPERIN WS", ItemCategory.DRUG, ItemUnit.BOX, "Antiparasitic", "240.00");
+        // DRUG
+        seedPharmacyItem("PHARM-ASHIENERO-10-ORAL", "ASHIENERO 10 % ORAL", ItemCategory.DRUG, ItemUnit.PIECE, "Antibiotic", "600.00");
+        seedPharmacyItem("PHARM-TOLTRACOX", "TOLTRACOX", ItemCategory.DRUG, ItemUnit.PIECE, "Anticoccidial", "800.00");
+        seedPharmacyItem("PHARM-LIMOXIN", "LIMOXIN", ItemCategory.DRUG, ItemUnit.PIECE, "Antibiotic", "1200.00");
+        seedPharmacyItem("PHARM-RESPIMINT-ORAL", "RESPIMINT ORAL", ItemCategory.DRUG, ItemUnit.PIECE, "Respiratory treatment", "2000.00");
+        seedPharmacyItem("PHARM-COXASAN-ORAL", "COXASAN ORAL", ItemCategory.DRUG, ItemUnit.PIECE, "Anticoccidial", "1800.00");
+        seedPharmacyItem("PHARM-AMPROLIN-300-WS", "AMPROLIN-300 ws", ItemCategory.DRUG, ItemUnit.PIECE, "Anticoccidial", "650.00");
+        seedPharmacyItem("PHARM-PIPERIN-WS", "PIPERIN ws", ItemCategory.DRUG, ItemUnit.PIECE, "Antiparasitic", "600.00");
 
-        seedPharmacyItem("PHARM-LASOTA-VACCINE", "LASOTA VACCINE", ItemCategory.VACCINE, ItemUnit.VIAL, "Poultry vaccine", "180.00");
-        seedPharmacyItem("PHARM-TYPHOID-VACCINE", "TYPHOID VACCINE", ItemCategory.VACCINE, ItemUnit.VIAL, "Poultry vaccine", "220.00");
-        seedPharmacyItem("PHARM-IB-VACCINE", "IB VACCINE", ItemCategory.VACCINE, ItemUnit.VIAL, "Poultry vaccine", "190.00");
+        // VACCINE
+        seedPharmacyItem("PHARM-LASOTA-VACCINE", "LASOTA VACCINE", ItemCategory.VACCINE, ItemUnit.DOSE, "Poultry vaccine", "1.50");
+        seedPharmacyItem("PHARM-TYPHOID-VACCINE", "TYPHOID VACCINE", ItemCategory.VACCINE, ItemUnit.DOSE, "Poultry vaccine", "3.00");
+        seedPharmacyItem("PHARM-IB-VACCINE", "IB VACCINE", ItemCategory.VACCINE, ItemUnit.DOSE, "Poultry vaccine", "2.20");
 
-        seedPharmacyItem("PHARM-VITABOOST", "VITABOOST", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Vitamin supplement", "210.00");
-        seedPharmacyItem("PHARM-AMINOVIT", "AMINOVIT", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Amino acid supplement", "230.00");
-        seedPharmacyItem("PHARM-VIT-ADEK", "VIT-ADEK", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Vitamin supplement", "250.00");
-        seedPharmacyItem("PHARM-MAXIVIT", "MAXIVIT", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Vitamin supplement", "240.00");
-        seedPharmacyItem("PHARM-INTROVIT-A-ORAL", "INTROVIT A+ ORAL", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Vitamin supplement", "270.00");
-        seedPharmacyItem("PHARM-INTROVIT-A-WS", "INTROVIT A+ WS", ItemCategory.VITAMIN, ItemUnit.BOX, "Water soluble vitamin", "275.00");
-        seedPharmacyItem("PHARM-CALCIMIN-P-ORAL", "CALCIMIN-P ORAL", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Mineral supplement", "235.00");
-        seedPharmacyItem("PHARM-EGG-STIMULANT", "EGG STIMULANT", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Layer supplement", "245.00");
-        seedPharmacyItem("PHARM-ARMOR", "ARMOR", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Supplement", "255.00");
-        seedPharmacyItem("PHARM-GARVITAL-ORAL", "GARVITAL ORAL", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Supplement", "225.00");
-        seedPharmacyItem("PHARM-SPECIAL-LIQUID", "SPECIAL LIQUID", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Supplement", "215.00");
-        seedPharmacyItem("PHARM-SYNBIOTIC", "SYNBIOTIC", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Gut health supplement", "265.00");
-        seedPharmacyItem("PHARM-TEKNOACID", "TEKNOACID", ItemCategory.VITAMIN, ItemUnit.BOTTLE, "Feed additive", "295.00");
+        // VITAMIN (Supplements & Feed Additives)
+        seedPharmacyItem("PHARM-VITABOOST", "VITABOOST", ItemCategory.VITAMIN, ItemUnit.PIECE, "Vitamin supplement", "450.00");
+        seedPharmacyItem("PHARM-TEKNOACID", "TEKNOACID", ItemCategory.VITAMIN, ItemUnit.PIECE, "Feed additive", "1500.00");
+        seedPharmacyItem("PHARM-AMINOVIT", "AMINOVIT", ItemCategory.VITAMIN, ItemUnit.PIECE, "Amino acid supplement", "525.00");
+        seedPharmacyItem("PHARM-VIT-ADEK", "VIT-ADEK", ItemCategory.VITAMIN, ItemUnit.PIECE, "Vitamin supplement", "750.00");
+        seedPharmacyItem("PHARM-SPECIAL-LIQUID", "SPECIAL LIQUID", ItemCategory.VITAMIN, ItemUnit.PIECE, "Supplement", "700.00");
+        seedPharmacyItem("PHARM-MAXIVIT", "MAXIVIT", ItemCategory.VITAMIN, ItemUnit.PIECE, "Vitamin supplement", "400.00");
+        seedPharmacyItem("PHARM-EGG-STIMULANT", "EGG STIMULANT", ItemCategory.VITAMIN, ItemUnit.PIECE, "Layer supplement", "500.00");
+        seedPharmacyItem("PHARM-SYNBIOTIC", "SYNBIOTIC", ItemCategory.VITAMIN, ItemUnit.PIECE, "Gut health supplement", "500.00");
+        seedPharmacyItem("PHARM-ARMOR", "ARMOR", ItemCategory.VITAMIN, ItemUnit.PIECE, "Supplement", "700.00");
+        seedPharmacyItem("PHARM-INTRASAN-PH-ORAL", "INTRASAN PH ORAL", ItemCategory.VITAMIN, ItemUnit.PIECE, "Water acidifier & gut health", "1500.00");
+        seedPharmacyItem("PHARM-GARVITAL-ORAL", "GARVITAL ORAL", ItemCategory.VITAMIN, ItemUnit.PIECE, "Supplement", "1800.00");
+        seedPharmacyItem("PHARM-CALCIMIN-P-ORAL", "CALCIMIN-P ORAL", ItemCategory.VITAMIN, ItemUnit.PIECE, "Mineral supplement", "1800.00");
+        seedPharmacyItem("PHARM-INTROVIT-A-ORAL", "INTROVIT A+ ORAL", ItemCategory.VITAMIN, ItemUnit.PIECE, "Vitamin supplement", "500.00");
+        seedPharmacyItem("PHARM-INTROVIT-A-WS", "INTROVIT A+ WS", ItemCategory.VITAMIN, ItemUnit.PIECE, "Water soluble vitamin", "500.00");
 
-        seedPharmacyItem("PHARM-LAYER-FEED", "LAYER FEED", ItemCategory.FEED, ItemUnit.SACK, "Layer feed", "1500.00");
-        seedPharmacyItem("PHARM-PULLET-FEED", "PULLET FEED", ItemCategory.FEED, ItemUnit.SACK, "Pullet feed", "1450.00");
-        seedPharmacyItem("PHARM-MOLASES", "MOLASES", ItemCategory.FEED, ItemUnit.LITER, "Feed ingredient", "120.00");
-        seedPharmacyItem("PHARM-FINISHER", "FINISHER", ItemCategory.FEED, ItemUnit.SACK, "Finisher feed", "1520.00");
+        // FEED
+        seedPharmacyItem("PHARM-LAYER-FEED", "LAYER FEED", ItemCategory.FEED, ItemUnit.PIECE, "Layer feed", "9050.00");
+        seedPharmacyItem("PHARM-PULLET-FEED", "PULLET FEED", ItemCategory.FEED, ItemUnit.PIECE, "Pullet feed", "8600.00");
+        seedPharmacyItem("PHARM-MOLASES", "MOLASES", ItemCategory.FEED, ItemUnit.KG, "Feed ingredient", "300.00");
+        seedPharmacyItem("PHARM-FINISHER", "FINISHER", ItemCategory.FEED, ItemUnit.PIECE, "Finisher feed", "650.00");
 
-        seedPharmacyItem("PHARM-MANUAL-DRINKER", "MANUAL DRINKER", ItemCategory.EQUIPMENT, ItemUnit.PIECE, "Poultry equipment", "450.00");
-        seedPharmacyItem("PHARM-AUTOMATIC-DRINKER", "AUTOMATIC DRINKER", ItemCategory.EQUIPMENT, ItemUnit.PIECE, "Poultry equipment", "950.00");
-        seedPharmacyItem("PHARM-FEEDER", "FEEDER", ItemCategory.EQUIPMENT, ItemUnit.PIECE, "Poultry equipment", "520.00");
+        // EQUIPMENT
+        seedPharmacyItem("PHARM-MANUAL-DRINKER", "MANUAL DRINKER", ItemCategory.EQUIPMENT, ItemUnit.PIECE, "Poultry equipment", "370.00");
+        seedPharmacyItem("PHARM-FEEDER", "FEEDER", ItemCategory.EQUIPMENT, ItemUnit.PIECE, "Poultry equipment", "500.00");
+        seedPharmacyItem("PHARM-AUTOMATIC-DRINKER", "AUTOMATIC DRINKER", ItemCategory.EQUIPMENT, ItemUnit.PIECE, "Poultry equipment", "3050.00");
 
-        seedPharmacyItem("PHARM-HYDROGEN-PEROXIDE", "HYDROGEN PER OXIDE", ItemCategory.FARM_MATERIAL, ItemUnit.LITER, "Disinfectant and biosecurity", "180.00");
-        seedPharmacyItem("PHARM-EM", "EM", ItemCategory.FARM_MATERIAL, ItemUnit.LITER, "Farm material", "160.00");
+        // FARM MATERIAL
+        seedPharmacyItem("PHARM-HYDROGEN-PEROXIDE", "HYDROGEN PER OXIDE", ItemCategory.FARM_MATERIAL, ItemUnit.LITER, "Disinfectant and biosecurity", "450.00");
+        // Reset mock stock quantities so unverified piece counts are not populated
+        jdbcTemplate.update("UPDATE inventory_items SET current_stock = NULL WHERE sku LIKE 'PHARM-%'");
     }
 
     private void seedPharmacyItem(String sku, String name, ItemCategory category, ItemUnit unit, String subcategory, String retailPrice) {
@@ -311,9 +320,9 @@ public class DataSeeder implements CommandLineRunner {
         item.setCategory(category);
         item.setSubcategory(subcategory);
         item.setUnit(unit);
-        item.setCurrentStock(item.getCurrentStock() != null && item.getCurrentStock() > 0 ? item.getCurrentStock() : 25.0);
-        item.setReorderPoint(item.getReorderPoint() != null && item.getReorderPoint() > 0 ? item.getReorderPoint() : 5.0);
-        item.setReorderQty(item.getReorderQty() != null && item.getReorderQty() > 0 ? item.getReorderQty() : 10.0);
+        item.setCurrentStock(null);
+        item.setReorderPoint(0.0);
+        item.setReorderQty(0.0);
         item.setRetailPrice(new BigDecimal(retailPrice));
         item.setSellingPrice(new BigDecimal(retailPrice));
         item.setStatus(ItemStatus.ACTIVE);

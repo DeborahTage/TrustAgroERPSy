@@ -47,7 +47,7 @@ const VeterinaryPage = () => {
   const renderCalendar = () => {
     let days = [];
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-24 bg-gray-50/30 rounded-2xl" />);
+      days.push(<div key={`empty-${i}`} className="h-24 bg-muted/20 rounded-2xl" />);
     }
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
@@ -56,15 +56,15 @@ const VeterinaryPage = () => {
 
       days.push(
         <div key={i} className={cn(
-          "h-24 p-3 border border-gray-100 rounded-2xl flex flex-col overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group",
-          isToday ? "bg-emerald-900 border-emerald-900 text-white shadow-xl shadow-primary/10" : "bg-white"
+          "h-24 p-3 border rounded-2xl flex flex-col overflow-hidden hover:shadow-lg hover:border-primary/40 transition-all cursor-pointer group",
+          isToday ? "bg-primary border-primary text-primary-foreground shadow-xl shadow-primary/10" : "bg-card border-border"
         )}>
-          <span className={cn("text-xs font-black uppercase tracking-tighter", isToday ? "text-emerald-200" : "text-gray-400 group-hover:text-primary")}>{i}</span>
+          <span className={cn("text-xs font-black uppercase tracking-tighter", isToday ? "text-primary-foreground font-black" : "text-muted-foreground group-hover:text-primary")}>{i}</span>
           <div className="flex-1 overflow-y-auto mt-2 space-y-1 scrollbar-hide">
             {dayVacs.map(v => (
               <div key={v.id} title={v.vaccineName} className={cn(
                 "text-[9px] px-2 py-0.5 rounded-lg truncate font-black uppercase tracking-tight",
-                isToday ? "bg-white/10 text-white" : v.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-700" : "bg-primary/10 text-primary"
+                isToday ? "bg-white/20 text-white" : v.status === 'COMPLETED' ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400" : "bg-primary/10 text-primary dark:bg-primary/20"
               )}>
                 {v.vaccineName}
               </div>
@@ -308,24 +308,24 @@ const VeterinaryPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm bg-white rounded-[2.5rem] p-4 flex flex-col gap-2">
-            <Button variant="ghost" className="h-14 rounded-2xl justify-start px-6 group hover:bg-blue-50 transition-all" onClick={() => navigate('/veterinary/vaccinations/new')}>
-              <div className="h-10 w-10 bg-blue-100 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                <Syringe className="h-5 w-5 text-blue-600" />
+          <Card className="erp-card rounded-3xl border border-border p-4 flex flex-col gap-2">
+            <Button variant="ghost" className="h-14 rounded-2xl justify-start px-6 group hover:bg-muted transition-all" onClick={() => navigate('/veterinary/vaccinations/new')}>
+              <div className="h-10 w-10 bg-blue-100 dark:bg-blue-950/60 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                <Syringe className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <span className="text-sm font-black text-gray-700 uppercase tracking-tight">Protocol Entry</span>
+              <span className="text-sm font-black text-foreground uppercase tracking-tight">Protocol Entry</span>
             </Button>
-            <Button variant="ghost" className="h-14 rounded-2xl justify-start px-6 group hover:bg-rose-50 transition-all" onClick={() => navigate('/veterinary/disease-cases/new')}>
-              <div className="h-10 w-10 bg-rose-100 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                <ShieldAlert className="h-5 w-5 text-rose-600" />
+            <Button variant="ghost" className="h-14 rounded-2xl justify-start px-6 group hover:bg-muted transition-all" onClick={() => navigate('/veterinary/disease-cases/new')}>
+              <div className="h-10 w-10 bg-rose-100 dark:bg-rose-950/60 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                <ShieldAlert className="h-5 w-5 text-rose-600 dark:text-rose-400" />
               </div>
-              <span className="text-sm font-black text-gray-700 uppercase tracking-tight">Pathology Log</span>
+              <span className="text-sm font-black text-foreground uppercase tracking-tight">Pathology Log</span>
             </Button>
-            <Button variant="ghost" className="h-14 rounded-2xl justify-start px-6 group hover:bg-emerald-50 transition-all" onClick={() => navigate('/veterinary/treatments/new')}>
-              <div className="h-10 w-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                <Stethoscope className="h-5 w-5 text-emerald-600" />
+            <Button variant="ghost" className="h-14 rounded-2xl justify-start px-6 group hover:bg-muted transition-all" onClick={() => navigate('/veterinary/treatments/new')}>
+              <div className="h-10 w-10 bg-emerald-100 dark:bg-emerald-950/60 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                <Stethoscope className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <span className="text-sm font-black text-gray-700 uppercase tracking-tight">Medical Plan</span>
+              <span className="text-sm font-black text-foreground uppercase tracking-tight">Medical Plan</span>
             </Button>
           </Card>
         </div>
@@ -333,28 +333,28 @@ const VeterinaryPage = () => {
         <div className="lg:col-span-3">
           <Tabs defaultValue="vaccinations" className="w-full">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <TabsList className="bg-gray-100/50 p-1.5 rounded-3xl h-auto border border-gray-100 flex-wrap sm:flex-nowrap">
+              <TabsList className="bg-muted/40 p-1.5 rounded-2xl h-auto border border-border flex-wrap sm:flex-nowrap">
                 {['vaccinations', 'healthReports', 'surveillance', 'ledger', 'biosecurity'].map(tab => (
-                  <TabsTrigger key={tab} value={tab} className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-lg rounded-2xl px-6 py-2.5 font-black text-[10px] uppercase tracking-wider transition-all">
+                  <TabsTrigger key={tab} value={tab} className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl px-6 py-2.5 font-bold text-[10px] uppercase tracking-wider transition-all">
                     {tab === 'healthReports' ? 'Surveillance' : tab === 'surveillance' ? 'Diseases' : tab === 'ledger' ? 'Rx Ledger' : tab}
                   </TabsTrigger>
                 ))}
               </TabsList>
-              <div className="h-11 px-6 bg-emerald-50 rounded-2xl flex items-center gap-3 border border-emerald-100 shadow-sm shadow-emerald-50">
-                <ShieldCheck className="h-4.5 w-4.5 text-emerald-600" />
-                <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest whitespace-nowrap">Status: Biosecure</span>
+              <div className="h-11 px-6 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl flex items-center gap-3 border border-emerald-200 dark:border-emerald-800/40 shadow-sm">
+                <ShieldCheck className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-widest whitespace-nowrap">Status: Biosecure</span>
               </div>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden min-h-[600px]">
+            <div className="erp-card rounded-3xl border border-border overflow-hidden min-h-[600px]">
               <TabsContent value="vaccinations" className="m-0 focus:ring-0 outline-none">
-                <div className="flex justify-between items-center p-6 border-b border-gray-50">
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Vaccination Compliance</h3>
-                  <div className="bg-gray-100 p-1 rounded-xl flex gap-1">
-                    <Button size="sm" variant={vaccinationView === 'list' ? 'default' : 'ghost'} className={cn("h-8 rounded-lg text-[9px] uppercase font-black", vaccinationView === 'list' && "bg-white text-primary shadow-sm hover:bg-white")} onClick={() => setVaccinationView('list')}>
+                <div className="flex justify-between items-center p-6 border-b border-border/60">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Vaccination Compliance</h3>
+                  <div className="bg-muted/50 p-1 rounded-xl flex gap-1">
+                    <Button size="sm" variant={vaccinationView === 'list' ? 'default' : 'ghost'} className={cn("h-8 rounded-lg text-[9px] uppercase font-bold", vaccinationView === 'list' && "bg-card text-primary shadow-sm hover:bg-card")} onClick={() => setVaccinationView('list')}>
                       <List className="h-3 w-3 mr-1" /> Grid
                     </Button>
-                    <Button size="sm" variant={vaccinationView === 'calendar' ? 'default' : 'ghost'} className={cn("h-8 rounded-lg text-[9px] uppercase font-black", vaccinationView === 'calendar' && "bg-white text-primary shadow-sm hover:bg-white")} onClick={() => setVaccinationView('calendar')}>
+                    <Button size="sm" variant={vaccinationView === 'calendar' ? 'default' : 'ghost'} className={cn("h-8 rounded-lg text-[9px] uppercase font-bold", vaccinationView === 'calendar' && "bg-card text-primary shadow-sm hover:bg-card")} onClick={() => setVaccinationView('calendar')}>
                       <CalendarIcon className="h-3 w-3 mr-1" /> Calendar
                     </Button>
                   </div>
@@ -364,16 +364,16 @@ const VeterinaryPage = () => {
                 ) : (
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-8">
-                      <h3 className="text-xl font-black text-emerald-900 uppercase tracking-tighter">
+                      <h3 className="text-xl font-black text-foreground uppercase tracking-tight">
                         {new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}
                       </h3>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" className="rounded-xl bg-gray-50" onClick={() => { setCurrentMonth(prev => prev === 0 ? 11 : prev - 1); setCurrentYear(prev => currentMonth === 0 ? prev - 1 : prev); }}><ChevronRight className="rotate-180 h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="rounded-xl bg-gray-50" onClick={() => { setCurrentMonth(prev => prev === 11 ? 0 : prev + 1); setCurrentYear(prev => currentMonth === 11 ? prev + 1 : prev); }}><ChevronRight className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="rounded-xl bg-muted/40" onClick={() => { setCurrentMonth(prev => prev === 0 ? 11 : prev - 1); setCurrentYear(prev => currentMonth === 0 ? prev - 1 : prev); }}><ChevronRight className="rotate-180 h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="rounded-xl bg-muted/40" onClick={() => { setCurrentMonth(prev => prev === 11 ? 0 : prev + 1); setCurrentYear(prev => currentMonth === 11 ? prev + 1 : prev); }}><ChevronRight className="h-4 w-4" /></Button>
                       </div>
                     </div>
                     <div className="grid grid-cols-7 gap-4">
-                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d} className="text-center text-[10px] font-black uppercase text-gray-300 tracking-widest pb-4">{d}</div>)}
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d} className="text-center text-[10px] font-black uppercase text-muted-foreground tracking-widest pb-4">{d}</div>)}
                       {renderCalendar()}
                     </div>
                   </div>
@@ -387,8 +387,8 @@ const VeterinaryPage = () => {
               <TabsContent value="surveillance" className="m-0 focus:ring-0 outline-none">
                 <DataTable columns={[
                   { accessorKey: 'farmName', header: 'Farm' },
-                  { accessorKey: 'suspectedDisease', header: 'Pathology', cell: ({ row }) => <span className="font-black text-rose-600">{row.original.suspectedDisease}</span> },
-                  { accessorKey: 'dateDetected', header: 'Detection', cell: ({ row }) => <span className="font-bold text-gray-500">{formatDate(row.original.dateDetected)}</span> },
+                  { accessorKey: 'suspectedDisease', header: 'Pathology', cell: ({ row }) => <span className="font-black text-rose-600 dark:text-rose-400">{row.original.suspectedDisease}</span> },
+                  { accessorKey: 'dateDetected', header: 'Detection', cell: ({ row }) => <span className="font-bold text-muted-foreground">{formatDate(row.original.dateDetected)}</span> },
                   { accessorKey: 'severity', header: 'Triage', cell: ({ row }) => <StatusBadge status={row.original.severity?.toLowerCase()} /> },
                   { accessorKey: 'status', header: 'Resolution', cell: ({ row }) => <StatusBadge status={row.original.status?.toLowerCase()} /> }
                 ]} data={diseaseCases} loading={loading} />
@@ -397,8 +397,8 @@ const VeterinaryPage = () => {
               <TabsContent value="ledger" className="m-0 focus:ring-0 outline-none">
                 <DataTable columns={[
                   { accessorKey: 'prescriptionNumber', header: 'Rx Reference', cell: ({ row }) => <span className="font-black text-primary">#{row.original.prescriptionNumber}</span> },
-                  { accessorKey: 'drugName', header: 'Medication', cell: ({ row }) => <span className="font-bold text-slate-700">{row.original.drugName}</span> },
-                  { accessorKey: 'quantity', header: 'Dose Qty', cell: ({ row }) => <span className="font-black">{row.original.quantity} {row.original.unit}</span> },
+                  { accessorKey: 'drugName', header: 'Medication', cell: ({ row }) => <span className="font-bold text-foreground">{row.original.drugName}</span> },
+                  { accessorKey: 'quantity', header: 'Dose Qty', cell: ({ row }) => <span className="font-black text-foreground">{row.original.quantity} {row.original.unit}</span> },
                   { accessorKey: 'status', header: 'Fulfillment', cell: ({ row }) => <StatusBadge status={row.original.status?.toLowerCase()} /> }
                 ]} data={prescriptions} loading={loading} />
               </TabsContent>
@@ -406,22 +406,22 @@ const VeterinaryPage = () => {
               <TabsContent value="biosecurity" className="m-0 focus:ring-0 outline-none p-6">
                 <div className="flex justify-between items-center mb-8 px-2">
                   <div>
-                    <h3 className="text-xl font-black text-[#0f172a] uppercase tracking-tight">Security Audit</h3>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Farm Access and Sanitation Compliance</p>
+                    <h3 className="text-xl font-black text-foreground uppercase tracking-tight">Security Audit</h3>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Farm Access and Sanitation Compliance</p>
                   </div>
-                  <Button className="h-11 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] font-black uppercase text-[10px] px-6" onClick={() => navigate('/veterinary/biosecurity/new')}>
+                  <Button className="h-11 rounded-xl bg-primary text-primary-foreground font-bold uppercase text-[10px] px-6 shadow-md" onClick={() => navigate('/veterinary/biosecurity/new')}>
                     <Plus className="mr-2 h-4 w-4" /> Protocol Log
                   </Button>
                 </div>
                 <DataTable columns={[
-                  { accessorKey: 'timestamp', header: 'Timestamp', cell: ({ row }) => <span className="font-medium text-gray-500">{new Date(row.original.timestamp).toLocaleString()}</span> },
-                  { accessorKey: 'farmName', header: 'Entity', cell: ({ row }) => <span className="font-black">{row.original.farmName}</span> },
+                  { accessorKey: 'timestamp', header: 'Timestamp', cell: ({ row }) => <span className="font-medium text-muted-foreground">{new Date(row.original.timestamp).toLocaleString()}</span> },
+                  { accessorKey: 'farmName', header: 'Entity', cell: ({ row }) => <span className="font-bold text-foreground">{row.original.farmName}</span> },
                   { accessorKey: 'visitorName', header: 'Operator', cell: ({ row }) => <span className="font-bold text-primary">{row.original.visitorName || 'External Staff'}</span> },
                   {
                     id: 'compliance', header: 'Protocol Checks', cell: ({ row }) => (
                       <div className="flex gap-1.5 flex-wrap">
-                        {row.original.ppeWorn && <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 border-none font-black text-[8px] uppercase tracking-tight">PPE</span>}
-                        {row.original.footbathRefreshed && <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-blue-50 text-blue-700 border-none font-black text-[8px] uppercase tracking-tight">SANITIZED</span>}
+                        {row.original.ppeWorn && <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 font-bold text-[8px] uppercase tracking-tight">PPE</span>}
+                        {row.original.footbathRefreshed && <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40 font-bold text-[8px] uppercase tracking-tight">SANITIZED</span>}
                       </div>
                     )
                   }
@@ -433,37 +433,37 @@ const VeterinaryPage = () => {
       </div>
 
       <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
-        <DialogContent className="sm:max-w-[650px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
-          <div className="bg-[#0f172a] p-10 text-white relative">
+        <DialogContent className="sm:max-w-[650px] rounded-3xl p-0 overflow-hidden border border-border shadow-2xl bg-card">
+          <div className="bg-slate-900 p-8 sm:p-10 text-white relative">
             <div className="absolute top-0 right-0 p-10 opacity-5">
               <ClipboardCheck className="h-32 w-32" />
             </div>
             <DialogHeader>
-              <DialogTitle className="text-3xl font-black tracking-tighter">Clinical Peer Review</DialogTitle>
-              <DialogDescription className="text-emerald-300 font-black uppercase tracking-widest text-[10px] mt-2 opacity-70">
+              <DialogTitle className="text-3xl font-black tracking-tight text-white">Clinical Peer Review</DialogTitle>
+              <DialogDescription className="text-emerald-400 font-bold uppercase tracking-widest text-[10px] mt-2">
                 Assessing Environmental Health Incident: {selectedReport?.id}
               </DialogDescription>
             </DialogHeader>
           </div>
 
-          <div className="p-10 space-y-8 bg-white">
+          <div className="p-8 sm:p-10 space-y-8 bg-card text-foreground">
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Diagnosis Confirmation</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Diagnosis Confirmation</Label>
                 <Input
                   placeholder="Suspected Pathology..."
-                  className="h-12 rounded-2xl border-gray-100 bg-gray-50/50 font-bold focus:ring-primary"
+                  className="h-12 rounded-xl border border-border bg-background font-bold text-foreground focus:ring-primary"
                   value={reviewForm.suspectedDiagnosis}
                   onChange={e => setReviewForm(p => ({ ...p, suspectedDiagnosis: e.target.value }))}
                 />
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Risk Severity</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Risk Severity</Label>
                 <Select value={reviewForm.severity} onValueChange={v => setReviewForm(p => ({ ...p, severity: v }))}>
-                  <SelectTrigger className="h-12 rounded-2xl border-gray-100 bg-gray-50/50 font-black focus:ring-0">
+                  <SelectTrigger className="h-12 rounded-xl border border-border bg-background font-bold text-foreground focus:ring-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl">
+                  <SelectContent className="rounded-xl border border-border shadow-2xl">
                     {['LOW', 'MODERATE', 'HIGH', 'CRITICAL'].map(s => <SelectItem key={s} value={s} className="rounded-xl font-bold">{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -471,18 +471,18 @@ const VeterinaryPage = () => {
             </div>
 
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Clinical Directives</Label>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Clinical Directives</Label>
               <Textarea
                 placeholder="Document required medical interventions..."
-                className="rounded-3xl border-gray-100 bg-gray-50/50 min-h-[120px] p-5 font-medium leading-relaxed"
+                className="rounded-2xl border border-border bg-background text-foreground min-h-[120px] p-4 font-medium leading-relaxed"
                 value={reviewForm.treatmentPlan}
                 onChange={e => setReviewForm(p => ({ ...p, treatmentPlan: e.target.value }))}
               />
             </div>
 
-            <div className="flex justify-between items-center pt-6 border-t border-gray-50">
-              <Button variant="ghost" className="rounded-2xl font-black text-gray-400 uppercase tracking-widest text-[10px] px-8" onClick={() => setSelectedReport(null)}>Discard</Button>
-              <Button className="h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-tighter px-10 shadow-lg shadow-primary/10" onClick={submitReview}>
+            <div className="flex justify-between items-center pt-6 border-t border-border/60">
+              <Button variant="ghost" className="rounded-xl font-bold text-muted-foreground hover:text-foreground uppercase tracking-wider text-xs px-6" onClick={() => setSelectedReport(null)}>Discard</Button>
+              <Button className="h-12 rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-wider px-8 shadow-md" onClick={submitReview}>
                 Commit Audit
               </Button>
             </div>

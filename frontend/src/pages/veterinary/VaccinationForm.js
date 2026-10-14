@@ -74,43 +74,43 @@ const VaccinationForm = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="h-12 w-12 rounded-2xl bg-white shadow-sm border border-gray-100 hover:bg-gray-50 group transition-all"
+            className="h-12 w-12 rounded-2xl bg-card shadow-sm border border-border hover:bg-muted group transition-all"
             onClick={() => navigate('/veterinary')}
           >
-            <ArrowLeft className="h-5 w-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
+            <ArrowLeft className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
           </Button>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-gray-900 flex items-center gap-3">
+            <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
               Schedule Protocol
               <div className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/20 flex items-center gap-1.5">
                 <Syringe className="h-3 w-3" />
                 Medical Order
               </div>
             </h1>
-            <p className="text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest">Herd immunity orchestration & prophylactic management</p>
+            <p className="text-sm font-bold text-muted-foreground mt-1 uppercase tracking-widest">Herd immunity orchestration & prophylactic management</p>
           </div>
         </div>
-        <div className="h-px flex-1 bg-gray-100 hidden md:block mx-8" />
-        <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100">
+        <div className="h-px flex-1 bg-border hidden md:block mx-8" />
+        <div className="flex items-center gap-3 bg-muted/40 px-4 py-2 rounded-2xl border border-border">
           <Clock className="h-4 w-4 text-primary" />
-          <span className="text-[10px] font-black uppercase text-gray-500">Global Medical Clock Active</span>
+          <span className="text-[10px] font-black uppercase text-muted-foreground">Global Medical Clock Active</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-8">
-              <CardTitle className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2 uppercase">
+          <Card className="erp-card rounded-3xl overflow-hidden border border-border">
+            <CardHeader className="bg-muted/40 border-b border-border/60 p-8">
+              <CardTitle className="text-lg font-black text-foreground tracking-tight flex items-center gap-2 uppercase">
                 <FlaskConical className="h-5 w-5 text-primary" />
                 Biological Configuration
               </CardTitle>
-              <CardDescription className="text-xs font-bold text-gray-400">Specify biological agent and target population parameters</CardDescription>
+              <CardDescription className="text-xs font-bold text-muted-foreground">Specify biological agent and target population parameters</CardDescription>
             </CardHeader>
             <CardContent className="p-8">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {error && (
-                  <div className="p-4 text-xs font-black text-rose-700 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2">
+                  <div className="p-4 text-xs font-black text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2">
                     <AlertCircle className="h-5 w-5" />
                     {error}
                   </div>
@@ -118,12 +118,12 @@ const VaccinationForm = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Farm Zone *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Farm Zone *</Label>
                     <Select value={String(form.farmId)} onValueChange={handleFarmChange}>
-                      <SelectTrigger className="h-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-primary transition-all">
+                      <SelectTrigger className="h-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all">
                         <SelectValue placeholder="Select target facility" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                      <SelectContent className="rounded-xl border border-border shadow-2xl">
                         {farms.map((f) => (
                           <SelectItem key={f.id} value={String(f.id)} className="rounded-xl my-1 font-bold">{f.farmName}</SelectItem>
                         ))}
@@ -132,12 +132,12 @@ const VaccinationForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Flock Population *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Flock Population *</Label>
                     <Select value={String(form.flockId)} onValueChange={(v) => setForm({ ...form, flockId: v })} disabled={!form.farmId}>
-                      <SelectTrigger className={cn("h-12 border-2 rounded-2xl font-bold transition-all", !form.farmId ? "bg-gray-50 border-gray-100" : "bg-white border-gray-100 focus:ring-primary")}>
+                      <SelectTrigger className={cn("h-12 border rounded-xl font-bold transition-all text-foreground", !form.farmId ? "bg-muted/40 border-border" : "bg-background border-border focus:ring-primary")}>
                         <SelectValue placeholder="Select target batch" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                      <SelectContent className="rounded-xl border border-border shadow-2xl">
                         {flocks.map((f) => (
                           <SelectItem key={f.id} value={String(f.id)} className="rounded-xl my-1 font-bold">{f.batchCode}</SelectItem>
                         ))}
@@ -146,11 +146,11 @@ const VaccinationForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Biological Identity *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Biological Identity *</Label>
                     <div className="relative">
-                      <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
-                        className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-primary transition-all"
+                        className="h-12 pl-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all"
                         value={form.vaccineName}
                         onChange={(e) => setForm({ ...form, vaccineName: e.target.value })}
                         placeholder="e.g. LaSota B1, Mareks HVT"
@@ -159,14 +159,14 @@ const VaccinationForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Pathogen Defense</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Pathogen Defense</Label>
                     <div className="relative">
                       <ShieldCheck className="absolute z-10 left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 pointer-events-none" />
                       <Select value={form.diseaseProtectedAgainst} onValueChange={(v) => setForm({ ...form, diseaseProtectedAgainst: v })}>
-                        <SelectTrigger className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-primary transition-all">
+                        <SelectTrigger className="h-12 pl-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all">
                           <SelectValue placeholder="e.g. Newcastle, Gumboro" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl">
+                        <SelectContent className="rounded-xl border border-border shadow-2xl">
                           {diseaseOptions.map((d) => (
                             <SelectItem key={d.value} value={d.value} className="rounded-xl my-1 font-bold">{d.label}</SelectItem>
                           ))}
@@ -176,12 +176,12 @@ const VaccinationForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Administration Window *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Administration Window *</Label>
                     <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
                         type="date"
-                        className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-primary transition-all"
+                        className="h-12 pl-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all"
                         value={form.scheduledDate}
                         onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })}
                       />
@@ -189,10 +189,10 @@ const VaccinationForm = () => {
                   </div>
 
                   <div className="space-y-3 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Specific Protocol Remarks</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Specific Protocol Remarks</Label>
                     <Textarea
                       rows={4}
-                      className="bg-white border-2 border-gray-100 rounded-2xl font-medium text-sm focus:ring-primary transition-all p-4 leading-relaxed"
+                      className="bg-background border border-border rounded-xl font-medium text-foreground text-sm focus:ring-primary transition-all p-4 leading-relaxed"
                       value={form.remarks}
                       onChange={(e) => setForm({ ...form, remarks: e.target.value })}
                       placeholder="Include cold chain requirements, administration route (In-ovo, spray, ocular), or dosage specifics..."
@@ -201,10 +201,10 @@ const VaccinationForm = () => {
                 </div>
 
                 <div className="flex gap-4 pt-8">
-                  <Button type="submit" className="flex-[2] h-14 rounded-2xl bg-emerald-900 hover:bg-emerald-800 text-white font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95" disabled={loading}>
+                  <Button type="submit" className="flex-[2] h-14 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm uppercase tracking-wider shadow-md transition-all active:scale-95" disabled={loading}>
                     {loading ? 'Orchestrating Cycle...' : 'Authorize Schedule'}
                   </Button>
-                  <Button type="button" variant="outline" className="flex-1 h-14 rounded-2xl border-2 font-black text-sm uppercase tracking-widest hover:bg-gray-50" onClick={() => navigate('/veterinary')}>
+                  <Button type="button" variant="outline" className="flex-1 h-14 rounded-xl border border-border font-bold text-sm uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => navigate('/veterinary')}>
                     Discard
                   </Button>
                 </div>
@@ -214,46 +214,46 @@ const VaccinationForm = () => {
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-primary text-white overflow-hidden p-8">
+          <Card className="erp-card rounded-3xl border border-border bg-slate-900 text-white overflow-hidden p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-white/10 rounded-xl">
-                <Info className="h-5 w-5 text-emerald-100" />
+                <Info className="h-5 w-5 text-emerald-300" />
               </div>
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-100">Medical Guard</span>
+              <span className="text-xs font-black uppercase tracking-widest text-emerald-300">Medical Guard</span>
             </div>
             <div className="space-y-6">
               <div className="space-y-3">
                 <h4 className="text-sm font-black flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                   Cold Chain Protocol
                 </h4>
-                <p className="text-xs text-emerald-100/70 font-medium leading-relaxed italic">
+                <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
                   Ensure vaccines are maintained between 2°C and 8°C throughout the transit and administration phase.
                 </p>
               </div>
               <div className="h-px bg-white/10" />
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">Compliance Checklist</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">Compliance Checklist</p>
                 <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
                   <div className="h-1.5 w-1.5 bg-emerald-400 rounded-full" />
-                  <span className="text-[10px] font-bold">Withdrawal period verification</span>
+                  <span className="text-[10px] font-bold text-slate-200">Withdrawal period verification</span>
                 </div>
                 <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
                   <div className="h-1.5 w-1.5 bg-emerald-400 rounded-full" />
-                  <span className="text-[10px] font-bold">Equipment sterilization check</span>
+                  <span className="text-[10px] font-bold text-slate-200">Equipment sterilization check</span>
                 </div>
               </div>
             </div>
           </Card>
 
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-emerald-900 p-8 text-white">
+          <Card className="erp-card rounded-3xl border border-border p-8">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">Upcoming Vol</span>
-                <TrendingUp className="h-4 w-4 text-primary/70" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Upcoming Vol</span>
+                <TrendingUp className="h-4 w-4 text-primary" />
               </div>
-              <p className="text-2xl font-black">4,200</p>
-              <p className="text-[10px] font-bold text-emerald-300/60 uppercase tracking-widest">Chickens Targeted this Week</p>
+              <p className="text-3xl font-black text-foreground">4,200</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Chickens Targeted this Week</p>
             </div>
           </Card>
         </div>

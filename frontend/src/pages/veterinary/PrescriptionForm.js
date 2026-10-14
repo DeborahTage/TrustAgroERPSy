@@ -101,22 +101,22 @@ const PrescriptionForm = () => {
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-10">
+          <Card className="erp-card rounded-3xl overflow-hidden border border-border">
+            <CardHeader className="bg-muted/40 border-b border-border/60 p-8 sm:p-10">
               <div className="flex items-center gap-4 mb-2">
-                <div className="h-12 w-12 bg-emerald-900 rounded-2xl flex items-center justify-center">
-                  <FlaskConical className="h-6 w-6 text-emerald-300" />
+                <div className="h-12 w-12 bg-emerald-950/60 border border-emerald-800/50 rounded-2xl flex items-center justify-center">
+                  <FlaskConical className="h-6 w-6 text-emerald-400" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-black text-gray-900 tracking-tight uppercase">Medical Order Instruction</CardTitle>
-                  <CardDescription className="text-xs font-bold text-gray-400">Specify biological agent and target population protocols</CardDescription>
+                  <CardTitle className="text-xl font-black text-foreground tracking-tight uppercase">Medical Order Instruction</CardTitle>
+                  <CardDescription className="text-xs font-bold text-muted-foreground">Specify biological agent and target population protocols</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-10">
+            <CardContent className="p-8 sm:p-10">
               <form onSubmit={handleSubmit} className="space-y-10">
                 {error && (
-                  <div className="p-6 text-xs font-black text-rose-700 bg-rose-50 border border-rose-100 rounded-3xl flex items-center gap-4 animate-in slide-in-from-top-2">
+                  <div className="p-6 text-xs font-black text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 rounded-2xl flex items-center gap-4 animate-in slide-in-from-top-2">
                     <AlertCircle className="h-6 w-6" />
                     {error}
                   </div>
@@ -124,12 +124,12 @@ const PrescriptionForm = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Prescription Tier</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Prescription Tier</Label>
                     <Select value={form.prescriptionType} onValueChange={(v) => setForm({ ...form, prescriptionType: v })}>
-                      <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-[1.25rem] font-bold focus:ring-[#0f172a] transition-all">
+                      <SelectTrigger className="h-14 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="rounded-3xl border-none shadow-2xl">
+                      <SelectContent className="rounded-2xl border border-border shadow-2xl">
                         <SelectItem value="INTERNAL_FARM" className="rounded-xl my-1 font-bold">INTERNAL FARM HUB</SelectItem>
                         <SelectItem value="EXTERNAL_CLIENT" className="rounded-xl my-1 font-bold">EXTERNAL CLIENT PORTFOLIO</SelectItem>
                       </SelectContent>
@@ -137,11 +137,11 @@ const PrescriptionForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">RX Reference ID</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">RX Reference ID</Label>
                     <div className="relative">
-                      <Hash className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      <Hash className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
-                        className="h-14 pl-14 bg-gray-50 border-2 border-transparent rounded-[1.25rem] font-mono font-black text-primary cursor-not-allowed"
+                        className="h-14 pl-14 bg-muted/40 border border-border rounded-xl font-mono font-bold text-foreground cursor-not-allowed"
                         value={form.prescriptionNumber}
                         readOnly
                       />
@@ -151,12 +151,12 @@ const PrescriptionForm = () => {
                   {form.prescriptionType === 'INTERNAL_FARM' ? (
                     <>
                       <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Target Zone *</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Target Zone *</Label>
                         <Select value={String(form.farmId)} onValueChange={(v) => setForm({ ...form, farmId: v, flockId: '' })}>
-                          <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-[1.25rem] font-bold focus:ring-[#0f172a] transition-all">
+                          <SelectTrigger className="h-14 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all">
                             <SelectValue placeholder="Select facility" />
                           </SelectTrigger>
-                          <SelectContent className="rounded-3xl border-none shadow-2xl">
+                          <SelectContent className="rounded-2xl border border-border shadow-2xl">
                             {farms.map((f) => (
                               <SelectItem key={f.id} value={String(f.id)} className="rounded-xl my-1 font-bold">{f.farmName}</SelectItem>
                             ))}
@@ -164,12 +164,12 @@ const PrescriptionForm = () => {
                         </Select>
                       </div>
                       <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Flock Identity *</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Flock Identity *</Label>
                         <Select value={String(form.flockId)} onValueChange={(v) => setForm({ ...form, flockId: v })} disabled={!form.farmId}>
-                          <SelectTrigger className={cn("h-14 border-2 rounded-[1.25rem] font-bold transition-all", !form.farmId ? "bg-gray-50 border-gray-100" : "bg-white border-gray-100 focus:ring-[#0f172a]")}>
+                          <SelectTrigger className={cn("h-14 border rounded-xl font-bold transition-all text-foreground", !form.farmId ? "bg-muted/40 border-border" : "bg-background border-border focus:ring-primary")}>
                             <SelectValue placeholder="Select target batch" />
                           </SelectTrigger>
-                          <SelectContent className="rounded-3xl border-none shadow-2xl">
+                          <SelectContent className="rounded-2xl border border-border shadow-2xl">
                             {flocks.map((f) => (
                               <SelectItem key={f.id} value={String(f.id)} className="rounded-xl my-1 font-bold">{f.batchCode}</SelectItem>
                             ))}
@@ -179,14 +179,14 @@ const PrescriptionForm = () => {
                     </>
                   ) : (
                     <div className="space-y-3 md:col-span-2">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Account Portfolio *</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Account Portfolio *</Label>
                       <div className="relative">
-                        <User className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                        <User className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         <Select value={String(form.clientId)} onValueChange={(v) => setForm({ ...form, clientId: v })}>
-                          <SelectTrigger className="h-14 pl-14 bg-white border-2 border-gray-100 rounded-[1.25rem] font-bold focus:ring-[#0f172a] transition-all">
+                          <SelectTrigger className="h-14 pl-14 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all">
                             <SelectValue placeholder="Select registered client" />
                           </SelectTrigger>
-                          <SelectContent className="rounded-3xl border-none shadow-2xl">
+                          <SelectContent className="rounded-2xl border border-border shadow-2xl">
                             {clients.map((c) => (
                               <SelectItem key={c.id} value={String(c.id)} className="rounded-xl my-1 font-bold">{c.clientName}</SelectItem>
                             ))}
@@ -197,15 +197,15 @@ const PrescriptionForm = () => {
                   )}
 
                   <div className="space-y-3 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Pharmacy Inventory Link</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Pharmacy Inventory Link</Label>
                     <Select value={String(form.inventoryItemId)} onValueChange={(v) => {
                       const selected = inventoryItems.find((item) => String(item.id) === String(v));
                       setForm({ ...form, inventoryItemId: v, drugName: selected?.itemName || form.drugName });
                     }}>
-                      <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-[1.25rem] font-black focus:ring-[#0f172a] transition-all">
+                      <SelectTrigger className="h-14 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all">
                         <SelectValue placeholder="Link to existing medical stock" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-3xl border-none shadow-2xl max-h-[300px]">
+                      <SelectContent className="rounded-2xl border border-border shadow-2xl max-h-[300px]">
                         {inventoryItems.map((item) => (
                           <SelectItem key={item.id} value={String(item.id)} className="rounded-xl my-1 font-bold">
                             <div className="flex justify-between w-full gap-4">
@@ -219,27 +219,27 @@ const PrescriptionForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Priority Lifecycle *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Priority Lifecycle *</Label>
                     <Select value={form.priority || 'NORMAL'} onValueChange={(v) => setForm({ ...form, priority: v })}>
                       <SelectTrigger className={cn(
-                        "h-14 border-2 rounded-[1.25rem] font-black transition-all",
-                        form.priority === 'EMERGENCY' ? "border-rose-200 bg-rose-50 text-rose-700" : "bg-white border-gray-100"
+                        "h-14 border rounded-xl font-bold transition-all text-foreground",
+                        form.priority === 'EMERGENCY' ? "border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400" : "bg-background border-border"
                       )}>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="rounded-3xl border-none shadow-2xl">
+                      <SelectContent className="rounded-2xl border border-border shadow-2xl">
                         <SelectItem value="NORMAL" className="rounded-xl my-1 font-bold tracking-tight">NORMAL PRIORITY</SelectItem>
-                        <SelectItem value="EMERGENCY" className="rounded-xl my-1 font-black text-rose-600 tracking-tight">EMERGENCY / URGENT</SelectItem>
+                        <SelectItem value="EMERGENCY" className="rounded-xl my-1 font-bold text-rose-600 dark:text-rose-400 tracking-tight">EMERGENCY / URGENT</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Biological Identity *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Biological Identity *</Label>
                     <div className="relative">
-                      <Package className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      <Package className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
-                        className="h-14 pl-14 bg-white border-2 border-gray-100 rounded-[1.25rem] font-bold focus:ring-[#0f172a] transition-all"
+                        className="h-14 pl-14 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all"
                         value={form.drugName}
                         onChange={(e) => setForm({ ...form, drugName: e.target.value })}
                         placeholder="e.g. Oxytetracycline 20%"
@@ -248,12 +248,12 @@ const PrescriptionForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Dispense Volume *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Dispense Volume *</Label>
                     <Input
                       type="number"
                       min="0.01"
                       step="0.01"
-                      className="h-14 bg-white border-2 border-gray-100 rounded-[1.25rem] font-black focus:ring-[#0f172a] transition-all text-primary text-lg"
+                      className="h-14 bg-background border border-border rounded-xl font-bold focus:ring-primary transition-all text-primary text-lg"
                       value={form.quantity}
                       onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                       placeholder="0.00"
@@ -261,12 +261,12 @@ const PrescriptionForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Admin Route *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Admin Route *</Label>
                     <Select value={form.administrationRoute || ''} onValueChange={(v) => setForm({ ...form, administrationRoute: v })}>
-                      <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-[1.25rem] font-bold focus:ring-[#0f172a] transition-all">
+                      <SelectTrigger className="h-14 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all">
                         <SelectValue placeholder="e.g. Oral, Injection" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-3xl border-none shadow-2xl">
+                      <SelectContent className="rounded-2xl border border-border shadow-2xl">
                         {['ORAL', 'INJECTION', 'WATER_SOLUBLE', 'FEED_MIX', 'TOPICAL'].map(r => (
                           <SelectItem key={r} value={r} className="rounded-xl my-1 font-bold">{r.replace('_', ' ')}</SelectItem>
                         ))}
@@ -275,13 +275,13 @@ const PrescriptionForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Withdrawal Days (Meat)</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Withdrawal Days (Meat)</Label>
                     <div className="relative">
                       <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-rose-500" />
                       <Input
                         type="number"
                         min="0"
-                        className="h-14 pl-14 bg-rose-50/20 border-rose-100 border-2 rounded-[1.25rem] font-black text-rose-700 focus:ring-rose-600 transition-all text-lg"
+                        className="h-14 pl-14 bg-rose-50/20 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/40 border rounded-xl font-black text-rose-700 dark:text-rose-400 focus:ring-rose-600 transition-all text-lg"
                         value={form.withdrawalPeriodDays}
                         onChange={(e) => setForm({ ...form, withdrawalPeriodDays: e.target.value })}
                         placeholder="0"
@@ -290,12 +290,12 @@ const PrescriptionForm = () => {
                   </div>
 
                   <div className="space-y-3 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Clinical Instruction Set</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Clinical Instruction Set</Label>
                     <div className="relative">
-                      <ClipboardList className="absolute left-5 top-5 h-5 w-5 text-gray-400 pointer-events-none" />
+                      <ClipboardList className="absolute left-5 top-5 h-5 w-5 text-muted-foreground pointer-events-none" />
                       <Textarea
                         rows={5}
-                        className="bg-white border-2 border-gray-100 rounded-[1.5rem] font-medium text-sm focus:ring-[#0f172a] transition-all p-6 pl-14 leading-relaxed"
+                        className="bg-background border border-border rounded-xl font-medium text-foreground text-sm focus:ring-primary transition-all p-6 pl-14 leading-relaxed"
                         value={form.dosageInstruction}
                         onChange={(e) => setForm({ ...form, dosageInstruction: e.target.value })}
                         placeholder="Specify dosage, route of administration, and withdrawal period protocols..."
@@ -305,11 +305,11 @@ const PrescriptionForm = () => {
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <Button type="submit" className="flex-[2] h-16 rounded-3xl bg-[#0f172a] hover:bg-[#1e293b] text-white font-black text-base uppercase tracking-widest shadow-2xl shadow-gray-200 transition-all active:scale-95 flex gap-3" disabled={loading}>
+                  <Button type="submit" className="flex-[2] h-14 rounded-xl bg-primary text-primary-foreground font-black text-sm uppercase tracking-wider shadow-md transition-all active:scale-95 flex gap-3" disabled={loading}>
                     {loading ? <Activity className="animate-spin h-5 w-5" /> : <FileSignature className="h-5 w-5" />}
                     {loading ? 'Authorizing Order...' : 'Dispatch Prescription'}
                   </Button>
-                  <Button type="button" variant="outline" className="flex-1 h-16 rounded-3xl border-2 border-gray-200 font-black text-sm uppercase tracking-widest hover:bg-gray-50 text-gray-400 hover:text-gray-900 transition-all" onClick={() => navigate('/veterinary')}>
+                  <Button type="button" variant="outline" className="flex-1 h-14 rounded-xl border border-border font-bold text-sm uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted transition-all" onClick={() => navigate('/veterinary')}>
                     Discard
                   </Button>
                 </div>
@@ -319,15 +319,15 @@ const PrescriptionForm = () => {
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-[#0f172a] text-white overflow-hidden p-10 relative">
+          <Card className="erp-card border border-border rounded-3xl bg-slate-900 text-white overflow-hidden p-8 sm:p-10 relative">
             <div className="absolute top-0 right-0 p-8 opacity-5">
               <Activity className="h-40 w-40 rotate-12" />
             </div>
             <div className="flex items-center gap-3 mb-8">
               <div className="p-3 bg-white/10 rounded-2xl">
-                <ShieldCheck className="h-6 w-6 text-primary/70" />
+                <ShieldCheck className="h-6 w-6 text-primary" />
               </div>
-              <span className="text-sm font-black uppercase tracking-[0.2em] text-emerald-300">Compliance Audit</span>
+              <span className="text-sm font-black uppercase tracking-[0.2em] text-emerald-400">Compliance Audit</span>
             </div>
             <div className="space-y-8 relative z-10">
               <div className="space-y-3">
@@ -335,35 +335,35 @@ const PrescriptionForm = () => {
                   <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                   Medical Lifecycle
                 </h4>
-                <p className="text-xs text-emerald-200/70 font-medium leading-relaxed italic">
+                <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
                   Prescriptions are automatically queued for Pharmacist verification. Inventory deduction occurs only upon final fulfillment validation.
                 </p>
               </div>
               <div className="h-px bg-white/10" />
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300 opacity-50">Authorized Effects</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 opacity-80">Authorized Effects</p>
                 {[
                   { icon: Pill, text: "Fulfillment Queue Sync" },
                   { icon: Syringe, text: "COGS Expense Mapping" },
                   { icon: Clipboard, text: "Withdrawal Period Tracking" }
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
-                    <item.icon className="h-4 w-4 text-primary/70" />
-                    <span className="text-xs font-bold">{item.text}</span>
+                  <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                    <item.icon className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-bold text-slate-200">{item.text}</span>
                   </div>
                 ))}
               </div>
             </div>
           </Card>
 
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-primary/10 p-10 border border-primary/20 group hover:bg-primary/10 transition-all">
+          <Card className="erp-card rounded-3xl border border-border p-8 group">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">Inventory Status</span>
-                <Activity className="h-5 w-5 text-primary/70 group-hover:animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inventory Status</span>
+                <Activity className="h-5 w-5 text-primary group-hover:animate-pulse" />
               </div>
-              <p className="text-4xl font-black text-[#0f172a]">Live</p>
-              <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest">Medical SSOT Active</p>
+              <p className="text-3xl font-black text-foreground">Live</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Medical SSOT Active</p>
             </div>
           </Card>
         </div>

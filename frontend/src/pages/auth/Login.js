@@ -64,19 +64,19 @@ const Login = () => {
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">{t('login.title')}</h1>
-            <p className="text-gray-500 mt-2 font-medium">{t('login.tagline')}</p>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">{t('login.title')}</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">{t('login.tagline')}</p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm" role="alert">
+            <div className="bg-red-50 dark:bg-red-950/40 border-l-4 border-red-500 text-red-700 dark:text-red-400 p-4 mb-6 rounded shadow-sm" role="alert">
               <span className="text-sm font-semibold">{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <Label htmlFor="email" className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 {t('login.email')}
               </Label>
               <Input
@@ -85,14 +85,14 @@ const Login = () => {
                 placeholder={t('login.emailPlaceholder')}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white"
+                className="h-12 rounded-xl bg-gray-50 dark:bg-slate-800/80 border-gray-200 dark:border-slate-700 text-foreground focus:bg-white dark:focus:bg-slate-800"
                 autoComplete="email"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <Label htmlFor="password" className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 {t('login.password')}
               </Label>
               <div className="relative">
@@ -102,7 +102,7 @@ const Login = () => {
                   placeholder={t('login.passwordPlaceholder')}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white pr-12"
+                  className="h-12 rounded-xl bg-gray-50 dark:bg-slate-800/80 border-gray-200 dark:border-slate-700 text-foreground focus:bg-white dark:focus:bg-slate-800 pr-12"
                   autoComplete="current-password"
                   required
                 />

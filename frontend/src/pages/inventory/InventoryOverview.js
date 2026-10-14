@@ -6,12 +6,22 @@ import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS, canPerformAction } from '../../lib/permissions';
 
 function StatCard({ title, value, color }) {
-    const bg = { green: 'bg-green-50 border-green-200', yellow: 'bg-yellow-50 border-yellow-200', red: 'bg-red-50 border-red-200', orange: 'bg-orange-50 border-orange-200' };
-    const text = { green: 'text-green-800', yellow: 'text-yellow-800', red: 'text-red-800', orange: 'text-orange-800' };
+    const bg = {
+        green: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800/40',
+        yellow: 'bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800/40',
+        red: 'bg-rose-50 border-rose-200 dark:bg-rose-950/30 dark:border-rose-800/40',
+        orange: 'bg-orange-50 border-orange-200 dark:bg-orange-950/30 dark:border-orange-800/40'
+    };
+    const text = {
+        green: 'text-emerald-800 dark:text-emerald-400',
+        yellow: 'text-amber-800 dark:text-amber-400',
+        red: 'text-rose-800 dark:text-rose-400',
+        orange: 'text-orange-800 dark:text-orange-400'
+    };
     return (
-        <div className={`p-4 rounded-lg shadow-sm border ${bg[color] || 'bg-white border-gray-200'}`}>
-            <h3 className="text-gray-500 text-xs font-medium uppercase tracking-wide">{title}</h3>
-            <p className={`text-2xl font-bold mt-1 ${text[color] || 'text-gray-800'}`}>{value}</p>
+        <div className={`p-4 rounded-xl shadow-sm border ${bg[color] || 'erp-card'}`}>
+            <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">{title}</h3>
+            <p className={`text-2xl font-bold mt-1 ${text[color] || 'text-foreground'}`}>{value}</p>
         </div>
     );
 }
@@ -43,81 +53,98 @@ export default function InventoryOverview() {
     const createQuickPO = (itemId) => alert(`Creating draft PO for item ${itemId}...`);
 
     return (
-        <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Inventory Command Center</h1>
+        <div className="p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-black text-foreground tracking-tight">Inventory Command Center</h1>
+                    <p className="text-xs font-medium text-muted-foreground mt-0.5">Real-time stock alerts and warehouse replenishment overview</p>
+                </div>
                 <div className="flex gap-2">
                     {canPerformAction(user?.role, 'stockIn', 'inventoryItems') && (
                         <>
-                            <a href="/inventory/scan" className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700">Scan Station</a>
-                            <a href="/inventory/stock-in" className="bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700">Stock In</a>
+                            <a href="/inventory/scan" className="bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">Scan Station</a>
+                            <a href="/inventory/stock-in" className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors">Stock In</a>
                         </>
                     )}
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard title="Total SKUs" value={stats.totalSkus || 0} color="green" />
                 <StatCard title="Total Value" value={`${(stats.totalValue || 0).toFixed(2)} Birr`} color="green" />
                 <StatCard title="Low Stock Alerts" value={stats.lowStockCount || 0} color="red" />
                 <StatCard title="Expiring (30d)" value={stats.expiringCount || 0} color="orange" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div className="bg-white rounded shadow-sm border p-4">
-                    <h2 className="text-lg font-bold mb-4">Recent Stock Movements</h2>
-                    <ResponsiveContainer width="100%" height={200}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="erp-card rounded-2xl border border-border p-5">
+                    <h2 className="text-base font-bold text-foreground mb-4">Recent Stock Movements</h2>
+                    <ResponsiveContainer width="100%" height={220}>
                         <BarChart data={movements}>
-                            <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="qty" fill="#3b82f6" />
+                            <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'currentColor' }} stroke="currentColor" className="text-muted-foreground" />
+                            <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} stroke="currentColor" className="text-muted-foreground" />
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: 'var(--card, #0f172a)',
+                                    borderColor: 'var(--border, #334155)',
+                                    borderRadius: '0.75rem',
+                                    color: 'var(--foreground, #fff)'
+                                }}
+                            />
+                            <Bar dataKey="qty" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
 
-                <div className="bg-white rounded shadow-sm border p-4">
-                    <h2 className="text-lg font-bold mb-4 text-red-700">⚠ Critical Stock Alerts</h2>
-                    <div className="overflow-y-auto max-h-52">
+                <div className="erp-card rounded-2xl border border-border p-5">
+                    <h2 className="text-base font-bold mb-4 text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                        <span>⚠ Critical Stock Alerts</span>
+                    </h2>
+                    <div className="overflow-y-auto max-h-56">
                         <table className="w-full text-left text-sm">
-                            <thead><tr className="border-b"><th className="py-1">SKU</th><th className="py-1">Item</th><th className="py-1">Stock</th><th className="py-1">Reorder At</th><th className="py-1"></th></tr></thead>
-                            <tbody>
+                            <thead className="erp-table-head"><tr className="border-b border-border"><th className="py-2 px-2 text-xs font-semibold text-muted-foreground uppercase">SKU</th><th className="py-2 px-2 text-xs font-semibold text-muted-foreground uppercase">Item</th><th className="py-2 px-2 text-xs font-semibold text-muted-foreground uppercase">Stock</th><th className="py-2 px-2 text-xs font-semibold text-muted-foreground uppercase">Reorder At</th><th className="py-2 px-2"></th></tr></thead>
+                            <tbody className="divide-y divide-border">
                                 {lowStock.map(item => (
-                                    <tr key={item.id} className="border-b hover:bg-red-50">
-                                        <td className="py-2 font-mono text-xs">{item.sku}</td>
-                                        <td className="py-2">{item.itemName}</td>
-                                        <td className="py-2 font-bold text-red-600">{item.currentStock}</td>
-                                        <td className="py-2 text-gray-500">{item.reorderPoint}</td>
-                                        <td className="py-2">
-                                            <button onClick={() => createQuickPO(item.id)} className="text-blue-600 text-xs font-medium hover:underline">Create PO</button>
+                                    <tr key={item.id} className="hover:bg-muted/40 transition-colors">
+                                        <td className="py-2.5 px-2 font-mono text-xs text-muted-foreground">{item.sku}</td>
+                                        <td className="py-2.5 px-2 font-medium text-foreground">{item.itemName}</td>
+                                        <td className="py-2.5 px-2 font-bold text-rose-600 dark:text-rose-400">{item.currentStock}</td>
+                                        <td className="py-2.5 px-2 text-muted-foreground">{item.reorderPoint}</td>
+                                        <td className="py-2.5 px-2 text-right">
+                                            <button onClick={() => createQuickPO(item.id)} className="text-primary hover:underline text-xs font-semibold">Create PO</button>
                                         </td>
                                     </tr>
                                 ))}
-                                {lowStock.length === 0 && <tr><td colSpan="5" className="py-6 text-center text-gray-400">All stock levels healthy ✓</td></tr>}
+                                {lowStock.length === 0 && <tr><td colSpan="5" className="py-6 text-center text-muted-foreground">All stock levels healthy ✓</td></tr>}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white rounded shadow-sm border p-4">
-                <h2 className="text-lg font-bold mb-4 text-orange-700">⏰ Expiring Batches (Next 30 Days)</h2>
-                <table className="w-full text-left text-sm">
-                    <thead><tr className="border-b"><th className="py-2">Item</th><th className="py-2">Batch #</th><th className="py-2">Qty Remaining</th><th className="py-2">Expiry Date</th><th className="py-2">Location</th></tr></thead>
-                    <tbody>
-                        {expiring.map(b => (
-                            <tr key={b.id} className="border-b hover:bg-orange-50">
-                                <td className="py-2">{b.item?.itemName}</td>
-                                <td className="py-2 font-mono text-xs">{b.batchNumber}</td>
-                                <td className="py-2">{b.quantityRemaining}</td>
-                                <td className="py-2 text-orange-600 font-medium">{b.expiryDate}</td>
-                                <td className="py-2 text-gray-500">{b.storageZone}</td>
-                            </tr>
-                        ))}
-                        {expiring.length === 0 && <tr><td colSpan="5" className="py-6 text-center text-gray-400">No items expiring within 30 days ✓</td></tr>}
-                    </tbody>
-                </table>
+            <div className="erp-card rounded-2xl border border-border p-5">
+                <h2 className="text-base font-bold mb-4 text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                    <span>⏰ Expiring Batches (Next 30 Days)</span>
+                </h2>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="erp-table-head"><tr className="border-b border-border"><th className="py-2 px-3 text-xs font-semibold text-muted-foreground uppercase">Item</th><th className="py-2 px-3 text-xs font-semibold text-muted-foreground uppercase">Batch #</th><th className="py-2 px-3 text-xs font-semibold text-muted-foreground uppercase">Qty Remaining</th><th className="py-2 px-3 text-xs font-semibold text-muted-foreground uppercase">Expiry Date</th><th className="py-2 px-3 text-xs font-semibold text-muted-foreground uppercase">Location</th></tr></thead>
+                        <tbody className="divide-y divide-border">
+                            {expiring.map(b => (
+                                <tr key={b.id} className="hover:bg-muted/40 transition-colors">
+                                    <td className="py-2.5 px-3 font-medium text-foreground">{b.item?.itemName}</td>
+                                    <td className="py-2.5 px-3 font-mono text-xs text-muted-foreground">{b.batchNumber}</td>
+                                    <td className="py-2.5 px-3 text-foreground font-semibold">{b.quantityRemaining}</td>
+                                    <td className="py-2.5 px-3 text-amber-600 dark:text-amber-400 font-semibold">{b.expiryDate}</td>
+                                    <td className="py-2.5 px-3 text-muted-foreground">{b.storageZone}</td>
+                                </tr>
+                            ))}
+                            {expiring.length === 0 && <tr><td colSpan="5" className="py-6 text-center text-muted-foreground">No items expiring within 30 days ✓</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+    );
     );
 }

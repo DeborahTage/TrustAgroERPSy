@@ -7,7 +7,7 @@ import StatusBadge from '../../components/shared/StatusBadge';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatDate } from '../../utils';
-import { PERMISSIONS } from '../../lib/permissions';
+import { PERMISSIONS, ROLE_LABELS } from '../../lib/permissions';
 import { cn } from '../../lib/utils';
 import { Button } from '../../components/ui/button';
 import { MoreHorizontal, Edit, UserCheck, UserX, UserPlus, Users, UserMinus } from 'lucide-react';
@@ -84,7 +84,7 @@ const UserList = () => {
       header: 'Role',
       cell: ({ row }) => (
         <span className="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary">
-          {row.original.role?.replace(/_/g, ' ')}
+          {ROLE_LABELS[row.original.role] || row.original.role?.replace(/_/g, ' ')}
         </span>
       ),
     },

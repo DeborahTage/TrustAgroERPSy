@@ -69,8 +69,8 @@ const FlockDashboard = () => {
       title: 'Total Flocks',
       value: data.totalFlocks || 0,
       icon: Layers,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-500/10 dark:bg-blue-500/20',
       trend: 'up',
       trendValue: '+3 new this month'
     },
@@ -78,8 +78,8 @@ const FlockDashboard = () => {
       title: 'Active Flocks',
       value: data.activeFlocks || 0,
       icon: Activity,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-50',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20',
       trend: 'stable',
       trendValue: 'All operational'
     },
@@ -87,8 +87,8 @@ const FlockDashboard = () => {
       title: 'Total Chickens',
       value: `${(data.totalChickens || 0).toLocaleString()}`,
       icon: HeartPulse,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      bgColor: 'bg-purple-500/10 dark:bg-purple-500/20',
       trend: 'up',
       trendValue: '+8% from last month'
     },
@@ -96,8 +96,8 @@ const FlockDashboard = () => {
       title: 'Avg Mortality',
       value: `${data.avgMortality || 0}%`,
       icon: TrendingDown,
-      iconColor: data.avgMortality > 3 ? 'text-red-600' : 'text-green-600',
-      bgColor: data.avgMortality > 3 ? 'bg-red-50' : 'bg-green-50',
+      iconColor: data.avgMortality > 3 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400',
+      bgColor: data.avgMortality > 3 ? 'bg-rose-500/10 dark:bg-rose-500/20' : 'bg-emerald-500/10 dark:bg-emerald-500/20',
       trend: data.avgMortality > 3 ? 'up' : 'down',
       trendValue: data.avgMortality > 3 ? 'Above target' : 'Within target'
     }
@@ -167,8 +167,8 @@ const FlockDashboard = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Flock Management</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Flock Management</h1>
+        <p className="text-muted-foreground mt-1">
           Monitor flock performance, mortality trends, and growth analytics.
         </p>
       </div>
@@ -219,13 +219,13 @@ const FlockDashboard = () => {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+        <Card className="erp-card overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <CardTitle className="text-lg font-black text-foreground tracking-tight flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-emerald-500" />
               Growth Performance
             </CardTitle>
-            <p className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Actual Weight vs. Breed Standard</p>
+            <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Actual Weight vs. Breed Standard</p>
           </CardHeader>
           <CardContent>
             <div className="h-72 w-full">
@@ -239,14 +239,14 @@ const FlockDashboard = () => {
                 ]}>
                   <defs>
                     <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} label={{ value: 'Day', position: 'insideBottom', offset: -5 }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="stroke-border/40" />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'currentColor', fontSize: 10 }} className="text-muted-foreground" label={{ value: 'Day', position: 'insideBottom', offset: -5 }} />
                   <YAxis hide />
-                  <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                  <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }} />
                   <Area type="monotone" dataKey="actual" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorActual)" />
                   <Area type="monotone" dataKey="standard" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" fill="none" />
                 </AreaChart>
@@ -255,13 +255,13 @@ const FlockDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+        <Card className="erp-card overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <CardTitle className="text-lg font-black text-foreground tracking-tight flex items-center gap-2">
               <Scale className="h-5 w-5 text-primary" />
               Feed Efficiency (FCR)
             </CardTitle>
-            <p className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Feed Conversion Ratio Trend</p>
+            <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Feed Conversion Ratio Trend</p>
           </CardHeader>
           <CardContent>
             <div className="h-72 w-full">
@@ -272,10 +272,10 @@ const FlockDashboard = () => {
                   { week: 'Wk 3', fcr: 1.45 },
                   { week: 'Wk 4', fcr: 1.6 },
                 ]}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="stroke-border/40" />
+                  <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: 'currentColor', fontSize: 10 }} className="text-muted-foreground" />
                   <YAxis hide />
-                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                  <Tooltip contentStyle={{ borderRadius: '16px', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }} />
                   <Bar dataKey="fcr" fill="#6366f1" radius={[10, 10, 0, 0]} maxBarSize={40}>
                     {[1.1, 1.3, 1.45, 1.6].map((entry, index) => (
                       <Cell key={index} fill={entry > 1.7 ? '#f43f5e' : '#6366f1'} />

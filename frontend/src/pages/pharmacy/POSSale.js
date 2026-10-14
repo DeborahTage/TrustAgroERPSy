@@ -51,45 +51,48 @@ export default function POSSale() {
 
     return (
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            <div className="bg-white rounded shadow-sm border p-4">
-                <h2 className="text-xl font-bold mb-4">Inventory Items</h2>
-                <input placeholder="Search OTC drugs/vaccines..." className="w-full border p-2 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <div className="erp-card rounded-2xl border border-border p-5">
+                <h2 className="text-xl font-bold mb-4 text-foreground">Inventory Items</h2>
+                <input
+                    placeholder="Search OTC drugs/vaccines..."
+                    className="w-full bg-background border border-border p-2.5 rounded-xl mb-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
                 <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                     {sellableItems.map(item => (
-                        <div key={item.id} className="border p-3 rounded flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition">
+                        <div key={item.id} className="border border-border p-3 rounded-xl flex justify-between items-center bg-muted/40 hover:bg-muted/70 transition-colors">
                             <div>
-                                <div className="font-semibold text-gray-800">{item.itemName}</div>
-                                <div className="text-sm text-gray-500">Stock: {item.currentStock || 0} {item.unit} | SKU: {item.sku}</div>
+                                <div className="font-semibold text-foreground">{item.itemName}</div>
+                                <div className="text-xs text-muted-foreground">Stock: {item.currentStock || 0} {item.unit} | SKU: {item.sku}</div>
                             </div>
                             <button
                                 onClick={() => addToCart(item)}
-                                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                                className="bg-primary text-primary-foreground font-semibold px-3 py-1.5 rounded-lg text-sm hover:opacity-90 disabled:opacity-50 transition"
                                 disabled={(item.currentStock || 0) <= 0}
                             >
                                 Add+
                             </button>
                         </div>
                     ))}
-                    {sellableItems.length === 0 && <p className="text-gray-500 text-center">No inventory found.</p>}
+                    {sellableItems.length === 0 && <p className="text-muted-foreground text-center py-4">No inventory found.</p>}
                 </div>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded shadow border">
-                <h2 className="text-xl font-bold mb-4">Cart Checkout</h2>
+            <div className="erp-card rounded-2xl border border-border p-6">
+                <h2 className="text-xl font-bold mb-4 text-foreground">Cart Checkout</h2>
 
-                <div className="min-h-32">
+                <div className="min-h-32 divide-y divide-border">
                     {cart.map((item, i) => (
-                        <div key={i} className="flex justify-between py-2 border-b">
-                            <span className="font-medium text-gray-700">{item.itemName} <span className="text-sm text-gray-500">x{item.cartQty}</span></span>
-                            <span className="font-medium text-gray-900">{item.lineTotal.toFixed(2)} Birr</span>
+                        <div key={i} className="flex justify-between py-2.5">
+                            <span className="font-medium text-foreground">{item.itemName} <span className="text-xs text-muted-foreground">x{item.cartQty}</span></span>
+                            <span className="font-semibold text-foreground">{item.lineTotal.toFixed(2)} Birr</span>
                         </div>
                     ))}
-                    {cart.length === 0 && <p className="text-gray-500 py-4 text-center">Cart is empty</p>}
+                    {cart.length === 0 && <p className="text-muted-foreground py-6 text-center">Cart is empty</p>}
                 </div>
 
-                <div className="text-xl font-bold mt-6 mb-4 flex justify-between">
+                <div className="text-xl font-bold mt-6 mb-4 flex justify-between text-foreground border-t border-border pt-4">
                     <span>Total:</span>
-                    <span>{total.toFixed(2)} Birr</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">{total.toFixed(2)} Birr</span>
                 </div>
 
                 <div className="mt-4 space-y-3">
@@ -97,29 +100,28 @@ export default function POSSale() {
                         placeholder="Customer Name"
                         value={customer.name}
                         onChange={e => setCustomer({ ...customer, name: e.target.value })}
-                        className="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-background border border-border p-2.5 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <input
                         placeholder="Phone Number"
                         value={customer.phone}
                         onChange={e => setCustomer({ ...customer, phone: e.target.value })}
-                        className="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-background border border-border p-2.5 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <select
                         value={paymentMethod}
                         onChange={e => setPaymentMethod(e.target.value)}
-                        className="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        className="w-full bg-background border border-border p-2.5 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
                     >
                         <option value="Cash">Cash</option>
-                        <option value="Credit">Credit</option>
-                        <option value="Mobile Money">Mobile Money</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
                     </select>
                 </div>
 
                 <button
                     onClick={handleCheckout}
                     disabled={cart.length === 0}
-                    className="bg-green-600 text-white font-bold text-lg w-full mt-6 py-3 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    className="bg-emerald-600 text-white font-bold text-base w-full mt-6 py-3 rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md">
                     Complete Sale & Print Receipt
                 </button>
             </div>

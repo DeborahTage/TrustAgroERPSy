@@ -9,16 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS } from '../../lib/permissions';
 import { formatCurrency, formatDate } from '../../utils';
-import { Plus } from 'lucide-react';
+import { Plus, ShoppingCart, DollarSign, TrendingUp } from 'lucide-react';
 
 const STATUS_STYLES = {
-  DRAFT: 'bg-slate-100 text-slate-700',
-  CONFIRMED: 'bg-blue-100 text-blue-700',
-  INVOICED: 'bg-indigo-100 text-indigo-700',
-  PARTIALLY_PAID: 'bg-amber-100 text-amber-700',
-  PAID: 'bg-emerald-100 text-emerald-700',
-  COMPLETED: 'bg-emerald-200 text-emerald-800',
-  CANCELLED: 'bg-rose-100 text-rose-700',
+  DRAFT: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+  CONFIRMED: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-800/40',
+  INVOICED: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-400 dark:border-indigo-800/40',
+  PARTIALLY_PAID: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800/40',
+  PAID: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800/40',
+  COMPLETED: 'bg-emerald-200 text-emerald-800 border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-700/50',
+  CANCELLED: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-400 dark:border-rose-800/40',
 };
 
 const ChickenSales = () => {
@@ -46,9 +46,27 @@ const ChickenSales = () => {
   useEffect(() => { load(); }, [load]);
 
   const stats = useMemo(() => [
-    { title: 'Open Sales', value: sales.filter((s) => !['CANCELLED', 'COMPLETED'].includes(s.status)).length },
-    { title: 'Outstanding', value: formatCurrency(sales.reduce((sum, s) => sum + (Number(s.outstandingAmount) || 0), 0)) },
-    { title: 'Chickens Sold (confirmed+)', value: sales.filter((s) => !['DRAFT', 'CANCELLED'].includes(s.status)).reduce((sum, s) => sum + (Number(s.totalChickens) || 0), 0).toLocaleString() },
+    {
+      title: 'Open Sales',
+      value: sales.filter((s) => !['CANCELLED', 'COMPLETED'].includes(s.status)).length,
+      icon: ShoppingCart,
+      iconColor: 'text-primary dark:text-primary',
+      bgColor: 'bg-primary/10 dark:bg-primary/20',
+    },
+    {
+      title: 'Outstanding',
+      value: formatCurrency(sales.reduce((sum, s) => sum + (Number(s.outstandingAmount) || 0), 0)),
+      icon: DollarSign,
+      iconColor: 'text-amber-500 dark:text-amber-400',
+      bgColor: 'bg-amber-500/10 dark:bg-amber-500/20',
+    },
+    {
+      title: 'Chickens Sold (confirmed+)',
+      value: sales.filter((s) => !['DRAFT', 'CANCELLED'].includes(s.status)).reduce((sum, s) => sum + (Number(s.totalChickens) || 0), 0).toLocaleString(),
+      icon: TrendingUp,
+      iconColor: 'text-emerald-500 dark:text-emerald-400',
+      bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20',
+    },
   ], [sales]);
 
   const cols = [

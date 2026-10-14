@@ -61,8 +61,8 @@ const EnterprisePage = ({
   const toolbar = (onRefresh || exportData) && (
     <div className="flex items-center gap-2 flex-wrap">
       {onRefresh && (
-        <Button variant="outline" size="sm" onClick={onRefresh} className="h-9 rounded-lg">
-          <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+        <Button variant="outline" size="sm" onClick={onRefresh} className="h-9 rounded-xl border border-border/80 bg-card hover:bg-accent text-foreground shadow-xs font-semibold">
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5 text-primary" /> Refresh
         </Button>
       )}
       {exportData?.length > 0 && exportColumns && (

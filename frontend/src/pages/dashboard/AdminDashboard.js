@@ -100,13 +100,13 @@ const AdminDashboard = () => {
     const cards = [];
     if (finance) {
       cards.push(
-        { title: 'Period Revenue', value: displayMoney(finance.totalRevenue, finance.status), icon: DollarSign, iconColor: 'text-emerald-600', bgColor: 'bg-emerald-50', description: 'INCOME ledger only' },
-        { title: 'Net Profit', value: displayMoney(finance.netProfit, finance.profitabilityStatus || finance.status), icon: TrendingUp, iconColor: 'text-primary', bgColor: 'bg-primary/10', description: 'Revenue − expenses' },
+        { title: 'Period Revenue', value: displayMoney(finance.totalRevenue, finance.status), icon: DollarSign, iconColor: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20', description: 'INCOME ledger only' },
+        { title: 'Net Profit', value: displayMoney(finance.netProfit, finance.profitabilityStatus || finance.status), icon: TrendingUp, iconColor: 'text-primary dark:text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20', description: 'Revenue − expenses' },
         { title: 'Cash + Bank', value: displayMoney(
           Number(finance.cashInHand || 0) + Number(finance.bankBalance || 0),
           finance.status,
-        ), icon: Wallet, iconColor: 'text-blue-600', bgColor: 'bg-blue-50', description: 'Point-in-time balances' },
-        { title: 'Accounts Receivable', value: displayMoney(finance.accountsReceivable, finance.status), icon: UserCheck, iconColor: 'text-violet-600', bgColor: 'bg-violet-50', description: 'Open invoice outstanding' },
+        ), icon: Wallet, iconColor: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10 dark:bg-blue-500/20', description: 'Point-in-time balances' },
+        { title: 'Accounts Receivable', value: displayMoney(finance.accountsReceivable, finance.status), icon: UserCheck, iconColor: 'text-violet-600 dark:text-violet-400', bgColor: 'bg-violet-500/10 dark:bg-violet-500/20', description: 'Open invoice outstanding' },
       );
     }
     if (farm) {
@@ -114,8 +114,8 @@ const AdminDashboard = () => {
         title: 'Active Farms',
         value: farm.activeFarms ?? '—',
         icon: Building2,
-        iconColor: 'text-primary',
-        bgColor: 'bg-primary/10',
+        iconColor: 'text-primary dark:text-primary',
+        bgColor: 'bg-primary/10 dark:bg-primary/20',
         description: `${farm.activeFlocks ?? 0} active flocks`,
       });
     }
@@ -124,8 +124,8 @@ const AdminDashboard = () => {
         title: 'Inventory Value',
         value: displayMoney(inventory.totalValue, inventory.status),
         icon: Package,
-        iconColor: 'text-amber-600',
-        bgColor: 'bg-amber-50',
+        iconColor: 'text-amber-600 dark:text-amber-400',
+        bgColor: 'bg-amber-500/10 dark:bg-amber-500/20',
         description: `${inventory.lowStockCount ?? 0} low stock`,
       });
     }
@@ -134,8 +134,8 @@ const AdminDashboard = () => {
         title: 'Lead conversion',
         value: sales.conversionRate != null ? `${sales.conversionRate}%` : '—',
         icon: ShoppingCart,
-        iconColor: 'text-emerald-600',
-        bgColor: 'bg-emerald-50',
+        iconColor: 'text-emerald-600 dark:text-emerald-400',
+        bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20',
         description: 'CRM commercial dashboard',
       });
     }
@@ -144,8 +144,8 @@ const AdminDashboard = () => {
         title: 'Active headcount',
         value: workforce.activeHeadcount ?? '—',
         icon: Users,
-        iconColor: 'text-blue-600',
-        bgColor: 'bg-blue-50',
+        iconColor: 'text-blue-600 dark:text-blue-400',
+        bgColor: 'bg-blue-500/10 dark:bg-blue-500/20',
         description: 'Aggregated HR only',
       });
     }
@@ -158,10 +158,10 @@ const AdminDashboard = () => {
 
   const filters = (
     <div className="flex flex-wrap gap-3 items-end mb-6">
-      <label className="text-xs font-semibold text-slate-600">
+      <label className="text-xs font-semibold text-muted-foreground">
         Period
         <select
-          className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white"
+          className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm bg-card text-foreground shadow-xs focus:ring-2 focus:ring-primary focus:outline-none"
           value={preset}
           onChange={(e) => setPreset(e.target.value)}
         >
@@ -170,20 +170,20 @@ const AdminDashboard = () => {
       </label>
       {preset === 'CUSTOM' && (
         <>
-          <label className="text-xs font-semibold text-slate-600">
+          <label className="text-xs font-semibold text-muted-foreground">
             From
-            <input type="date" className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <input type="date" className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm bg-card text-foreground shadow-xs focus:ring-2 focus:ring-primary focus:outline-none" value={from} onChange={(e) => setFrom(e.target.value)} />
           </label>
-          <label className="text-xs font-semibold text-slate-600">
+          <label className="text-xs font-semibold text-muted-foreground">
             To
-            <input type="date" className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
+            <input type="date" className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm bg-card text-foreground shadow-xs focus:ring-2 focus:ring-primary focus:outline-none" value={to} onChange={(e) => setTo(e.target.value)} />
           </label>
         </>
       )}
-      <label className="text-xs font-semibold text-slate-600">
+      <label className="text-xs font-semibold text-muted-foreground">
         Business line
         <select
-          className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white"
+          className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm bg-card text-foreground shadow-xs focus:ring-2 focus:ring-primary focus:outline-none"
           value={businessLine}
           onChange={(e) => setBusinessLine(e.target.value)}
         >
@@ -191,7 +191,7 @@ const AdminDashboard = () => {
         </select>
       </label>
       {payload.period && (
-        <span className="text-xs text-slate-500 pb-2">
+        <span className="text-xs text-muted-foreground pb-2">
           {payload.period.from} → {payload.period.to}
         </span>
       )}
@@ -222,25 +222,35 @@ const AdminDashboard = () => {
       {filters}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <Card className="lg:col-span-2 border-none shadow-sm bg-white rounded-2xl">
-          <CardHeader className="border-b border-gray-50 px-6 py-4 flex flex-row items-center justify-between">
+        <Card className="lg:col-span-2 border border-border/80 shadow-xs bg-card text-card-foreground rounded-2xl">
+          <CardHeader className="border-b border-border/60 px-6 py-4 flex flex-row items-center justify-between">
             <CardTitle className="text-base font-black uppercase tracking-tight">Revenue by module</CardTitle>
             {finance && statusBadge(finance.status)}
           </CardHeader>
           <CardContent className="p-6">
             {!finance ? (
-              <p className="text-sm text-gray-500 text-center py-16">Finance section unavailable for your role.</p>
+              <p className="text-sm text-muted-foreground text-center py-16">Finance section unavailable for your role.</p>
             ) : (
               <div className="h-[280px]">
                 {revenueByModule.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-16">No INCOME recorded in this period.</p>
+                  <p className="text-sm text-muted-foreground text-center py-16">No INCOME recorded in this period.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={revenueByModule}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} />
-                      <Tooltip formatter={(v) => formatCurrency(v)} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-border opacity-60" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'currentColor' }} className="text-muted-foreground" />
+                      <YAxis tick={{ fontSize: 11, fill: 'currentColor' }} className="text-muted-foreground" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'var(--card, #0f172a)',
+                          borderColor: 'var(--border, #1e293b)',
+                          borderRadius: '0.75rem',
+                          color: 'var(--card-foreground, #f8fafc)',
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                        }}
+                        itemStyle={{ color: '#10B981' }}
+                        formatter={(v) => formatCurrency(v)}
+                      />
                       <Bar dataKey="revenue" fill="#10B981" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -248,13 +258,13 @@ const AdminDashboard = () => {
               </div>
             )}
             {finance?.accountingNote && (
-              <p className="text-xs text-slate-500 mt-3">{finance.accountingNote}</p>
+              <p className="text-xs text-muted-foreground mt-3">{finance.accountingNote}</p>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white rounded-2xl">
-          <CardHeader className="border-b border-gray-100 px-6 py-4">
+        <Card className="border border-border/80 shadow-xs bg-card text-card-foreground rounded-2xl">
+          <CardHeader className="border-b border-border/60 px-6 py-4">
             <CardTitle className="flex items-center gap-2 text-base font-black uppercase tracking-tight">
               <Bell className="h-4 w-4 text-primary" /> Alerts
               <Badge variant="outline" className="ml-auto">{alerts.length}</Badge>
@@ -262,7 +272,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent className="p-6 space-y-3 max-h-[320px] overflow-y-auto">
             {alerts.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-8">No active executive alerts.</p>
+              <p className="text-sm text-muted-foreground text-center py-8">No active executive alerts.</p>
             ) : alerts.map((a, idx) => (
               <button
                 key={`${a.title}-${idx}`}
@@ -283,8 +293,8 @@ const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
         {farm && (
-          <Card className="border-none shadow-sm bg-white rounded-2xl">
-            <CardHeader className="border-b border-gray-50 px-6 py-4 flex flex-row items-center justify-between">
+          <Card className="border border-border/80 shadow-xs bg-card text-card-foreground rounded-2xl">
+            <CardHeader className="border-b border-border/60 px-6 py-4 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-black uppercase tracking-tight">Farm</CardTitle>
               {statusBadge(farm.fcr?.status)}
             </CardHeader>
@@ -292,14 +302,14 @@ const AdminDashboard = () => {
               <p>Active farms: <strong>{farm.activeFarms ?? '—'}</strong></p>
               <p>Active flocks: <strong>{farm.activeFlocks ?? '—'}</strong></p>
               <p>Mortality in range: <strong>{farm.mortalityInRange ?? 0}</strong></p>
-              <p className="text-xs text-slate-500">FCR: N/A — not calculated from live feed/weight data.</p>
+              <p className="text-xs text-muted-foreground">FCR: N/A — not calculated from live feed/weight data.</p>
             </CardContent>
           </Card>
         )}
 
         {inventory && (
-          <Card className="border-none shadow-sm bg-white rounded-2xl">
-            <CardHeader className="border-b border-gray-50 px-6 py-4">
+          <Card className="border border-border/80 shadow-xs bg-card text-card-foreground rounded-2xl">
+            <CardHeader className="border-b border-border/60 px-6 py-4">
               <CardTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
                 <Package className="h-4 w-4" /> Inventory
               </CardTitle>
@@ -313,8 +323,8 @@ const AdminDashboard = () => {
         )}
 
         {sales && (
-          <Card className="border-none shadow-sm bg-white rounded-2xl">
-            <CardHeader className="border-b border-gray-50 px-6 py-4">
+          <Card className="border border-border/80 shadow-xs bg-card text-card-foreground rounded-2xl">
+            <CardHeader className="border-b border-border/60 px-6 py-4">
               <CardTitle className="text-sm font-black uppercase tracking-tight">Sales / CRM</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-2 text-sm">
@@ -327,8 +337,8 @@ const AdminDashboard = () => {
         )}
 
         {procurement && (
-          <Card className="border-none shadow-sm bg-white rounded-2xl">
-            <CardHeader className="border-b border-gray-50 px-6 py-4">
+          <Card className="border border-border/80 shadow-xs bg-card text-card-foreground rounded-2xl">
+            <CardHeader className="border-b border-border/60 px-6 py-4">
               <CardTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
                 <Truck className="h-4 w-4" /> Procurement
               </CardTitle>
@@ -342,8 +352,8 @@ const AdminDashboard = () => {
         )}
 
         {services && (
-          <Card className="border-none shadow-sm bg-white rounded-2xl">
-            <CardHeader className="border-b border-gray-50 px-6 py-4">
+          <Card className="border border-border/80 shadow-xs bg-card text-card-foreground rounded-2xl">
+            <CardHeader className="border-b border-border/60 px-6 py-4">
               <CardTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
                 <Briefcase className="h-4 w-4" /> Services
               </CardTitle>
@@ -351,14 +361,14 @@ const AdminDashboard = () => {
             <CardContent className="p-6 space-y-2 text-sm">
               <p>Consultancy revenue: <strong>{displayMoney(services.consultancy?.revenue)}</strong></p>
               <p>Training revenue: <strong>{displayMoney(services.training?.revenue)}</strong></p>
-              <p className="text-xs text-slate-500">{services.note}</p>
+              <p className="text-xs text-muted-foreground">{services.note}</p>
             </CardContent>
           </Card>
         )}
 
         {workforce && (
-          <Card className="border-none shadow-sm bg-white rounded-2xl">
-            <CardHeader className="border-b border-gray-50 px-6 py-4">
+          <Card className="border border-border/80 shadow-xs bg-card text-card-foreground rounded-2xl">
+            <CardHeader className="border-b border-border/60 px-6 py-4">
               <CardTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
                 <Users className="h-4 w-4" /> Workforce
               </CardTitle>
@@ -367,30 +377,30 @@ const AdminDashboard = () => {
               <p>Active headcount: <strong>{workforce.activeHeadcount ?? '—'}</strong></p>
               <p>On leave: <strong>{workforce.onLeave ?? 0}</strong></p>
               <p>Pending leave: <strong>{workforce.pendingLeaveRequests ?? 0}</strong></p>
-              <p className="text-xs text-slate-500">{workforce.privacyNote}</p>
+              <p className="text-xs text-muted-foreground">{workforce.privacyNote}</p>
             </CardContent>
           </Card>
         )}
       </div>
 
       {finance && (
-        <Card className="border-none shadow-sm bg-white rounded-2xl">
-          <CardHeader className="border-b border-gray-50 px-6 py-4">
+        <Card className="border border-border/80 shadow-xs bg-card text-card-foreground rounded-2xl">
+          <CardHeader className="border-b border-border/60 px-6 py-4">
             <CardTitle className="flex items-center gap-2 text-base font-black uppercase tracking-tight">
               <Activity className="h-4 w-4 text-primary" /> Cash flow (period)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
-              <p className="text-slate-500">Inflows</p>
+              <p className="text-muted-foreground">Inflows</p>
               <p className="text-lg font-bold">{displayMoney(finance.cashInflows)}</p>
             </div>
             <div>
-              <p className="text-slate-500">Outflows</p>
+              <p className="text-muted-foreground">Outflows</p>
               <p className="text-lg font-bold">{displayMoney(finance.cashOutflows)}</p>
             </div>
             <div>
-              <p className="text-slate-500">Net change</p>
+              <p className="text-muted-foreground">Net change</p>
               <p className="text-lg font-bold">{displayMoney(finance.netCashChange)}</p>
             </div>
           </CardContent>

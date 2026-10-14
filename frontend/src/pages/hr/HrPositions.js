@@ -67,8 +67,15 @@ const HrPositions = () => {
 
   const cols = [
     { accessorKey: 'code', header: 'Code', cell: ({ row }) => <span className="font-mono font-bold">{row.original.code || '—'}</span> },
-    { accessorKey: 'name', header: 'Position' },
-    { accessorKey: 'description', header: 'Description', cell: ({ row }) => row.original.description || '—' },
+    {
+      accessorKey: 'description',
+      header: 'Description / Key Responsibilities',
+      cell: ({ row }) => (
+        <div className="whitespace-pre-line text-xs text-slate-600 max-w-md py-1 leading-relaxed">
+          {row.original.description || '—'}
+        </div>
+      ),
+    },
     { accessorKey: 'employeeCount', header: 'Employees', cell: ({ row }) => <span className="font-mono">{row.original.employeeCount}</span> },
     { accessorKey: 'createdAt', header: 'Created', cell: ({ row }) => formatDate(row.original.createdAt) },
     {

@@ -77,43 +77,43 @@ const TreatmentForm = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="h-12 w-12 rounded-2xl bg-white shadow-sm border border-gray-100 hover:bg-gray-50 group transition-all"
+            className="h-12 w-12 rounded-2xl bg-card shadow-sm border border-border hover:bg-muted group transition-all"
             onClick={() => navigate('/veterinary')}
           >
-            <ArrowLeft className="h-5 w-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
+            <ArrowLeft className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
           </Button>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-gray-900 flex items-center gap-3">
+            <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
               Clinic Intake
-              <div className="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100 flex items-center gap-1.5">
+              <div className="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1.5">
                 <HeartPulse className="h-3 w-3" />
                 Active Therapy
               </div>
             </h1>
-            <p className="text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest">Medical oversight & therapeutic outcome management</p>
+            <p className="text-sm font-bold text-muted-foreground mt-1 uppercase tracking-widest">Medical oversight & therapeutic outcome management</p>
           </div>
         </div>
-        <div className="h-px flex-1 bg-gray-100 hidden md:block mx-8" />
-        <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100">
+        <div className="h-px flex-1 bg-border hidden md:block mx-8" />
+        <div className="flex items-center gap-3 bg-muted/40 px-4 py-2 rounded-2xl border border-border">
           <ShieldCheck className="h-4 w-4 text-emerald-500" />
-          <span className="text-[10px] font-black uppercase text-gray-500">Regimen Compliance Active</span>
+          <span className="text-[10px] font-black uppercase text-muted-foreground">Regimen Compliance Active</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-8">
-              <CardTitle className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2 uppercase">
-                <Pill className="h-5 w-5 text-emerald-600" />
+          <Card className="erp-card rounded-3xl overflow-hidden border border-border">
+            <CardHeader className="bg-muted/40 border-b border-border/60 p-8">
+              <CardTitle className="text-lg font-black text-foreground tracking-tight flex items-center gap-2 uppercase">
+                <Pill className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 Therapeutic config
               </CardTitle>
-              <CardDescription className="text-xs font-bold text-gray-400">Establish pharmacology and temporal bounds for treatment</CardDescription>
+              <CardDescription className="text-xs font-bold text-muted-foreground">Establish pharmacology and temporal bounds for treatment</CardDescription>
             </CardHeader>
             <CardContent className="p-8">
               <form onSubmit={handleSubmit} className="space-y-8">
                 {error && (
-                  <div className="p-4 text-xs font-black text-rose-700 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2">
+                  <div className="p-4 text-xs font-black text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2">
                     <AlertCircle className="h-5 w-5" />
                     {error}
                   </div>
@@ -121,12 +121,12 @@ const TreatmentForm = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Location Zone *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Location Zone *</Label>
                     <Select value={String(form.farmId)} onValueChange={handleFarmChange}>
-                      <SelectTrigger className="h-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-emerald-600 transition-all">
+                      <SelectTrigger className="h-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-emerald-600 transition-all">
                         <SelectValue placeholder="Select target facility" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                      <SelectContent className="rounded-xl border border-border shadow-2xl">
                         {farms.map((f) => (
                           <SelectItem key={f.id} value={String(f.id)} className="rounded-xl my-1 font-bold">{f.farmName}</SelectItem>
                         ))}
@@ -135,12 +135,12 @@ const TreatmentForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Population Batch *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Population Batch *</Label>
                     <Select value={String(form.flockId)} onValueChange={(v) => setForm({ ...form, flockId: v })} disabled={!form.farmId}>
-                      <SelectTrigger className={cn("h-12 border-2 rounded-2xl font-bold transition-all", !form.farmId ? "bg-gray-50 border-gray-100" : "bg-white border-gray-100 focus:ring-emerald-600")}>
+                      <SelectTrigger className={cn("h-12 border rounded-xl font-bold transition-all text-foreground", !form.farmId ? "bg-muted/40 border-border" : "bg-background border-border focus:ring-emerald-600")}>
                         <SelectValue placeholder="Select target batch" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                      <SelectContent className="rounded-xl border border-border shadow-2xl">
                         {flocks.map((f) => (
                           <SelectItem key={f.id} value={String(f.id)} className="rounded-xl my-1 font-bold">{f.batchCode}</SelectItem>
                         ))}
@@ -149,13 +149,13 @@ const TreatmentForm = () => {
                   </div>
 
                   <div className="space-y-3 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Etiology Link (Disease Case)</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Etiology Link (Disease Case)</Label>
                     <Select value={String(form.diseaseCaseId)} onValueChange={(v) => setForm({ ...form, diseaseCaseId: v })}>
-                      <SelectTrigger className="h-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-emerald-600 transition-all">
+                      <SelectTrigger className="h-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-emerald-600 transition-all">
                         <SelectValue placeholder="Link to active medical case" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
-                        <SelectItem value="null" className="rounded-xl my-1 font-bold italic text-gray-400">INDIPENDENT AD-HOC TREATMENT</SelectItem>
+                      <SelectContent className="rounded-xl border border-border shadow-2xl">
+                        <SelectItem value="null" className="rounded-xl my-1 font-bold italic text-muted-foreground">INDIPENDENT AD-HOC TREATMENT</SelectItem>
                         {cases.map((c) => (
                           <SelectItem key={c.id} value={String(c.id)} className="rounded-xl my-1 font-bold">
                             {c.suspectedDisease} @ {c.farmName} <span className="ml-2 text-[10px] opacity-40">({new Date(c.dateDetected).toLocaleDateString()})</span>
@@ -166,11 +166,11 @@ const TreatmentForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Pharmacological Agent *</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Pharmacological Agent *</Label>
                     <div className="relative">
-                      <FlaskConical className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      <FlaskConical className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
-                        className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-emerald-600 transition-all"
+                        className="h-12 pl-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-emerald-600 transition-all"
                         value={form.drugName}
                         onChange={(e) => setForm({ ...form, drugName: e.target.value })}
                         placeholder="e.g. Enrofloxacin 10%"
@@ -179,9 +179,9 @@ const TreatmentForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Dosage Intensity</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Dosage Intensity</Label>
                     <Input
-                      className="h-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-emerald-600 transition-all text-emerald-700"
+                      className="h-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-emerald-600 transition-all"
                       value={form.dosage}
                       onChange={(e) => setForm({ ...form, dosage: e.target.value })}
                       placeholder="e.g. 10mg/kg live weight"
@@ -190,18 +190,18 @@ const TreatmentForm = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Delivery Route</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Delivery Route</Label>
                       <Input
-                        className="h-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-emerald-600 transition-all"
+                        className="h-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-emerald-600 transition-all"
                         value={form.route}
                         onChange={(e) => setForm({ ...form, route: e.target.value })}
                         placeholder="e.g. Ocular/Spray/Water"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Regimen Span</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Regimen Span</Label>
                       <Input
-                        className="h-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-emerald-600 transition-all"
+                        className="h-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-emerald-600 transition-all"
                         value={form.duration}
                         onChange={(e) => setForm({ ...form, duration: e.target.value })}
                         placeholder="e.g. 7 Continuous Days"
@@ -210,9 +210,9 @@ const TreatmentForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Anticipated Outcome</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Anticipated Outcome</Label>
                     <Input
-                      className="h-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-emerald-600 transition-all"
+                      className="h-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-emerald-600 transition-all"
                       value={form.outcome}
                       onChange={(e) => setForm({ ...form, outcome: e.target.value })}
                       placeholder="e.g. Total Remission"
@@ -220,12 +220,12 @@ const TreatmentForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Protocol Initialization</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Protocol Initialization</Label>
                     <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
                         type="date"
-                        className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-emerald-600 transition-all"
+                        className="h-12 pl-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-emerald-600 transition-all"
                         value={form.startDate}
                         onChange={(e) => setForm({ ...form, startDate: e.target.value })}
                       />
@@ -233,12 +233,12 @@ const TreatmentForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Terminal Review Date</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Terminal Review Date</Label>
                     <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
                         type="date"
-                        className="h-12 pl-12 bg-white border-2 border-gray-100 rounded-2xl font-bold focus:ring-emerald-600 transition-all"
+                        className="h-12 pl-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-emerald-600 transition-all"
                         value={form.endDate}
                         onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                       />
@@ -247,10 +247,10 @@ const TreatmentForm = () => {
                 </div>
 
                 <div className="flex gap-4 pt-8">
-                  <Button type="submit" className="flex-[2] h-14 rounded-2xl bg-emerald-900 hover:bg-emerald-800 text-white font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95" disabled={loading}>
+                  <Button type="submit" className="flex-[2] h-14 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm uppercase tracking-wider shadow-md transition-all active:scale-95" disabled={loading}>
                     {loading ? 'Initializing Regimen...' : 'Authorize Treatment'}
                   </Button>
-                  <Button type="button" variant="outline" className="flex-1 h-14 rounded-2xl border-2 font-black text-sm uppercase tracking-widest hover:bg-gray-50" onClick={() => navigate('/veterinary')}>
+                  <Button type="button" variant="outline" className="flex-1 h-14 rounded-xl border border-border font-bold text-sm uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => navigate('/veterinary')}>
                     Discard
                   </Button>
                 </div>
@@ -260,12 +260,12 @@ const TreatmentForm = () => {
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-emerald-900 text-white overflow-hidden p-8">
+          <Card className="erp-card border border-emerald-800/60 rounded-3xl bg-emerald-950/80 text-white overflow-hidden p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-emerald-800 rounded-xl">
+              <div className="p-2 bg-emerald-800/80 rounded-xl">
                 <Info className="h-5 w-5 text-emerald-300" />
               </div>
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-200">Therapeutic Guard</span>
+              <span className="text-xs font-black uppercase tracking-widest text-emerald-300">Therapeutic Guard</span>
             </div>
             <div className="space-y-6">
               <div className="space-y-3">
@@ -273,33 +273,33 @@ const TreatmentForm = () => {
                   <Activity className="h-4 w-4 text-emerald-400" />
                   Clinical Oversight
                 </h4>
-                <p className="text-xs text-emerald-200/70 font-medium leading-relaxed italic">
+                <p className="text-xs text-emerald-200/80 font-medium leading-relaxed italic">
                   Ensure all pharmaceutical interventions are recorded for withdrawal tracking. Failure to log antibiotic use may void compliance certifications.
                 </p>
               </div>
-              <div className="h-px bg-emerald-800" />
+              <div className="h-px bg-emerald-800/60" />
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">Regimen Logic</p>
-                <div className="flex items-center gap-3 bg-emerald-950/30 p-3 rounded-xl border border-emerald-800/50">
+                <div className="flex items-center gap-3 bg-emerald-950/50 p-3 rounded-xl border border-emerald-800/50">
                   <div className="h-1.5 w-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-bold">Automatic Withdrawal Monitoring</span>
+                  <span className="text-[10px] font-bold text-emerald-100">Automatic Withdrawal Monitoring</span>
                 </div>
-                <div className="flex items-center gap-3 bg-emerald-950/30 p-3 rounded-xl border border-emerald-800/50">
+                <div className="flex items-center gap-3 bg-emerald-950/50 p-3 rounded-xl border border-emerald-800/50">
                   <div className="h-1.5 w-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-bold">Audit-Ready Medical Logs</span>
+                  <span className="text-[10px] font-bold text-emerald-100">Audit-Ready Medical Logs</span>
                 </div>
               </div>
             </div>
           </Card>
 
-          <Card className="border-none shadow-2xl shadow-gray-200/40 rounded-[2.5rem] bg-emerald-500 p-8 text-white">
+          <Card className="erp-card border border-border rounded-3xl p-8">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-100">Recovery Rate</span>
-                <TrendingUp className="h-4 w-4 text-emerald-100" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Recovery Rate</span>
+                <TrendingUp className="h-4 w-4 text-emerald-500" />
               </div>
-              <p className="text-2xl font-black">88.4%</p>
-              <p className="text-[10px] font-bold text-emerald-100/60 uppercase tracking-widest">Aggregate Regimen Efficacy</p>
+              <p className="text-3xl font-black text-foreground">88.4%</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aggregate Regimen Efficacy</p>
             </div>
           </Card>
         </div>

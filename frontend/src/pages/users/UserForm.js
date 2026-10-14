@@ -8,8 +8,8 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { useLanguage } from '../../context/LanguageContext';
 import { toast } from 'react-toastify';
-import { CANONICAL_ROLES, ROLE_LABELS, normalizeRole } from '../../lib/permissions';
-import { User, Lock } from 'lucide-react';
+import { CANONICAL_ROLES, ROLE_LABELS, ROLE_DESCRIPTIONS, normalizeRole } from '../../lib/permissions';
+import { User, Lock, Shield, CheckCircle2 } from 'lucide-react';
 
 const ROLE_OPTIONS = CANONICAL_ROLES;
 
@@ -92,6 +92,25 @@ const UserForm = () => {
                 </SelectContent>
               </Select>
             </div>
+            {ROLE_DESCRIPTIONS[form.role] && (
+              <div className="md:col-span-2 bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-card border border-emerald-500/20 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300 font-bold text-sm mb-3">
+                  <Shield className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Key Role of {ROLE_DESCRIPTIONS[form.role].title}</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  {ROLE_DESCRIPTIONS[form.role].responsibilities.map((resp, idx) => (
+                    <div key={idx} className="flex items-start gap-2 bg-card p-2.5 rounded-lg border border-emerald-500/20 shadow-xs">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <span className="font-bold text-foreground">{resp.key}: </span>
+                        <span className="text-muted-foreground">{resp.detail}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

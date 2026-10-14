@@ -57,53 +57,53 @@ const BiosecurityForm = () => {
             backTo="/veterinary"
         >
             <form onSubmit={handleSubmit}>
-                <Card className="border-none shadow-2xl shadow-gray-200/50 rounded-[2.5rem] bg-white overflow-hidden">
+                <Card className="erp-card rounded-3xl overflow-hidden border border-border">
                     <CardContent className="p-8 space-y-8">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Target Farm Location *</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Target Farm Location *</Label>
                             <Select value={form.farmId} onValueChange={(val) => setForm({ ...form, farmId: val })}>
-                                <SelectTrigger className="h-14 rounded-2xl bg-gray-50 border-none font-bold text-gray-900 focus:ring-emerald-600">
+                                <SelectTrigger className="h-14 rounded-xl bg-background border border-border font-bold text-foreground focus:ring-emerald-600">
                                     <SelectValue placeholder="Select farm location" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-2xl border-none shadow-2xl">
-                                    {farms.map(f => <SelectItem key={f.id} value={String(f.id)} className="font-bold my-1">{f.farmName}</SelectItem>)}
+                                <SelectContent className="rounded-xl border border-border shadow-2xl">
+                                    {farms.map(f => <SelectItem key={f.id} value={String(f.id)} className="font-semibold my-1">{f.farmName}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border text-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-muted/40 rounded-2xl border border-border/60 text-sm">
                             <div className="flex items-center justify-between">
-                                <span className="font-bold flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-sky-500" /> Footbath Refreshed?</span>
+                                <span className="font-bold text-foreground flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-sky-500" /> Footbath Refreshed?</span>
                                 <Input type="checkbox" className="h-6 w-6 rounded-lg text-emerald-600" checked={form.footbathRefreshed} onChange={e => setForm({ ...form, footbathRefreshed: e.target.checked })} />
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="font-bold flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /> Vehicular Spray Used?</span>
+                                <span className="font-bold text-foreground flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /> Vehicular Spray Used?</span>
                                 <Input type="checkbox" className="h-6 w-6 rounded-lg text-emerald-600" checked={form.vehicularSpray} onChange={e => setForm({ ...form, vehicularSpray: e.target.checked })} />
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="font-bold flex items-center gap-2"><UserCheck className="h-5 w-5 text-emerald-500" /> PPE Enforced?</span>
+                                <span className="font-bold text-foreground flex items-center gap-2"><UserCheck className="h-5 w-5 text-emerald-500" /> PPE Enforced?</span>
                                 <Input type="checkbox" className="h-6 w-6 rounded-lg text-emerald-600" checked={form.ppeWorn} onChange={e => setForm({ ...form, ppeWorn: e.target.checked })} />
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="font-bold flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-rose-500" /> Visitor Register Signed?</span>
+                                <span className="font-bold text-foreground flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-rose-500" /> Visitor Register Signed?</span>
                                 <Input type="checkbox" className="h-6 w-6 rounded-lg text-emerald-600" checked={form.visitorLogged} onChange={e => setForm({ ...form, visitorLogged: e.target.checked })} />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Visitor Link (if applicable)</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Visitor Link (if applicable)</Label>
                                 <Input
-                                    className="h-14 rounded-2xl bg-white border-2 border-gray-100 font-bold focus:border-emerald-600 focus:ring-emerald-600"
+                                    className="h-14 rounded-xl bg-background border border-border font-bold text-foreground focus:border-emerald-600 focus:ring-emerald-600"
                                     placeholder="Visitor Name"
                                     value={form.visitorName}
                                     onChange={(e) => setForm({ ...form, visitorName: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Vehicle Logs (if applicable)</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Vehicle Logs (if applicable)</Label>
                                 <Input
-                                    className="h-14 rounded-2xl bg-white border-2 border-gray-100 font-bold focus:border-emerald-600 focus:ring-emerald-600 uppercase"
+                                    className="h-14 rounded-xl bg-background border border-border font-bold text-foreground focus:border-emerald-600 focus:ring-emerald-600 uppercase"
                                     placeholder="E.g., CA-12345"
                                     value={form.vehicleReg}
                                     onChange={(e) => setForm({ ...form, vehicleReg: e.target.value })}
@@ -112,19 +112,19 @@ const BiosecurityForm = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Inspector Notes</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Inspector Notes</Label>
                             <Textarea
-                                className="rounded-2xl border-2 border-gray-100 font-bold focus:border-emerald-600 focus:ring-emerald-600 min-h-[100px]"
+                                className="rounded-xl border border-border font-bold text-foreground bg-background focus:border-emerald-600 focus:ring-emerald-600 min-h-[100px]"
                                 placeholder="Mention any breaches or anomalies observed..."
                                 value={form.notes}
                                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                             />
                         </div>
 
-                        <div className="space-y-2 pt-4 border-t border-gray-100">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Oversight Signature *</Label>
+                        <div className="space-y-2 pt-4 border-t border-border/60">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Oversight Signature *</Label>
                             <Input
-                                className="h-14 rounded-2xl bg-emerald-50 border-emerald-100/50 font-mono text-emerald-900 tracking-wider font-extrabold focus:ring-emerald-600"
+                                className="h-14 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 font-mono text-emerald-900 dark:text-emerald-400 tracking-wider font-extrabold focus:ring-emerald-600"
                                 placeholder="TYPE DIGITAL SIGNATURE HERE"
                                 value={form.staffSignature}
                                 onChange={(e) => setForm({ ...form, staffSignature: e.target.value })}
@@ -136,8 +136,8 @@ const BiosecurityForm = () => {
                 </Card>
 
                 <div className="mt-8 flex justify-end gap-4">
-                    <Button type="button" variant="ghost" className="h-14 px-8 rounded-2xl font-black tracking-widest text-gray-500 hover:text-gray-900 uppercase" onClick={() => navigate(-1)}>Cancel</Button>
-                    <Button type="submit" className="h-14 px-10 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-200 font-black tracking-widest uppercase" disabled={loading}>
+                    <Button type="button" variant="ghost" className="h-14 px-8 rounded-xl font-bold tracking-wider text-muted-foreground hover:text-foreground uppercase" onClick={() => navigate(-1)}>Cancel</Button>
+                    <Button type="submit" className="h-14 px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md font-bold tracking-wider uppercase" disabled={loading}>
                         {loading ? 'Submitting...' : 'Sign & Complete Audit'}
                     </Button>
                 </div>

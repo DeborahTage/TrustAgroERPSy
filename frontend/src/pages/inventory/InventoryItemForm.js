@@ -83,20 +83,20 @@ const InventoryItemForm = () => {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="itemName" className="text-sm font-bold text-gray-700">{t('inventoryItemForm.itemName')} *</Label>
+                  <Label htmlFor="itemName" className="text-sm font-bold text-foreground">{t('inventoryItemForm.itemName')} *</Label>
                   <Input
                     id="itemName"
                     value={form.itemName}
                     onChange={e => setForm({ ...form, itemName: e.target.value })}
                     required
                     placeholder="e.g. Broiler Feed - Stage 1"
-                    className="h-11 bg-gray-50/50 border-gray-200 focus:bg-white transition-all shadow-sm"
+                    className="h-11 bg-card border-border focus:bg-background transition-all shadow-sm text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-sm font-bold text-gray-700">{t('inventoryItemForm.category')}</Label>
+                  <Label htmlFor="category" className="text-sm font-bold text-foreground">{t('inventoryItemForm.category')}</Label>
                   <Select value={form.category} onValueChange={value => setForm({ ...form, category: value })}>
-                    <SelectTrigger className="h-11 bg-gray-50/50 border-gray-200">
+                    <SelectTrigger className="h-11 bg-card border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -107,9 +107,9 @@ const InventoryItemForm = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="unit" className="text-sm font-bold text-gray-700">{t('inventoryItemForm.unit')}</Label>
+                  <Label htmlFor="unit" className="text-sm font-bold text-foreground">{t('inventoryItemForm.unit')}</Label>
                   <Select value={form.unit} onValueChange={value => setForm({ ...form, unit: value })}>
-                    <SelectTrigger className="h-11 bg-gray-50/50 border-gray-200">
+                    <SelectTrigger className="h-11 bg-card border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -123,12 +123,12 @@ const InventoryItemForm = () => {
             </div>
 
             {/* Threshold & Compliance Section */}
-            <div className="space-y-6 pt-6 border-t border-dashed">
+            <div className="space-y-6 pt-6 border-t border-border/60 border-dashed">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-amber-500" />
-                    <Label htmlFor="minimumStockLevel" className="text-sm font-bold text-gray-700">Safety Stock Threshold</Label>
+                    <Label htmlFor="minimumStockLevel" className="text-sm font-bold text-foreground">Safety Stock Threshold</Label>
                   </div>
                   <Input
                     id="minimumStockLevel"
@@ -137,25 +137,25 @@ const InventoryItemForm = () => {
                     value={form.minimumStockLevel}
                     onChange={e => setForm({ ...form, minimumStockLevel: e.target.value })}
                     placeholder="Alert level"
-                    className="h-11 bg-gray-50/50 border-gray-200 shadow-sm"
+                    className="h-11 bg-card border-border shadow-sm text-foreground"
                   />
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="sku" className="text-sm font-bold text-gray-700">SKU / Barcode</Label>
+                    <Label htmlFor="sku" className="text-sm font-bold text-foreground">SKU / Barcode</Label>
                   </div>
                   <Input
                     id="sku"
                     value={form.sku}
                     onChange={e => setForm({ ...form, sku: e.target.value })}
                     placeholder="Auto-generate or scan..."
-                    className="h-11 bg-gray-50/50 border-gray-200 shadow-sm"
+                    className="h-11 bg-card border-border shadow-sm text-foreground"
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="reorderPoint" className="text-sm font-bold text-gray-700">Reorder Point</Label>
+                  <Label htmlFor="reorderPoint" className="text-sm font-bold text-foreground">Reorder Point</Label>
                   <Input
                     id="reorderPoint"
                     type="number"
@@ -163,12 +163,12 @@ const InventoryItemForm = () => {
                     value={form.reorderPoint}
                     onChange={e => setForm({ ...form, reorderPoint: e.target.value })}
                     placeholder="Reorder at..."
-                    className="h-11 bg-gray-50/50 border-gray-200 shadow-sm"
+                    className="h-11 bg-card border-border shadow-sm text-foreground"
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="reorderQty" className="text-sm font-bold text-gray-700">Reorder Quantity</Label>
+                  <Label htmlFor="reorderQty" className="text-sm font-bold text-foreground">Reorder Quantity</Label>
                   <Input
                     id="reorderQty"
                     type="number"
@@ -176,26 +176,26 @@ const InventoryItemForm = () => {
                     value={form.reorderQty}
                     onChange={e => setForm({ ...form, reorderQty: e.target.value })}
                     placeholder="Order amount"
-                    className="h-11 bg-gray-50/50 border-gray-200 shadow-sm"
+                    className="h-11 bg-card border-border shadow-sm text-foreground"
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="storageLocation" className="text-sm font-bold text-gray-700">Storage Location</Label>
+                  <Label htmlFor="storageLocation" className="text-sm font-bold text-foreground">Storage Location</Label>
                   <Input
                     id="storageLocation"
                     value={form.storageLocation}
                     onChange={e => setForm({ ...form, storageLocation: e.target.value })}
                     placeholder="e.g. Cold Room A"
-                    className="h-11 bg-gray-50/50 border-gray-200 shadow-sm"
+                    className="h-11 bg-card border-border shadow-sm text-foreground"
                   />
                 </div>
 
-                <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <div className="space-y-3 p-4 bg-muted/40 rounded-lg border border-border/60">
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col gap-0.5">
-                      <Label htmlFor="expiryRequired" className="text-sm font-bold text-gray-700">Expiry Tracking</Label>
-                      <span className="text-[10px] text-gray-500">Require expiry dates for all stock receipts.</span>
+                      <Label htmlFor="expiryRequired" className="text-sm font-bold text-foreground">Expiry Tracking</Label>
+                      <span className="text-[10px] text-muted-foreground">Require expiry dates for all stock receipts.</span>
                     </div>
                     <Switch
                       id="expiryRequired"
@@ -208,14 +208,14 @@ const InventoryItemForm = () => {
             </div>
 
             {/* Pricing Section */}
-            <div className="space-y-6 pt-6 border-t border-dashed">
+            <div className="space-y-6 pt-6 border-t border-border/60 border-dashed">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm font-bold text-gray-700">Commercial Pricing (ETB)</span>
+                <span className="text-sm font-bold text-foreground">Commercial Pricing (ETB)</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="retailPrice" className="text-sm font-bold text-gray-700">Retail Price *</Label>
+                  <Label htmlFor="retailPrice" className="text-sm font-bold text-foreground">Retail Price *</Label>
                   <Input
                     id="retailPrice"
                     type="number"
@@ -224,11 +224,11 @@ const InventoryItemForm = () => {
                     value={form.retailPrice}
                     onChange={e => setForm({ ...form, retailPrice: e.target.value })}
                     placeholder="0.00"
-                    className="h-11 bg-gray-50/50 border-gray-200 shadow-sm"
+                    className="h-11 bg-card border-border shadow-sm text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="wholesalePrice" className="text-sm font-bold text-gray-700">Wholesale Price</Label>
+                  <Label htmlFor="wholesalePrice" className="text-sm font-bold text-foreground">Wholesale Price</Label>
                   <Input
                     id="wholesalePrice"
                     type="number"
@@ -237,11 +237,11 @@ const InventoryItemForm = () => {
                     value={form.wholesalePrice}
                     onChange={e => setForm({ ...form, wholesalePrice: e.target.value })}
                     placeholder="0.00"
-                    className="h-11 bg-gray-50/50 border-gray-200 shadow-sm"
+                    className="h-11 bg-card border-border shadow-sm text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="partnerPrice" className="text-sm font-bold text-gray-700">Partner Farm Price</Label>
+                  <Label htmlFor="partnerPrice" className="text-sm font-bold text-foreground">Partner Farm Price</Label>
                   <Input
                     id="partnerPrice"
                     type="number"
@@ -250,15 +250,15 @@ const InventoryItemForm = () => {
                     value={form.partnerPrice}
                     onChange={e => setForm({ ...form, partnerPrice: e.target.value })}
                     placeholder="0.00"
-                    className="h-11 bg-gray-50/50 border-gray-200 shadow-sm"
+                    className="h-11 bg-card border-border shadow-sm text-foreground"
                   />
                 </div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <div className="p-4 bg-muted/40 rounded-lg border border-border/60">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col gap-0.5">
-                    <Label htmlFor="isControlled" className="text-sm font-bold text-gray-700">Controlled Substance</Label>
-                    <span className="text-[10px] text-gray-500">Requires a valid prescription to dispense from pharmacy.</span>
+                    <Label htmlFor="isControlled" className="text-sm font-bold text-foreground">Controlled Substance</Label>
+                    <span className="text-[10px] text-muted-foreground">Requires a valid prescription to dispense from pharmacy.</span>
                   </div>
                   <Switch
                     id="isControlled"
@@ -270,11 +270,11 @@ const InventoryItemForm = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-6 border-t">
-              <Button type="button" variant="ghost" onClick={() => navigate('/inventory')} className="text-gray-500">
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-border/60">
+              <Button type="button" variant="ghost" onClick={() => navigate('/inventory')} className="text-muted-foreground hover:text-foreground">
                 {t('forms.cancel')}
               </Button>
-              <Button type="submit" disabled={loading} className="px-8 h-11 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200">
+              <Button type="submit" disabled={loading} className="px-8 h-11 bg-blue-600 hover:bg-blue-700 text-white shadow-md font-bold rounded-xl">
                 {loading ? t('forms.saving') : isEdit ? 'Update Specification' : 'Register New Item'}
               </Button>
             </div>

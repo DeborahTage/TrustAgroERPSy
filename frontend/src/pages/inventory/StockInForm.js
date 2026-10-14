@@ -83,23 +83,23 @@ const StockInForm = () => {
     >
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="border-none shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100">
-              <CardTitle className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2 uppercase">
-                <Package className="h-5 w-5 text-emerald-600" />
+          <Card className="erp-card overflow-hidden">
+            <CardHeader className="border-b border-border/60">
+              <CardTitle className="text-lg font-black text-foreground tracking-tight flex items-center gap-2 uppercase">
+                <Package className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 Receipt Details
               </CardTitle>
-              <CardDescription className="text-xs font-bold text-gray-400">Core information about the incoming stock</CardDescription>
+              <CardDescription className="text-xs font-bold text-muted-foreground">Core information about the incoming stock</CardDescription>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Inventory Category</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inventory Category</Label>
                   <Select value={form.category || ''} onValueChange={v => setForm({ ...form, category: v, itemId: '' })}>
-                    <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus:ring-emerald-500 transition-all font-bold text-gray-700">
+                    <SelectTrigger className="h-14 bg-card border border-border rounded-xl focus:ring-emerald-500 transition-all font-bold text-foreground">
                       <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectContent className="rounded-2xl border-border shadow-2xl">
                       {['FEED', 'DRUG', 'VACCINE', 'VITAMIN', 'EQUIPMENT', 'FARM_MATERIAL', 'CLEANING_MATERIAL', 'OFFICE_SUPPLY', 'CONSUMABLE'].map(c => (
                         <SelectItem key={c} value={c} className="rounded-xl my-1 font-medium">{c.replace('_', ' ')}</SelectItem>
                       ))}
@@ -108,18 +108,18 @@ const StockInForm = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Inventory Item *</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inventory Item *</Label>
                   <Select value={String(form.itemId)} onValueChange={v => setForm({ ...form, itemId: v })} disabled={!form.category}>
                     <SelectTrigger className={cn(
-                      "h-14 bg-white border-2 border-gray-100 rounded-2xl focus:ring-emerald-500 transition-all font-bold text-gray-700",
+                      "h-14 bg-card border border-border rounded-xl focus:ring-emerald-500 transition-all font-bold text-foreground",
                       !form.category && "opacity-50 cursor-not-allowed"
                     )}>
                       <SelectValue placeholder={form.category ? "Select item" : "Select category first"} />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectContent className="rounded-2xl border-border shadow-2xl">
                       {items.filter(i => i.category === form.category).map(i => (
                         <SelectItem key={i.id} value={String(i.id)} className="rounded-xl my-1 font-medium">
-                          {i.itemName} <span className="text-gray-400 ml-2 font-normal">({i.unit})</span>
+                          {i.itemName} <span className="text-muted-foreground ml-2 font-normal">({i.unit})</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -129,11 +129,11 @@ const StockInForm = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                     <Tag className="h-3 w-3" /> Batch / Lot Number
                   </Label>
                   <Input
-                    className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-emerald-500 focus-visible:border-emerald-500 transition-all font-bold text-gray-700"
+                    className="h-14 bg-card border border-border rounded-xl focus-visible:ring-emerald-500 transition-all font-bold text-foreground"
                     value={form.batchNumber}
                     onChange={e => setForm({ ...form, batchNumber: e.target.value })}
                     placeholder="e.g. BTC-2024-001"
@@ -141,13 +141,13 @@ const StockInForm = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                     <Activity className="h-3 w-3" /> Quantity Received *
                   </Label>
                   <Input
                     type="number"
                     step="0.01"
-                    className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-emerald-500 focus-visible:border-emerald-500 transition-all font-bold text-gray-700"
+                    className="h-14 bg-card border border-border rounded-xl focus-visible:ring-emerald-500 transition-all font-bold text-foreground"
                     placeholder="0.00"
                     value={form.quantity}
                     onChange={e => setForm({ ...form, quantity: e.target.value })}
@@ -158,25 +158,25 @@ const StockInForm = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                     <Truck className="h-3 w-3" /> Supplier Entity
                   </Label>
                   <Select value={String(form.supplierId)} onValueChange={v => setForm({ ...form, supplierId: v })}>
-                    <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus:ring-emerald-500 focus:border-emerald-500 transition-all font-bold text-gray-700">
+                    <SelectTrigger className="h-14 bg-card border border-border rounded-xl focus:ring-emerald-500 transition-all font-bold text-foreground">
                       <SelectValue placeholder="Select Vendor" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectContent className="rounded-2xl border-border shadow-2xl">
                       {suppliers.map(s => <SelectItem key={s.id} value={String(s.id)} className="rounded-xl my-1 font-medium">{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                     <FileStack className="h-3 w-3" /> PO Reference
                   </Label>
                   <Input
-                    className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-emerald-500 focus-visible:border-emerald-500 transition-all font-bold text-gray-700"
+                    className="h-14 bg-card border border-border rounded-xl focus-visible:ring-emerald-500 transition-all font-bold text-foreground"
                     value={form.poReference}
                     onChange={e => setForm({ ...form, poReference: e.target.value })}
                     placeholder="e.g. PO-8821"
@@ -188,21 +188,21 @@ const StockInForm = () => {
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100">
-              <CardTitle className="text-sm font-black text-gray-900 tracking-tight uppercase">Dates & Valuation</CardTitle>
+          <Card className="erp-card overflow-hidden">
+            <CardHeader className="border-b border-border/60">
+              <CardTitle className="text-sm font-black text-foreground tracking-tight uppercase">Dates & Valuation</CardTitle>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                   <DollarSign className="h-3 w-3" /> Unit Cost
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">ETB</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">ETB</span>
                   <Input
                     type="number"
                     step="0.01"
-                    className="h-14 pl-12 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-emerald-500 focus-visible:border-emerald-500 transition-all font-bold text-gray-700 text-lg"
+                    className="h-14 pl-12 bg-card border border-border rounded-xl focus-visible:ring-emerald-500 transition-all font-bold text-foreground text-lg"
                     placeholder="0.00"
                     value={form.unitCost}
                     onChange={e => setForm({ ...form, unitCost: e.target.value })}
@@ -211,24 +211,24 @@ const StockInForm = () => {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                   <Calendar className="h-3 w-3" /> Expiry Date
                 </Label>
                 <Input
                   type="date"
-                  className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-emerald-500 focus-visible:border-emerald-500 transition-all font-bold text-gray-700"
+                  className="h-14 bg-card border border-border rounded-xl focus-visible:ring-emerald-500 transition-all font-bold text-foreground"
                   value={form.expiryDate}
                   onChange={e => setForm({ ...form, expiryDate: e.target.value })}
                 />
               </div>
 
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                   <Calendar className="h-3 w-3" /> Receipt Date
                 </Label>
                 <Input
                   type="date"
-                  className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-emerald-500 focus-visible:border-emerald-500 transition-all font-bold text-gray-700"
+                  className="h-14 bg-card border border-border rounded-xl focus-visible:ring-emerald-500 transition-all font-bold text-foreground"
                   value={form.dateReceived}
                   onChange={e => setForm({ ...form, dateReceived: e.target.value })}
                 />

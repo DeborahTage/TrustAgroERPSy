@@ -53,6 +53,12 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+.dark .login-box {
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+}
+
 @media (max-width: 480px) {
   .login-box {
     padding: 32px 24px;

@@ -87,14 +87,14 @@ const AuditLogViewer = () => {
   };
 
   return (
-    <Card>
+    <Card className="erp-card">
       <CardHeader>
         <CardTitle>System Audit Trail</CardTitle>
       </CardHeader>
       <CardContent>
           <div className="flex flex-wrap gap-4 mb-6">
             <div className="w-44">
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Module</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Module</label>
               <Select
                 value={filters.module}
                 onChange={(e) => onFilterChange({ module: e.target.value })}
@@ -112,7 +112,7 @@ const AuditLogViewer = () => {
               />
             </div>
             <div className="w-44">
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Action</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Action</label>
               <Select
                 value={filters.action}
                 onChange={(e) => onFilterChange({ action: e.target.value })}
@@ -131,7 +131,7 @@ const AuditLogViewer = () => {
               />
             </div>
             <div className="w-40">
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Entity Type</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Entity Type</label>
               <Input
                 placeholder="e.g. User"
                 value={filters.entityType}
@@ -139,7 +139,7 @@ const AuditLogViewer = () => {
               />
             </div>
             <div className="w-32">
-              <label className="text-xs font-medium text-gray-500 mb-1 block">User ID</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">User ID</label>
               <Input
                 type="number"
                 placeholder="ID"
@@ -148,7 +148,7 @@ const AuditLogViewer = () => {
               />
             </div>
             <div className="w-48">
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Keyword</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Keyword</label>
               <Input
                 placeholder="Search..."
                 value={filters.keyword}
@@ -156,7 +156,7 @@ const AuditLogViewer = () => {
               />
             </div>
             <div className="w-44">
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Start</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Start</label>
               <Input
                 type="datetime-local"
                 value={filters.startDate}
@@ -164,7 +164,7 @@ const AuditLogViewer = () => {
               />
             </div>
             <div className="w-44">
-              <label className="text-xs font-medium text-gray-500 mb-1 block">End</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">End</label>
               <Input
                 type="datetime-local"
                 value={filters.endDate}
@@ -178,29 +178,29 @@ const AuditLogViewer = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+          <div className="overflow-x-auto border border-border rounded-xl">
             <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50 text-gray-500 font-medium">
+              <thead className="erp-table-head font-medium">
                 <tr>
-                  <th className="px-4 py-3 border-b">Timestamp</th>
-                  <th className="px-4 py-3 border-b">User</th>
-                  <th className="px-4 py-3 border-b">Action</th>
-                  <th className="px-4 py-3 border-b">Module & Entity</th>
-                  <th className="px-4 py-3 border-b">Result</th>
-                  <th className="px-4 py-3 border-b">Details</th>
+                  <th className="px-4 py-3 border-b border-border">Timestamp</th>
+                  <th className="px-4 py-3 border-b border-border">User</th>
+                  <th className="px-4 py-3 border-b border-border">Action</th>
+                  <th className="px-4 py-3 border-b border-border">Module & Entity</th>
+                  <th className="px-4 py-3 border-b border-border">Result</th>
+                  <th className="px-4 py-3 border-b border-border">Details</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {loading && logs.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan="6" className="px-4 py-8 text-center text-muted-foreground">
                       <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
                       Loading audit trail...
                     </td>
                   </tr>
                 ) : logs.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-4 py-8 text-center text-gray-500">No logs found matching the criteria.</td>
+                    <td colSpan="6" className="px-4 py-8 text-center text-muted-foreground">No logs found matching the criteria.</td>
                   </tr>
                 ) : (
                   logs.map((log) => {
@@ -212,22 +212,22 @@ const AuditLogViewer = () => {
 
                     return (
                       <React.Fragment key={log.id}>
-                        <tr className={`${isExpanded ? 'bg-primary/10/30' : 'hover:bg-gray-50'}`}>
-                          <td className="px-4 py-3 whitespace-nowrap text-gray-500">
+                        <tr className={`${isExpanded ? 'bg-primary/10' : 'hover:bg-muted/40'}`}>
+                          <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                             {new Date(log.createdAt).toLocaleString()}
                           </td>
                           <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900">{log.userEmail || 'System'}</div>
-                            {log.userId && <div className="text-xs text-gray-400">#{log.userId}</div>}
+                            <div className="font-medium text-foreground">{log.userEmail || 'System'}</div>
+                            {log.userId && <div className="text-xs text-muted-foreground">#{log.userId}</div>}
                           </td>
                           <td className="px-4 py-3">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-muted text-foreground">
                               {log.action}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900">{log.module}</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="font-medium text-foreground">{log.module}</div>
+                            <div className="text-xs text-muted-foreground">
                               {log.entityType} {log.entityId ? `#${log.entityId}` : ''}
                             </div>
                           </td>
@@ -242,23 +242,23 @@ const AuditLogViewer = () => {
                         </tr>
                         {isExpanded && (
                           <tr>
-                            <td colSpan="6" className="px-4 py-4 bg-gray-50 border-t border-gray-100">
+                            <td colSpan="6" className="px-4 py-4 bg-muted/30 border-t border-border">
                               {row.ipAddress && (
-                                <div className="text-xs text-gray-500 mb-2">IP: {row.ipAddress}</div>
+                                <div className="text-xs text-muted-foreground mb-2">IP: {row.ipAddress}</div>
                               )}
                               <div className="grid grid-cols-2 gap-4">
                                 {oldParsed && (
-                                  <div className="border border-red-100 bg-white rounded-md p-3">
-                                    <div className="text-xs font-semibold text-red-600 mb-2 uppercase tracking-wider">Previous</div>
-                                    <pre className="text-xs text-gray-700 bg-gray-50 p-2 rounded overflow-auto max-h-48 border border-gray-100">
+                                  <div className="border border-red-500/20 bg-card rounded-md p-3">
+                                    <div className="text-xs font-semibold text-rose-500 mb-2 uppercase tracking-wider">Previous</div>
+                                    <pre className="text-xs text-foreground bg-muted/50 p-2 rounded overflow-auto max-h-48 border border-border">
                                       {JSON.stringify(oldParsed, null, 2)}
                                     </pre>
                                   </div>
                                 )}
                                 {newParsed && (
-                                  <div className="border border-green-100 bg-white rounded-md p-3">
-                                    <div className="text-xs font-semibold text-green-600 mb-2 uppercase tracking-wider">New</div>
-                                    <pre className="text-xs text-gray-700 bg-gray-50 p-2 rounded overflow-auto max-h-48 border border-gray-100">
+                                  <div className="border border-emerald-500/20 bg-card rounded-md p-3">
+                                    <div className="text-xs font-semibold text-emerald-500 mb-2 uppercase tracking-wider">New</div>
+                                    <pre className="text-xs text-foreground bg-muted/50 p-2 rounded overflow-auto max-h-48 border border-border">
                                       {JSON.stringify(newParsed, null, 2)}
                                     </pre>
                                   </div>
@@ -275,7 +275,7 @@ const AuditLogViewer = () => {
             </table>
           </div>
 
-          <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+          <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
             <span>{totalElements} total</span>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" disabled={page <= 0} onClick={() => setPage((p) => p - 1)}>

@@ -100,23 +100,23 @@ const StockOutForm = () => {
     >
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="border-none shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100">
-              <CardTitle className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2 uppercase">
-                <ArrowDownRight className="h-5 w-5 text-rose-600" />
+          <Card className="erp-card overflow-hidden rounded-2xl">
+            <CardHeader className="bg-muted/40 border-b border-border/50">
+              <CardTitle className="text-lg font-black text-foreground tracking-tight flex items-center gap-2 uppercase">
+                <ArrowDownRight className="h-5 w-5 text-rose-600 dark:text-rose-400" />
                 Issuance Details
               </CardTitle>
-              <CardDescription className="text-xs font-bold text-gray-400">Specify what and how much is being issued</CardDescription>
+              <CardDescription className="text-xs font-bold text-muted-foreground">Specify what and how much is being issued</CardDescription>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Inventory Category</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inventory Category</Label>
                   <Select value={form.category || ''} onValueChange={v => setForm({ ...form, category: v, itemId: '' })}>
-                    <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus:ring-rose-500 transition-all font-bold text-gray-700">
+                    <SelectTrigger className="h-14 bg-card border border-border rounded-xl focus:ring-rose-500 transition-all font-bold text-foreground">
                       <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectContent className="rounded-2xl border-border shadow-2xl">
                       {['FEED', 'DRUG', 'VACCINE', 'VITAMIN', 'EQUIPMENT', 'FARM_MATERIAL', 'CLEANING_MATERIAL', 'OFFICE_SUPPLY', 'CONSUMABLE'].map(c => (
                         <SelectItem key={c} value={c} className="rounded-xl my-1 font-medium">{c.replace('_', ' ')}</SelectItem>
                       ))}
@@ -125,18 +125,18 @@ const StockOutForm = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Inventory Item *</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inventory Item *</Label>
                   <Select value={String(form.itemId)} onValueChange={v => setForm({ ...form, itemId: v })} disabled={!form.category}>
                     <SelectTrigger className={cn(
-                      "h-14 bg-white border-2 border-gray-100 rounded-2xl focus:ring-rose-500 transition-all font-bold text-gray-700",
+                      "h-14 bg-card border border-border rounded-xl focus:ring-rose-500 transition-all font-bold text-foreground",
                       !form.category && "opacity-50 cursor-not-allowed"
                     )}>
                       <SelectValue placeholder={form.category ? "Select item to issue" : "Select category first"} />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectContent className="rounded-2xl border-border shadow-2xl">
                       {items.filter(i => i.category === form.category).map(i => (
                         <SelectItem key={i.id} value={String(i.id)} className="rounded-xl my-1 font-medium">
-                          {i.itemName} <span className="text-gray-400 ml-2 font-normal">(Left: {i.currentStock} {i.unit})</span>
+                          {i.itemName} <span className="text-muted-foreground ml-2 font-normal">(Left: {i.currentStock} {i.unit})</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -146,13 +146,13 @@ const StockOutForm = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                     <Box className="h-3 w-3" /> Quantity to Issue *
                   </Label>
                   <Input
                     type="number"
                     step="0.01"
-                    className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-gray-700"
+                    className="h-14 bg-card border border-border rounded-xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-foreground"
                     placeholder="0.00"
                     value={form.quantity}
                     onChange={e => setForm({ ...form, quantity: e.target.value })}
@@ -161,14 +161,14 @@ const StockOutForm = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                     <Layers className="h-3 w-3" /> Transaction Entity
                   </Label>
                   <Select value={form.issuedToType} onValueChange={v => setForm({ ...form, issuedToType: v, farmId: '', department: '' })}>
-                    <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus:ring-rose-500 focus:border-rose-500 transition-all font-bold text-gray-700">
+                    <SelectTrigger className="h-14 bg-card border border-border rounded-xl focus:ring-rose-500 focus:border-rose-500 transition-all font-bold text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectContent className="rounded-2xl border-border shadow-2xl">
                       {['FARM', 'DEPARTMENT', 'CUSTOMER', 'INTERNAL', 'MEDICAL'].map(o => (
                         <SelectItem key={o} value={o} className="rounded-xl my-1 font-medium">Issue to {o}</SelectItem>
                       ))}
@@ -180,14 +180,14 @@ const StockOutForm = () => {
               <div className="space-y-6">
                 {form.issuedToType === 'FARM' && (
                   <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                       <Building2 className="h-3 w-3" /> Target Farm *
                     </Label>
                     <Select value={String(form.farmId)} onValueChange={v => setForm({ ...form, farmId: v })}>
-                      <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus:ring-rose-500 focus:border-rose-500 transition-all font-bold text-gray-700">
+                      <SelectTrigger className="h-14 bg-card border border-border rounded-xl focus:ring-rose-500 focus:border-rose-500 transition-all font-bold text-foreground">
                         <SelectValue placeholder="Select farm location" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                      <SelectContent className="rounded-2xl border-border shadow-2xl">
                         {farms.map(f => <SelectItem key={f.id} value={String(f.id)} className="rounded-xl my-1 font-medium">{f.farmName}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -196,11 +196,11 @@ const StockOutForm = () => {
 
                 {form.issuedToType === 'DEPARTMENT' && (
                   <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                       <User className="h-3 w-3" /> Department Name *
                     </Label>
                     <Input
-                      className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-gray-700"
+                      className="h-14 bg-card border border-border rounded-xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-foreground"
                       value={form.department}
                       onChange={e => setForm({ ...form, department: e.target.value })}
                       placeholder="e.g. Broiler Section, Veterinary"
@@ -211,27 +211,27 @@ const StockOutForm = () => {
                 {form.issuedToType === 'MEDICAL' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                         <Stethoscope className="h-3 w-3" /> Linked Prescription
                       </Label>
                       <Select value={String(form.prescriptionId)} onValueChange={v => setForm({ ...form, prescriptionId: v, vaccinationId: '' })}>
-                        <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-2xl">
+                        <SelectTrigger className="h-14 bg-card border border-border rounded-xl font-bold text-foreground">
                           <SelectValue placeholder="Select Prescription" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-2xl border-border shadow-2xl">
                           {prescriptions.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.drugName} (Prescribed: {p.prescriptionDate})</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                         <Syringe className="h-3 w-3" /> Linked Vaccination
                       </Label>
                       <Select value={String(form.vaccinationId)} onValueChange={v => setForm({ ...form, vaccinationId: v, prescriptionId: '' })}>
-                        <SelectTrigger className="h-14 bg-white border-2 border-gray-100 rounded-2xl">
+                        <SelectTrigger className="h-14 bg-card border border-border rounded-xl font-bold text-foreground">
                           <SelectValue placeholder="Select Vaccination Task" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-2xl border-border shadow-2xl">
                           {vaccinations.map(v => <SelectItem key={v.id} value={String(v.id)}>{v.vaccineName} (Due: {v.scheduledDate})</SelectItem>)}
                         </SelectContent>
                       </Select>
@@ -242,17 +242,17 @@ const StockOutForm = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100">
-              <CardTitle className="text-sm font-black text-gray-900 tracking-tight uppercase">Audit & Reference</CardTitle>
+          <Card className="erp-card overflow-hidden rounded-2xl">
+            <CardHeader className="bg-muted/40 border-b border-border/50">
+              <CardTitle className="text-sm font-black text-foreground tracking-tight uppercase">Audit & Reference</CardTitle>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                   <FileText className="h-3 w-3" /> Reason / Purpose
                 </Label>
                 <Input
-                  className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-gray-700"
+                  className="h-14 bg-card border border-border rounded-xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-foreground"
                   value={form.reason}
                   onChange={e => setForm({ ...form, reason: e.target.value })}
                   placeholder="e.g. Scheduled vaccination, Emergency repair"
@@ -263,29 +263,29 @@ const StockOutForm = () => {
         </div>
 
         <div className="space-y-8">
-          <Card className="border-none shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100">
-              <CardTitle className="text-sm font-black text-gray-900 tracking-tight uppercase">Timeline & Log</CardTitle>
+          <Card className="erp-card overflow-hidden rounded-2xl">
+            <CardHeader className="bg-muted/40 border-b border-border/50">
+              <CardTitle className="text-sm font-black text-foreground tracking-tight uppercase">Timeline & Log</CardTitle>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                   <Calendar className="h-3 w-3" /> Transaction Date
                 </Label>
                 <Input
                   type="date"
-                  className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-gray-700"
+                  className="h-14 bg-card border border-border rounded-xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-foreground"
                   value={form.movementDate}
                   onChange={e => setForm({ ...form, movementDate: e.target.value })}
                 />
               </div>
 
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                   <Tag className="h-3 w-3" /> External Reference
                 </Label>
                 <Input
-                  className="h-14 bg-white border-2 border-gray-100 rounded-2xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-gray-700"
+                  className="h-14 bg-card border border-border rounded-xl focus-visible:ring-rose-500 focus-visible:border-rose-500 transition-all font-bold text-foreground"
                   value={form.referenceType}
                   onChange={e => setForm({ ...form, referenceType: e.target.value })}
                   placeholder="Requisition ID, Voucher #"
@@ -294,9 +294,9 @@ const StockOutForm = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-none shadow-2xl rounded-3xl overflow-hidden p-1">
+          <Card className="erp-card bg-slate-900 border-none shadow-2xl rounded-2xl overflow-hidden p-1 text-white">
             <CardContent className="p-6 space-y-4">
-              <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+              <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
                 <div className="flex gap-3">
                   <div className="p-2 bg-rose-500/10 rounded-lg">
                     <Info className="h-4 w-4 text-rose-400" />
@@ -307,7 +307,7 @@ const StockOutForm = () => {
                   </div>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 bg-rose-600 hover:bg-rose-700 shadow-rose-900/20 shadow-xl rounded-2xl text-md font-black tracking-tight" disabled={loading}>
+              <Button type="submit" className="w-full h-14 bg-rose-600 hover:bg-rose-700 shadow-rose-900/20 shadow-xl rounded-xl text-md font-black tracking-tight" disabled={loading}>
                 {loading ? 'Processing...' : (
                   <>
                     <Save className="mr-2 h-5 w-5" />
@@ -315,7 +315,7 @@ const StockOutForm = () => {
                   </>
                 )}
               </Button>
-              <Button type="button" variant="ghost" className="w-full text-slate-400 hover:text-white hover:bg-slate-800 font-bold" onClick={() => navigate('/inventory')}>
+              <Button type="button" variant="ghost" className="w-full text-slate-400 hover:text-white hover:bg-slate-800 font-bold rounded-xl" onClick={() => navigate('/inventory')}>
                 Cancel Operation
               </Button>
             </CardContent>

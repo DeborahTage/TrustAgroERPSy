@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/inventory")
@@ -94,16 +95,40 @@ public class InventoryController {
     }
 
     @PostMapping("/items")
-    @PreAuthorize("hasAuthority('inventory:create')")
+    @PreAuthorize("hasAnyAuthority('inventory:create','inventory:update','pharmacy:sale','admin')")
     public ResponseEntity<InventoryItem> createItem(@RequestBody InventoryItem item) {
+        if (item.getSku() == null || item.getSku().isBlank()) {
+            String prefix = item.getCategory() != null ? item.getCategory().name() : "PHARM";
+            item.setSku(prefix + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        }
+        if (item.getSellingPrice() == null && item.getRetailPrice() != null) {
+            item.setSellingPrice(item.getRetailPrice());
+        }
+        if (item.getStatus() == null) {
+            item.setStatus(ItemStatus.ACTIVE);
+        }
+        if (item.getStorageLocation() == null) {
+            item.setStorageLocation("Pharmacy POS");
+        }
         return ResponseEntity.ok(itemRepository.save(item));
     }
 
     @PutMapping("/items/{id}")
-    @PreAuthorize("hasAuthority('inventory:update')")
+    @PreAuthorize("hasAnyAuthority('inventory:update','inventory:create','pharmacy:sale','admin')")
     public ResponseEntity<InventoryItem> updateItem(@PathVariable Long id, @RequestBody InventoryItem item) {
-        item.setId(id);
-        return ResponseEntity.ok(itemRepository.save(item));
+        return itemRepository.findById(id).map(existing -> {
+            if (item.getItemName() != null && !item.getItemName().isBlank()) existing.setItemName(item.getItemName());
+            if (item.getCategory() != null) existing.setCategory(item.getCategory());
+            if (item.getUnit() != null) existing.setUnit(item.getUnit());
+            if (item.getRetailPrice() != null) {
+                existing.setRetailPrice(item.getRetailPrice());
+                existing.setSellingPrice(item.getRetailPrice());
+            }
+            if (item.getSellingPrice() != null) existing.setSellingPrice(item.getSellingPrice());
+            if (item.getSubcategory() != null) existing.setSubcategory(item.getSubcategory());
+            if (item.getCurrentStock() != null) existing.setCurrentStock(item.getCurrentStock());
+            return ResponseEntity.ok(itemRepository.save(existing));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     // ─── Low Stock / Expiry ───────────────────────────────────────────────────
@@ -313,15 +338,10 @@ public class InventoryController {
 
     // ─── Pharmacy Integration ─────────────────────────────────────────────────
 
-    /**
-     * Returns only drug/vaccine items with stock > 0 for the pharmacy POS.
-     */
     @GetMapping("/pharmacy-items")
     @PreAuthorize("hasAuthority('inventory:read')")
     public ResponseEntity<List<InventoryItemResponse>> getPharmacyItems() {
-        return ResponseEntity.ok(inventoryService.getPharmacyCatalog().stream()
-                .filter(i -> i.getCurrentStock() != null && i.getCurrentStock() > 0)
-                .toList());
+        return ResponseEntity.ok(inventoryService.getPharmacyCatalog());
     }
 
     /**

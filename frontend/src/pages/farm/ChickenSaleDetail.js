@@ -107,28 +107,28 @@ const ChickenSaleDetail = () => {
       {sale && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-            <div><span className="text-slate-500 block">Status</span><Badge>{sale.status}</Badge></div>
-            <div><span className="text-slate-500 block">Type</span>{sale.saleType}</div>
-            <div><span className="text-slate-500 block">Date</span>{formatDate(sale.saleDate)}</div>
-            <div><span className="text-slate-500 block">Farm / Barn</span>{sale.farmName}{sale.barnName ? ` / ${sale.barnName}` : ''}</div>
-            <div><span className="text-slate-500 block">Flock</span>{sale.flockBatchCode} ({sale.flockPopulation?.toLocaleString()} remaining)</div>
-            <div><span className="text-slate-500 block">Customer</span>{sale.customerName}</div>
-            <div><span className="text-slate-500 block">Created by</span>{sale.createdByName || '—'}</div>
-            <div><span className="text-slate-500 block">Confirmed by</span>{sale.confirmedByName || '—'}</div>
+            <div><span className="text-muted-foreground block">Status</span><Badge>{sale.status}</Badge></div>
+            <div><span className="text-muted-foreground block">Type</span>{sale.saleType}</div>
+            <div><span className="text-muted-foreground block">Date</span>{formatDate(sale.saleDate)}</div>
+            <div><span className="text-muted-foreground block">Farm / Barn</span>{sale.farmName}{sale.barnName ? ` / ${sale.barnName}` : ''}</div>
+            <div><span className="text-muted-foreground block">Flock</span>{sale.flockBatchCode} ({sale.flockPopulation?.toLocaleString()} remaining)</div>
+            <div><span className="text-muted-foreground block">Customer</span>{sale.customerName}</div>
+            <div><span className="text-muted-foreground block">Created by</span>{sale.createdByName || '—'}</div>
+            <div><span className="text-muted-foreground block">Confirmed by</span>{sale.confirmedByName || '—'}</div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border">
+          <div className="overflow-x-auto rounded-xl border border-border/70">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50"><tr>
+              <thead className="erp-table-head"><tr>
                 <th className="p-3 text-left">Pricing</th>
                 <th className="p-3 text-left">Qty</th>
                 <th className="p-3 text-left">Unit / kg</th>
                 <th className="p-3 text-left">Weight</th>
                 <th className="p-3 text-right">Subtotal</th>
               </tr></thead>
-              <tbody>
+              <tbody className="bg-card">
                 {(sale.items || []).map((item) => (
-                  <tr key={item.id} className="border-t">
+                  <tr key={item.id} className="border-t border-border/60">
                     <td className="p-3">{item.pricingMethod}</td>
                     <td className="p-3">{item.quantity}</td>
                     <td className="p-3">{formatCurrency(item.unitPrice || item.pricePerKg)}</td>
@@ -140,7 +140,7 @@ const ChickenSaleDetail = () => {
             </table>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm p-4 rounded-xl border border-border/70 bg-card">
             <div>Subtotal<br /><strong>{formatCurrency(sale.subtotal)}</strong></div>
             <div>Discount<br /><strong>{formatCurrency(sale.discountAmount)}</strong></div>
             <div>Tax<br /><strong>{formatCurrency(sale.taxAmount)}</strong></div>
@@ -148,14 +148,14 @@ const ChickenSaleDetail = () => {
             <div>Paid / Outstanding<br /><strong>{formatCurrency(sale.paidAmount)} / {formatCurrency(sale.outstandingAmount)}</strong></div>
           </div>
 
-          <div className="rounded-xl border p-4 text-sm">
+          <div className="rounded-xl border border-border/70 bg-card p-4 text-sm">
             <h3 className="font-bold mb-2">Invoice</h3>
             {sale.invoiceNumber ? (
               <p>{sale.invoiceNumber} (#{sale.invoiceId})</p>
             ) : (
-              <p className="text-slate-500">Not invoiced yet.</p>
+              <p className="text-muted-foreground">Not invoiced yet.</p>
             )}
-            <p className="mt-2 text-slate-500">
+            <p className="mt-2 text-muted-foreground">
               Revenue {formatCurrency(sale.revenue)}.
               {sale.profitabilityAvailable
                 ? ` Estimated profit ${formatCurrency(sale.profit)} from flock cost allocation.`
@@ -163,29 +163,29 @@ const ChickenSaleDetail = () => {
             </p>
           </div>
 
-          <div className="rounded-xl border p-4 text-sm">
+          <div className="rounded-xl border border-border/70 bg-card p-4 text-sm">
             <h3 className="font-bold mb-2">Payments</h3>
-            {(sale.payments || []).length === 0 && <p className="text-slate-500">No payments.</p>}
+            {(sale.payments || []).length === 0 && <p className="text-muted-foreground">No payments.</p>}
             {(sale.payments || []).map((p) => (
-              <div key={p.id} className="flex justify-between border-t py-2">
+              <div key={p.id} className="flex justify-between border-t border-border/60 py-2">
                 <span>{formatDate(p.paymentDate)} · {p.paymentMethod} · tx {p.financeTransactionId || '—'}</span>
                 <strong>{formatCurrency(p.amount)}</strong>
               </div>
             ))}
           </div>
 
-          <div className="rounded-xl border p-4 text-sm">
+          <div className="rounded-xl border border-border/70 bg-card p-4 text-sm">
             <h3 className="font-bold mb-2">Flock population history</h3>
-            {(sale.populationEvents || []).length === 0 && <p className="text-slate-500">No flock movement yet (confirm to decrement).</p>}
+            {(sale.populationEvents || []).length === 0 && <p className="text-muted-foreground">No flock movement yet (confirm to decrement).</p>}
             {(sale.populationEvents || []).map((e) => (
-              <div key={e.id} className="border-t py-2">
+              <div key={e.id} className="border-t border-border/60 py-2">
                 {formatDate(e.eventDate)} · {e.eventType}: {e.previousPopulation.toLocaleString()}
                 {' − '}{e.quantityChange.toLocaleString()}{' = '}{e.newPopulation.toLocaleString()}
               </div>
             ))}
           </div>
 
-          {sale.notes && <p className="text-sm text-slate-600">{sale.notes}</p>}
+          {sale.notes && <p className="text-sm text-muted-foreground">{sale.notes}</p>}
         </div>
       )}
 
@@ -204,7 +204,6 @@ const ChickenSaleDetail = () => {
                 <SelectContent>
                   <SelectItem value="CASH">Cash</SelectItem>
                   <SelectItem value="BANK_TRANSFER">Bank transfer</SelectItem>
-                  <SelectItem value="MOBILE_MONEY">Mobile money</SelectItem>
                 </SelectContent>
               </Select>
             </div>

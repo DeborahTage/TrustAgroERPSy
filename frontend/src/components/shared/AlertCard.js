@@ -14,23 +14,23 @@ const AlertCard = ({
 }) => {
   const typeStyles = {
     critical: {
-      bgColor: 'bg-red-50',
-      iconColor: 'text-red-600',
+      bgColor: 'bg-red-500/10 dark:bg-red-500/20',
+      iconColor: 'text-red-600 dark:text-red-400',
       badgeColor: 'destructive'
     },
     warning: {
-      bgColor: 'bg-yellow-50',
-      iconColor: 'text-yellow-600',
+      bgColor: 'bg-yellow-500/10 dark:bg-yellow-500/20',
+      iconColor: 'text-yellow-600 dark:text-yellow-400',
       badgeColor: 'warning'
     },
     info: {
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600',
+      bgColor: 'bg-blue-500/10 dark:bg-blue-500/20',
+      iconColor: 'text-blue-600 dark:text-blue-400',
       badgeColor: 'info'
     },
     success: {
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
+      bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
       badgeColor: 'success'
     }
   };
@@ -48,12 +48,12 @@ const AlertCard = ({
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-semibold text-gray-900 truncate">{title}</h4>
+              <h4 className="font-semibold text-foreground truncate">{title}</h4>
               <Badge variant={style.badgeColor} className="shrink-0">{type}</Badge>
             </div>
-            <p className="text-sm text-gray-600 mb-2">{description}</p>
+            <p className="text-sm text-muted-foreground mb-2">{description}</p>
             {timestamp && (
-              <p className="text-xs text-gray-400">{timestamp}</p>
+              <p className="text-xs text-muted-foreground/70">{timestamp}</p>
             )}
           </div>
           {action && (
