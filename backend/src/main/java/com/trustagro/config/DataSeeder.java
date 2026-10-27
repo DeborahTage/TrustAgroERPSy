@@ -31,6 +31,7 @@ public class DataSeeder implements CommandLineRunner {
     private final MasterDataItemRepository masterDataRepository;
     private final JdbcTemplate jdbcTemplate;
     private final boolean seedDemoUsers;
+    private final boolean seedDemoMasterData;
 
     private static final List<Map.Entry<String, Role>> DEMO_USERS = List.of(
             Map.entry("admin@trustagro.com", Role.ADMIN),
@@ -46,12 +47,14 @@ public class DataSeeder implements CommandLineRunner {
 
     public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
                       MasterDataItemRepository masterDataRepository, JdbcTemplate jdbcTemplate,
-                      @Value("${app.seed.demo-users:false}") boolean seedDemoUsers) {
+                      @Value("${app.seed.demo-users:false}") boolean seedDemoUsers,
+                      @Value("${app.seed.demo-master-data:false}") boolean seedDemoMasterData) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.masterDataRepository = masterDataRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.seedDemoUsers = seedDemoUsers;
+        this.seedDemoMasterData = seedDemoMasterData;
     }
 
     @Override
@@ -63,7 +66,11 @@ public class DataSeeder implements CommandLineRunner {
         } else {
             log.info("Demo user seeding disabled (app.seed.demo-users=false)");
         }
-        seedMasterData();
+        if (seedDemoMasterData) {
+            seedMasterData();
+        } else {
+            log.info("Demo master-data seeding disabled (app.seed.demo-master-data=false)");
+        }
     }
 
     /**

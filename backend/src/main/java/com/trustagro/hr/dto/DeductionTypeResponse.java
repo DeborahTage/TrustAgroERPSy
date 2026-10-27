@@ -17,6 +17,7 @@ public class DeductionTypeResponse {
     private BigDecimal ratePercent;
     private BigDecimal fixedAmount;
     private boolean active;
+    private boolean approved;
     private String notes;
     private LocalDateTime createdAt;
 }

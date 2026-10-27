@@ -9,6 +9,7 @@ RUN apt-get update \
 WORKDIR /app
 COPY target/trust-agro-backend-1.0.0.jar app.jar
 USER trustagro
+ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8081
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=5 \
   CMD curl -sf http://localhost:8081/actuator/health || exit 1

@@ -44,6 +44,13 @@ public class PayrollDeductionType {
     @Column(nullable = false)
     private boolean active = true;
 
+    /**
+     * Whether this deduction rate is approved as an official statutory rate.
+     * Unapproved rates or placeholder rates block payroll approval, processing, and payment.
+     */
+    @Column(nullable = false)
+    private boolean approved = false;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 

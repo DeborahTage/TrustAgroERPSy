@@ -1509,6 +1509,50 @@ class HrServiceTest {
         return r;
     }
 
+    @Test
+    void payrollApprovalRejectsUnapprovedDeductionType() {
+        PayrollDeductionType unapproved = deductionType(50L, "UNAPPROVED_TAX", DeductionCategory.INCOME_TAX, "15");
+        unapproved.setApproved(false);
+        when(deductionTypeRepository.findByActiveTrueOrderByCodeAsc()).thenReturn(List.of(unapproved));
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.approvePayroll(300L));
+        assertTrue(ex.getMessage().contains("not approved"));
+    }
+
+    @Test
+    void payrollApprovalRejectsPlaceholderRateDeduction() {
+        PayrollDeductionType placeholder = deductionType(50L, "TAX", DeductionCategory.INCOME_TAX, "15");
+        placeholder.setApproved(true);
+        placeholder.setNotes("PLACEHOLDER RATE — not statutory");
+        when(deductionTypeRepository.findByActiveTrueOrderByCodeAsc()).thenReturn(List.of(placeholder));
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.approvePayroll(300L));
+        assertTrue(ex.getMessage().contains("placeholder rate"));
+    }
+
+    @Test
+    void payrollProcessingRejectsUnapprovedDeductionType() {
+        PayrollDeductionType unapproved = deductionType(50L, "UNAPPROVED_TAX", DeductionCategory.INCOME_TAX, "15");
+        unapproved.setApproved(false);
+        when(deductionTypeRepository.findByActiveTrueOrderByCodeAsc()).thenReturn(List.of(unapproved));
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.processPayroll(300L));
+        assertTrue(ex.getMessage().contains("not approved"));
+    }
+
+    @Test
+    void payrollPaymentRejectsUnapprovedDeductionType() {
+        PayrollDeductionType unapproved = deductionType(50L, "UNAPPROVED_TAX", DeductionCategory.INCOME_TAX, "15");
+        unapproved.setApproved(false);
+        when(deductionTypeRepository.findByActiveTrueOrderByCodeAsc()).thenReturn(List.of(unapproved));
+
+        PayrollPaymentRequest req = new PayrollPaymentRequest();
+        req.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.payPayroll(400L, req));
+        assertTrue(ex.getMessage().contains("not approved"));
+    }
+
     private PayrollDeductionType deductionType(Long id, String code, DeductionCategory category, String rate) {
         PayrollDeductionType d = new PayrollDeductionType();
         setId(d, id);
@@ -1516,6 +1560,7 @@ class HrServiceTest {
         d.setName(code);
         d.setCategory(category);
         d.setRatePercent(new BigDecimal(rate));
+        d.setApproved(true);
         return d;
     }
 
@@ -1526,6 +1571,7 @@ class HrServiceTest {
         d.setName(code);
         d.setCategory(category);
         d.setFixedAmount(new BigDecimal(amount));
+        d.setApproved(true);
         return d;
     }
 

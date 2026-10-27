@@ -2,7 +2,9 @@ package com.trustagro.hr.service;
 
 import com.trustagro.hr.entity.*;
 import com.trustagro.hr.repository.*;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -11,17 +13,24 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Idempotent HR reference-data seed. Only creates rows that are missing, so
- * operator edits are never overwritten on restart.
+ * Idempotent HR reference-data and number-sequence initializer.
  * <p>
- * Leave entitlements and deduction rates seeded here are <strong>placeholders</strong>.
- * They are not statutory values and must be reviewed and configured against the
- * regulations that apply to the organisation before payroll is run for real.
+ * HR number sequences are initialized on every startup to ensure system counters
+ * are always ready and business operations are never blocked.
+ * <p>
+ * Departments, positions, leave entitlements, and deduction rates are optional
+ * reference-data seeds controlled by {@code app.seed.hr-reference-data} (default {@code false}).
+ * In production, fictional or unverified HR settings must not be silently initialized.
+ * <p>
+ * Any deduction rates seeded for local development are explicitly marked as
+ * unapproved placeholders ({@code approved = false}) with disclaimer notes.
+ * The production payroll safety rule strictly prevents payroll finalization or
+ * payment when unapproved or placeholder deduction rates exist.
  */
 @Component
-@RequiredArgsConstructor
 public class HrDataInitializer implements ApplicationRunner {
 
+    private static final Logger log = LoggerFactory.getLogger(HrDataInitializer.class);
     private static final String RATE_DISCLAIMER =
             "PLACEHOLDER RATE — not a statutory figure. Configure per the regulations that apply before running payroll.";
 
@@ -30,14 +39,35 @@ public class HrDataInitializer implements ApplicationRunner {
     private final LeaveTypeRepository leaveTypeRepository;
     private final PayrollDeductionTypeRepository deductionTypeRepository;
     private final HrNumberSequenceRepository sequenceRepository;
+    private final boolean seedHrReferenceData;
+
+    public HrDataInitializer(
+            HrDepartmentRepository departmentRepository,
+            HrPositionRepository positionRepository,
+            LeaveTypeRepository leaveTypeRepository,
+            PayrollDeductionTypeRepository deductionTypeRepository,
+            HrNumberSequenceRepository sequenceRepository,
+            @Value("${app.seed.hr-reference-data:false}") boolean seedHrReferenceData) {
+        this.departmentRepository = departmentRepository;
+        this.positionRepository = positionRepository;
+        this.leaveTypeRepository = leaveTypeRepository;
+        this.deductionTypeRepository = deductionTypeRepository;
+        this.sequenceRepository = sequenceRepository;
+        this.seedHrReferenceData = seedHrReferenceData;
+    }
 
     @Override
     public void run(ApplicationArguments args) {
         seedSequences();
-        seedDepartments();
-        seedPositions();
-        seedLeaveTypes();
-        seedDeductionTypes();
+        if (seedHrReferenceData) {
+            log.info("Seeding optional HR reference data (departments, positions, leave types, placeholder deductions)");
+            seedDepartments();
+            seedPositions();
+            seedLeaveTypes();
+            seedDeductionTypes();
+        } else {
+            log.info("HR reference-data seeding disabled (app.seed.hr-reference-data=false)");
+        }
     }
 
     private void seedSequences() {
@@ -64,6 +94,17 @@ public class HrDataInitializer implements ApplicationRunner {
         department("TRAINING", "Training");
         department("CONSULTANCY", "Consultancy");
         department("ADMINISTRATION", "Administration");
+    }
+
+    private void position(String code, String name) {
+        if (positionRepository.existsByCode(code)) {
+            return;
+        }
+        HrPosition p = new HrPosition();
+        p.setCode(code);
+        p.setName(name);
+        p.setActive(true);
+        positionRepository.save(p);
     }
 
     private void seedPositions() {
@@ -115,17 +156,6 @@ public class HrDataInitializer implements ApplicationRunner {
         departmentRepository.save(d);
     }
 
-    private void position(String code, String name) {
-        if (positionRepository.existsByCode(code)) {
-            return;
-        }
-        HrPosition p = new HrPosition();
-        p.setCode(code);
-        p.setName(name);
-        p.setActive(true);
-        positionRepository.save(p);
-    }
-
     private void leaveType(String code, String name, boolean balanceControlled,
                            int entitlementDays, boolean paid, String note) {
         if (leaveTypeRepository.existsByCode(code)) {
@@ -152,6 +182,7 @@ public class HrDataInitializer implements ApplicationRunner {
         d.setCategory(category);
         d.setRatePercent(ratePercent);
         d.setActive(true);
+        d.setApproved(false);
         d.setNotes(RATE_DISCLAIMER);
         deductionTypeRepository.save(d);
     }
