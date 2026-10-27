@@ -799,7 +799,26 @@ public class HrService {
             d.setFixedAmount(scale(req.getFixedAmount()));
         }
         if (req.getActive() != null) d.setActive(req.getActive());
+        if (req.getApproved() != null) d.setApproved(req.getApproved());
         if (req.getNotes() != null) d.setNotes(req.getNotes());
+    }
+
+    private void assertPayrollConfigurationApproved() {
+        List<PayrollDeductionType> activeDeductions = deductionTypeRepository.findByActiveTrueOrderByCodeAsc();
+        for (PayrollDeductionType d : activeDeductions) {
+            if (!d.isApproved()) {
+                throw new BusinessException(String.format(
+                        "Payroll finalization/payment rejected: deduction type '%s' (%s) is not approved. "
+                                + "Official approved statutory rates are required.",
+                        d.getCode(), d.getName()));
+            }
+            if (d.getNotes() != null && d.getNotes().toUpperCase().contains("PLACEHOLDER")) {
+                throw new BusinessException(String.format(
+                        "Payroll finalization/payment rejected: deduction type '%s' contains unverified placeholder rate notes. "
+                                + "Approved statutory configuration is required.",
+                        d.getCode()));
+            }
+        }
     }
 
     private String describeDeductionRate(PayrollDeductionType d) {
@@ -1022,6 +1041,7 @@ public class HrService {
     @Transactional
     public PayrollPeriodResponse approvePayroll(Long periodId) {
         assertHasAuthority(Permissions.HR_PAYROLL_APPROVE);
+        assertPayrollConfigurationApproved();
         PayrollPeriod period = requirePayrollPeriod(periodId);
         if (period.getStatus() == PayrollPeriodStatus.APPROVED) {
             return toPayrollPeriodResponse(period);
@@ -1071,6 +1091,7 @@ public class HrService {
     @Transactional
     public PayrollPeriodResponse processPayroll(Long periodId) {
         assertHasAuthority(Permissions.HR_PAYROLL_PROCESS);
+        assertPayrollConfigurationApproved();
         PayrollPeriod period = requirePayrollPeriod(periodId);
         if (period.getStatus() == PayrollPeriodStatus.PROCESSED
                 || period.getStatus() == PayrollPeriodStatus.CLOSED) {
@@ -1220,6 +1241,7 @@ public class HrService {
     @Transactional
     public PayrollPaymentResponse payPayroll(Long runId, PayrollPaymentRequest req) {
         assertHasAuthority(Permissions.HR_PAYROLL_PROCESS);
+        assertPayrollConfigurationApproved();
         PayrollRun run = requirePayrollRun(runId);
         PayrollPeriod period = run.getPayrollPeriod();
         if (!PayrollPeriodLifecycle.isPayable(period.getStatus())) {
@@ -1661,6 +1683,7 @@ public class HrService {
                 .ratePercent(d.getRatePercent())
                 .fixedAmount(d.getFixedAmount())
                 .active(d.isActive())
+                .approved(d.isApproved())
                 .notes(d.getNotes())
                 .createdAt(d.getCreatedAt())
                 .build();

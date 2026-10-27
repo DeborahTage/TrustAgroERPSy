@@ -10,6 +10,12 @@ backend/data/
 *.class
 
 # Local env files / secrets
+/.env*
+!/.env.example
+/backend/.env*
+/frontend/.env*
+!/frontend/.env.example
+!/frontend/.env.production.example
 frontend/.env.local
 frontend/.env.development.local
 frontend/.env.test.local
@@ -23,6 +29,12 @@ backend/.env
 admin_token.txt
 *_log.txt
 *_token.txt
+/dashboard_output.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
 
 # Logs
 *.log

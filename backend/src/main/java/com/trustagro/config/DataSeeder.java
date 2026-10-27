@@ -38,6 +38,7 @@ public class DataSeeder implements CommandLineRunner {
     private final InventoryItemRepository inventoryItemRepository;
     private final JdbcTemplate jdbcTemplate;
     private final boolean seedDemoUsers;
+    private final boolean seedDemoMasterData;
 
     private static final List<Map.Entry<String, Role>> DEMO_USERS = List.of(
             Map.entry("admin@trustagro.com", Role.ADMIN),
@@ -55,13 +56,21 @@ public class DataSeeder implements CommandLineRunner {
     public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
                       MasterDataItemRepository masterDataRepository, InventoryItemRepository inventoryItemRepository,
                       JdbcTemplate jdbcTemplate,
-                      @Value("${app.seed.demo-users:false}") boolean seedDemoUsers) {
+                      @Value("${app.seed.demo-users:false}") boolean seedDemoUsers,
+                      @Value("${app.seed.demo-master-data:false}") boolean seedDemoMasterData) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.masterDataRepository = masterDataRepository;
         this.inventoryItemRepository = inventoryItemRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.seedDemoUsers = seedDemoUsers;
+        this.seedDemoMasterData = seedDemoMasterData;
+    }
+
+    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                      MasterDataItemRepository masterDataRepository, JdbcTemplate jdbcTemplate,
+                      boolean seedDemoUsers, boolean seedDemoMasterData) {
+        this(userRepository, passwordEncoder, masterDataRepository, null, jdbcTemplate, seedDemoUsers, seedDemoMasterData);
     }
 
     @Override
@@ -73,8 +82,14 @@ public class DataSeeder implements CommandLineRunner {
         } else {
             log.info("Demo user seeding disabled (app.seed.demo-users=false)");
         }
-        seedMasterData();
-        seedVeterinaryPharmacyItems();
+        if (seedDemoMasterData) {
+            seedMasterData();
+            if (inventoryItemRepository != null) {
+                seedVeterinaryPharmacyItems();
+            }
+        } else {
+            log.info("Demo master-data seeding disabled (app.seed.demo-master-data=false)");
+        }
     }
 
     /**

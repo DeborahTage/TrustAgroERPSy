@@ -19,5 +19,6 @@ public class DeductionTypeRequest {
     @DecimalMin("0.0")
     private BigDecimal fixedAmount;
     private Boolean active;
+    private Boolean approved;
     private String notes;
 }

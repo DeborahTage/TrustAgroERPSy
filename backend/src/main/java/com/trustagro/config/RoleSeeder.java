@@ -13,7 +13,19 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Idempotent role/permission seeder. Canonical matrix lives in {@link RolePermissionCatalog}.
+ * Idempotent role/permission seeder.
+ * <p>
+ * <strong>Architectural Decision — Authoritative RBAC Catalog:</strong><br>
+ * The code-defined role catalog ({@link RolePermissionCatalog}) is the authoritative, version-controlled
+ * single source of truth for all role permissions and security boundaries in Trust Agro ERP.
+ * Security enforcement (in {@code CustomUserDetailsService}, {@code AuthService}, and {@code UserService})
+ * queries {@link RolePermissionCatalog} directly.
+ * <p>
+ * To prevent security drift, privilege escalation, or stale database state across deployments,
+ * {@link RoleSeeder} synchronizes the {@code roles} table with the canonical catalog on startup.
+ * Database modifications to role permissions by administrators are not authoritative and will be
+ * reconciled to the canonical catalog upon restart. Role records and existing user assignments are
+ * strictly preserved without duplication or deletion.
  */
 @Component
 @Order(1)

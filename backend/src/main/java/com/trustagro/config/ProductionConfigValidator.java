@@ -21,11 +21,23 @@ public class ProductionConfigValidator {
     @Value("${spring.datasource.password:}")
     private String dbPassword;
 
+    @Value("${DB_URL:${spring.datasource.url:}}")
+    private String dbUrl;
+
+    @Value("${DB_USERNAME:${spring.datasource.username:}}")
+    private String dbUsername;
+
     @Value("${app.cors.allowed-origins:}")
     private String corsAllowedOrigins;
 
     @Value("${app.seed.demo-users:false}")
     private boolean seedDemoUsers;
+
+    @Value("${app.seed.demo-master-data:false}")
+    private boolean seedDemoMasterData;
+
+    @Value("${app.seed.hr-reference-data:false}")
+    private boolean seedHrReferenceData;
 
     @PostConstruct
     public void validate() {
@@ -41,9 +53,29 @@ public class ProductionConfigValidator {
             throw new IllegalStateException(
                     "Production misconfiguration: DB_PASSWORD / spring.datasource.password is required");
         }
+        if (dbUrl == null || dbUrl.isBlank()) {
+            throw new IllegalStateException(
+                    "Production misconfiguration: DB_URL / spring.datasource.url is required");
+        }
+        if (dbUrl.toLowerCase().contains("jdbc:h2")) {
+            throw new IllegalStateException(
+                    "Production misconfiguration: H2 database is not permitted in production profile");
+        }
+        if (dbUsername == null || dbUsername.isBlank()) {
+            throw new IllegalStateException(
+                    "Production misconfiguration: DB_USERNAME / spring.datasource.username is required");
+        }
         if (seedDemoUsers) {
             throw new IllegalStateException(
                     "Production misconfiguration: app.seed.demo-users must be false in production");
+        }
+        if (seedDemoMasterData) {
+            throw new IllegalStateException(
+                    "Production misconfiguration: app.seed.demo-master-data must be false in production");
+        }
+        if (seedHrReferenceData) {
+            throw new IllegalStateException(
+                    "Production misconfiguration: app.seed.hr-reference-data must be false in production");
         }
         List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
                 .map(String::trim)

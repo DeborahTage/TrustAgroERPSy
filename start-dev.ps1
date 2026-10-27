@@ -58,8 +58,31 @@ if (-not (Test-PortOpen -HostName $backendHost -Port $backendPort)) {
         Remove-Item -LiteralPath $backendLog -Force
     }
 
+    $mavenCandidates = @(
+        "C:\Maven\apache-maven-3.10.0\bin\mvn.cmd",
+        "C:\Users\Hp\maven\apache-maven-3.9.14\bin\mvn.cmd",
+        (Join-Path $root "tmp\apache-maven\apache-maven-3.9.9\bin\mvn.cmd")
+    )
+    $mvnCmd = $mavenCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if (-not $mvnCmd) {
+        $fromPath = Get-Command mvn.cmd -ErrorAction SilentlyContinue
+        if ($fromPath) { $mvnCmd = $fromPath.Source }
+    }
+    if (-not $mvnCmd) {
+        Write-Host "Maven not found. Install Maven or place apache-maven under tmp\apache-maven or C:\Maven." -ForegroundColor Red
+        exit 1
+    }
+
+    $javaHome = $env:JAVA_HOME
+    if (-not $javaHome -or -not (Test-Path $javaHome)) {
+        foreach ($jdk in @("C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot", "C:\Program Files\Java\jdk-21", "C:\Program Files\Java\jdk-17")) {
+            if (Test-Path $jdk) { $javaHome = $jdk; break }
+        }
+    }
+    $javaHomeArg = if ($javaHome) { "`$env:JAVA_HOME='$javaHome'; `$env:Path='$javaHome\bin;' + `$env:Path; " } else { "" }
+
     $backendProcess = Start-Process -FilePath "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
-        -ArgumentList "-NoProfile", "-Command", "Set-Location '$backendDir'; & 'C:\Users\Hp\maven\apache-maven-3.9.14\bin\mvn.cmd' spring-boot:run '-Dspring-boot.run.profiles=local' *>> '$backendLog'" `
+        -ArgumentList "-NoProfile", "-Command", "$javaHomeArg Set-Location '$backendDir'; & '$mvnCmd' spring-boot:run '-Dspring-boot.run.profiles=local' *>> '$backendLog'" `
         -WindowStyle Hidden `
         -PassThru
 
