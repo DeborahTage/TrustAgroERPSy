@@ -99,9 +99,14 @@ const Sidebar = ({ show, collapsed, onToggleCollapse, onHide }) => {
         collapsed ? 'w-[4.5rem]' : 'w-64'
       )}
     >
-      <div className={cn('flex h-16 items-center border-b border-border/60', collapsed ? 'justify-center px-2' : 'px-5')}>
-        <button type="button" onClick={() => navigate('/dashboard')} className="flex items-center gap-3 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/25 transition-transform group-hover:scale-105 dark:bg-primary/20 dark:text-primary dark:border dark:border-primary/30">
+      <div className={cn('flex h-16 items-center border-b border-border/60', collapsed ? 'justify-center px-2' : 'justify-between px-4')}>
+        <button
+          type="button"
+          onClick={() => (collapsed ? onToggleCollapse?.() : navigate('/dashboard'))}
+          className="flex items-center gap-3 group min-w-0"
+          title={collapsed ? 'Expand sidebar' : 'Dashboard'}
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/25 transition-transform group-hover:scale-105 dark:bg-primary/20 dark:text-primary dark:border dark:border-primary/30">
             <Leaf className="h-5 w-5" />
           </div>
           {!collapsed && (
@@ -111,6 +116,17 @@ const Sidebar = ({ show, collapsed, onToggleCollapse, onHide }) => {
             </div>
           )}
         </button>
+
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            title="Collapse sidebar"
+            className="hidden lg:flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <ScrollArea className="flex-1 px-3 py-4">
@@ -129,14 +145,16 @@ const Sidebar = ({ show, collapsed, onToggleCollapse, onHide }) => {
       </ScrollArea>
 
       <div className="border-t border-border/60 p-3 space-y-2">
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className={cn('hidden lg:flex erp-nav-item w-full text-muted-foreground', collapsed && 'justify-center px-2')}
-        >
-          {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          {!collapsed && <span className="text-xs">Collapse sidebar</span>}
-        </button>
+        {collapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            title="Expand sidebar"
+            className="hidden lg:flex erp-nav-item w-full text-muted-foreground justify-center px-2"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </button>
+        )}
 
         <div className={cn('flex items-center gap-2 rounded-xl bg-muted/50 p-2', collapsed && 'justify-center')}>
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground dark:bg-primary/20 dark:text-primary dark:border dark:border-primary/25">

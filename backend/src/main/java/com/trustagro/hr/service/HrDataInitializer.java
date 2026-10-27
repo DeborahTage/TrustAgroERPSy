@@ -76,16 +76,60 @@ public class HrDataInitializer implements ApplicationRunner {
                 "- Lead team: Supervise managers and staff\n" +
                 "- Develop business: Manage clients and grow the company\n" +
                 "- Make decisions: Final authority on major issues");
-        position("OPERATIONS_MANAGER", "Operations Manager");
+        position("OPERATIONS_MANAGER", "Operations Manager",
+                "Key Responsibilities:\n" +
+                "- Run daily operations: Ensure farm and consulting activities run smoothly\n" +
+                "- Coordinate teams: Link farm, veterinary, store, and sales departments\n" +
+                "- Implement plans: Turn GM strategy into daily actions\n" +
+                "- Monitor performance: Track production, service delivery, and efficiency\n" +
+                "- Solve problems: Handle operational issues quickly (farm, logistics, staff)\n" +
+                "- Standardize processes: Ensure all sites follow the same procedures");
+        position("SECRETARY", "Secretary",
+                "Key Responsibilities:\n" +
+                "- Manage communication: Handle calls, emails, and messages with staff and clients\n" +
+                "- Schedule activities: Arrange meetings, farm visits, and trainings\n" +
+                "- Keep records: Maintain documents, reports, and contracts\n" +
+                "- Support management: Assist GM and managers with coordination\n" +
+                "- Follow-up: Track tasks, deadlines, and ensure actions are completed");
+        position("MARKETING_MANAGER", "Marketing Team (Trust Agro Consulting)",
+                "Key Responsibilities:\n" +
+                "- Generate clients: Find and attract new farmers and business partners\n" +
+                "- Promote services: Advertise consulting, veterinary support, and farm solutions\n" +
+                "- Build brand: Create trust and visibility in the market\n" +
+                "- Manage channels: Handle social media, field promotion, and campaigns\n" +
+                "- Support sales: Convert leads into paying clients\n" +
+                "- Collect feedback: Understand customer needs and improve services");
+        position("MARKETING_OFFICER", "Marketing Team (Trust Agro Consulting)",
+                "Key Responsibilities:\n" +
+                "- Generate clients: Find and attract new farmers and business partners\n" +
+                "- Promote services: Advertise consulting, veterinary support, and farm solutions\n" +
+                "- Build brand: Create trust and visibility in the market\n" +
+                "- Manage channels: Handle social media, field promotion, and campaigns\n" +
+                "- Support sales: Convert leads into paying clients\n" +
+                "- Collect feedback: Understand customer needs and improve services");
+        position("PHARMACIST", "Pharmacy Sales (Trust Agro)",
+                "Key Responsibilities:\n" +
+                "- Sell products: Veterinary drugs, vaccines, and farm inputs\n" +
+                "- Advise customers: Guide proper drug use (dose, purpose, safety)\n" +
+                "- Manage customers: Build relationships and retain clients\n" +
+                "- Record sales: Track daily sales and report revenue\n" +
+                "- Coordinate with vet team: Ensure correct prescriptions and usage\n" +
+                "- Monitor stock: Work with store keeper to avoid shortages or expiry");
+        position("PHARMACY_SALES", "Pharmacy Sales (Trust Agro)",
+                "Key Responsibilities:\n" +
+                "- Sell products: Veterinary drugs, vaccines, and farm inputs\n" +
+                "- Advise customers: Guide proper drug use (dose, purpose, safety)\n" +
+                "- Manage customers: Build relationships and retain clients\n" +
+                "- Record sales: Track daily sales and report revenue\n" +
+                "- Coordinate with vet team: Ensure correct prescriptions and usage\n" +
+                "- Monitor stock: Work with store keeper to avoid shortages or expiry");
         position("FARM_MANAGER", "Farm Manager");
         position("FARM_WORKER", "Farm Worker");
         position("VETERINARIAN", "Veterinarian");
-        position("PHARMACIST", "Pharmacist");
         position("INVENTORY_MANAGER", "Inventory Manager");
         position("ACCOUNTANT", "Accountant");
         position("HR_OFFICER", "HR Officer");
         position("CRM_OFFICER", "CRM Officer");
-        position("MARKETING_OFFICER", "Marketing Officer");
         position("TRAINING_COORDINATOR", "Training Coordinator");
         position("CONSULTANT", "Consultant");
         position("EXTENSION_WORKER", "Extension Worker");

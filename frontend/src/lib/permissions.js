@@ -56,12 +56,14 @@ export const ROLE_LABELS = {
   FARM_WORKER: 'Farm Worker',
   VETERINARIAN: 'Veterinarian',
   INVENTORY_MANAGER: 'Inventory Manager',
-  PHARMACIST: 'Pharmacist',
+  PHARMACIST: 'Pharmacy Sales (Trust Agro)',
   CRM_MANAGER: 'CRM Manager',
-  MARKETING_MANAGER: 'Marketing Manager',
+  MARKETING_MANAGER: 'Marketing Team (Trust Agro Consulting)',
   TRAINING_COORDINATOR: 'Training Coordinator',
   CONSULTANT: 'Consultant',
   EXTENSION_WORKER: 'Extension Worker',
+  MARKETING: 'Marketing Team (Trust Agro Consulting)',
+  PHARMACY_SALES: 'Pharmacy Sales (Trust Agro)',
 };
 
 /**
@@ -78,6 +80,71 @@ export const ROLE_DESCRIPTIONS = {
       { key: 'Lead team', detail: 'Supervise managers and staff' },
       { key: 'Develop business', detail: 'Manage clients and grow the company' },
       { key: 'Make decisions', detail: 'Final authority on major issues' },
+    ],
+  },
+  OPERATIONS_MANAGER: {
+    title: 'Operations Manager',
+    responsibilities: [
+      { key: 'Run daily operations', detail: 'Ensure farm and consulting activities run smoothly' },
+      { key: 'Coordinate teams', detail: 'Link farm, veterinary, store, and sales departments' },
+      { key: 'Implement plans', detail: 'Turn GM strategy into daily actions' },
+      { key: 'Monitor performance', detail: 'Track production, service delivery, and efficiency' },
+      { key: 'Solve problems', detail: 'Handle operational issues quickly (farm, logistics, staff)' },
+      { key: 'Standardize processes', detail: 'Ensure all sites follow the same procedures' },
+    ],
+  },
+  SECRETARY: {
+    title: 'Secretary',
+    responsibilities: [
+      { key: 'Manage communication', detail: 'Handle calls, emails, and messages with staff and clients' },
+      { key: 'Schedule activities', detail: 'Arrange meetings, farm visits, and trainings' },
+      { key: 'Keep records', detail: 'Maintain documents, reports, and contracts' },
+      { key: 'Support management', detail: 'Assist GM and managers with coordination' },
+      { key: 'Follow-up', detail: 'Track tasks, deadlines, and ensure actions are completed' },
+    ],
+  },
+  MARKETING_MANAGER: {
+    title: 'Marketing Team (Trust Agro Consulting)',
+    responsibilities: [
+      { key: 'Generate clients', detail: 'Find and attract new farmers and business partners' },
+      { key: 'Promote services', detail: 'Advertise consulting, veterinary support, and farm solutions' },
+      { key: 'Build brand', detail: 'Create trust and visibility in the market' },
+      { key: 'Manage channels', detail: 'Handle social media, field promotion, and campaigns' },
+      { key: 'Support sales', detail: 'Convert leads into paying clients' },
+      { key: 'Collect feedback', detail: 'Understand customer needs and improve services' },
+    ],
+  },
+  MARKETING: {
+    title: 'Marketing Team (Trust Agro Consulting)',
+    responsibilities: [
+      { key: 'Generate clients', detail: 'Find and attract new farmers and business partners' },
+      { key: 'Promote services', detail: 'Advertise consulting, veterinary support, and farm solutions' },
+      { key: 'Build brand', detail: 'Create trust and visibility in the market' },
+      { key: 'Manage channels', detail: 'Handle social media, field promotion, and campaigns' },
+      { key: 'Support sales', detail: 'Convert leads into paying clients' },
+      { key: 'Collect feedback', detail: 'Understand customer needs and improve services' },
+    ],
+  },
+  PHARMACIST: {
+    title: 'Pharmacy Sales (Trust Agro)',
+    responsibilities: [
+      { key: 'Sell products', detail: 'Veterinary drugs, vaccines, and farm inputs' },
+      { key: 'Advise customers', detail: 'Guide proper drug use (dose, purpose, safety)' },
+      { key: 'Manage customers', detail: 'Build relationships and retain clients' },
+      { key: 'Record sales', detail: 'Track daily sales and report revenue' },
+      { key: 'Coordinate with vet team', detail: 'Ensure correct prescriptions and usage' },
+      { key: 'Monitor stock', detail: 'Work with store keeper to avoid shortages or expiry' },
+    ],
+  },
+  PHARMACY_SALES: {
+    title: 'Pharmacy Sales (Trust Agro)',
+    responsibilities: [
+      { key: 'Sell products', detail: 'Veterinary drugs, vaccines, and farm inputs' },
+      { key: 'Advise customers', detail: 'Guide proper drug use (dose, purpose, safety)' },
+      { key: 'Manage customers', detail: 'Build relationships and retain clients' },
+      { key: 'Record sales', detail: 'Track daily sales and report revenue' },
+      { key: 'Coordinate with vet team', detail: 'Ensure correct prescriptions and usage' },
+      { key: 'Monitor stock', detail: 'Work with store keeper to avoid shortages or expiry' },
     ],
   },
 };
