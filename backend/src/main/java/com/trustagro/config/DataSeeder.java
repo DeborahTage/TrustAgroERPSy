@@ -14,6 +14,7 @@ import com.trustagro.user.entity.UserStatus;
 import com.trustagro.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -53,6 +54,7 @@ public class DataSeeder implements CommandLineRunner {
             Map.entry("training@trustagro.com", Role.TRAINING_COORDINATOR)
     );
 
+    @Autowired
     public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
                       MasterDataItemRepository masterDataRepository, InventoryItemRepository inventoryItemRepository,
                       JdbcTemplate jdbcTemplate,
@@ -67,7 +69,7 @@ public class DataSeeder implements CommandLineRunner {
         this.seedDemoMasterData = seedDemoMasterData;
     }
 
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
+        public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
                       MasterDataItemRepository masterDataRepository, JdbcTemplate jdbcTemplate,
                       boolean seedDemoUsers, boolean seedDemoMasterData) {
         this(userRepository, passwordEncoder, masterDataRepository, null, jdbcTemplate, seedDemoUsers, seedDemoMasterData);

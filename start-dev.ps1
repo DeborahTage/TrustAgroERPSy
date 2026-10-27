@@ -75,7 +75,7 @@ if (-not (Test-PortOpen -HostName $backendHost -Port $backendPort)) {
 
     $javaHome = $env:JAVA_HOME
     if (-not $javaHome -or -not (Test-Path $javaHome)) {
-        foreach ($jdk in @("C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot", "C:\Program Files\Java\jdk-21", "C:\Program Files\Java\jdk-17")) {
+        foreach ($jdk in @("C:\Program Files\Java\jdk-20", "C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot", "C:\Program Files\Java\jdk-21", "C:\Program Files\Java\jdk-17")) {
             if (Test-Path $jdk) { $javaHome = $jdk; break }
         }
     }
