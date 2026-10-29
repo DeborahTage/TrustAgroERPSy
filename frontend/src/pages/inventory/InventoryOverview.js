@@ -146,5 +146,4 @@ export default function InventoryOverview() {
             </div>
         </div>
     );
-    );
 }

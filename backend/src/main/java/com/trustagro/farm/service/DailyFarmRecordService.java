@@ -40,7 +40,7 @@ public class DailyFarmRecordService {
     private final InventoryItemRepository inventoryItemRepository;
     private final InventoryService inventoryService;
 
-    @Value("${app.alerts.mortality-threshold}")
+    @Value("${app.alerts.mortality-threshold:1.0}")
     private double mortalityThreshold;
 
     public List<DailyFarmRecordResponse> getAll() {
