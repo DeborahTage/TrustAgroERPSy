@@ -57,31 +57,31 @@ Copy `.env.example` → `.env` and fill values. **Never commit real secrets.**
 
 ## Schema strategy
 
-- **local:** `spring.jpa.hibernate.ddl-auto=update` — convenient for development.
-- **prod:** `validate` — the running application **does not** auto-migrate schema.
-- Apply schema changes out-of-band (manual SQL / DBA review) before rolling a new app version.
-- **Future:** Flyway (or Liquibase) is the intended migration path; not introduced in this step.
+- **Flyway:** Spring Boot runs Flyway migrations automatically on startup from `classpath:db/migration/`.
+  - Baseline migration `V1__initial_schema.sql` establishes all 129 tables, primary keys, identity sequences, indexes, and constraints.
+  - `spring.flyway.baseline-on-migrate=true` and `spring.flyway.baseline-version=1` allow existing databases to adopt Flyway without reapplying the baseline script.
+- **Hibernate validation:** In `prod`, `spring.jpa.hibernate.ddl-auto=validate` ensures the application's JPA entity mappings strictly match the Flyway-managed schema.
+- **local:** `spring.jpa.hibernate.ddl-auto=update` with Flyway disabled for rapid local H2 iteration.
 
-### First-time PostgreSQL bootstrap (staging / empty database)
+### PostgreSQL bootstrap (staging / empty database)
 
-`validate` requires tables to exist already. For a **new** database, apply schema once with a throwaway backend process that uses the same image and credentials, then start the normal prod service:
+Because Flyway automatically applies `V1__initial_schema.sql` on backend startup, starting a clean staging or production stack requires no manual DDL commands:
 
 ```bash
-# 1. Start PostgreSQL only
-docker compose up -d postgres
+# 1. Prepare .env with secrets and optional INITIAL_ADMIN_EMAIL / INITIAL_ADMIN_PASSWORD
+cp .env.example .env
 
-# 2. One-shot schema create (do not leave this override on the long-running service)
-docker compose run --rm --no-deps \
-  -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
-  backend
-
-# 3. Start the stack with prod validate
+# 2. Start the full stack
 docker compose up -d
 ```
 
-Do **not** set `SPRING_JPA_HIBERNATE_DDL_AUTO=update` (or `create-drop`) on the standing production/staging backend. Hibernate `update` on PostgreSQL may emit noisy `ALTER` warnings for H2-oriented seed SQL; those are non-fatal during the one-shot bootstrap.
-
-After bootstrap, create the first admin with SQL (BCrypt hash) as in [Admin initialization](#admin-initialization). Role catalog is seeded on every start via `RoleSeeder` (no passwords).
+The backend container will:
+1. Wait for PostgreSQL to be healthy.
+2. Execute Flyway migrations (`V1__initial_schema.sql`).
+3. Validate entity mappings against the database schema (`ddl-auto=validate`).
+4. Seed canonical role permissions via `RoleSeeder`.
+5. Seed number sequences via `ProcurementDataInitializer` and `HrDataInitializer`.
+6. Provision the initial administrator account via `InitialAdminProvisioner` (if `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` are configured and no admin exists).
 
 ---
 
@@ -89,14 +89,11 @@ After bootstrap, create the first admin with SQL (BCrypt hash) as in [Admin init
 
 Demo credentials are **local profile only** (`app.seed.demo-users=true`).
 
-For production:
-
-1. Ensure `app.seed.demo-users=false` (default in prod profile).
-2. Create the first admin out-of-band, e.g. one-time SQL after schema is ready, or a controlled one-off seed run with a strong password that is rotated immediately.
-3. Prefer hashing passwords with BCrypt (same as the app `PasswordEncoder`) before inserting rows.
-4. Role/permission catalog still loads via `RoleSeeder` (idempotent, no passwords).
-
-Do not enable demo-user seeding in production.
+For staging and production:
+1. Supply `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` in `.env`.
+2. On initial startup with an empty database, `InitialAdminProvisioner` creates the administrator account with `Role.ADMIN` and a BCrypt-hashed password.
+3. If an administrator account already exists, `InitialAdminProvisioner` cleanly skips creation.
+4. If `INITIAL_ADMIN_EMAIL` / `INITIAL_ADMIN_PASSWORD` are left blank, the application starts with zero users and logs a clear setup notice, allowing administrators to be inserted via secure out-of-band management.
 
 ---
 

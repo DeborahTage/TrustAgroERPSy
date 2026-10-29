@@ -77,7 +77,9 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        refreshEnumCheckConstraints();
+        if (isH2Database()) {
+            refreshEnumCheckConstraints();
+        }
         migrateLegacyRoles();
         if (seedDemoUsers) {
             seedUsers();
@@ -91,6 +93,18 @@ public class DataSeeder implements CommandLineRunner {
             }
         } else {
             log.info("Demo master-data seeding disabled (app.seed.demo-master-data=false)");
+        }
+    }
+
+    private boolean isH2Database() {
+        try {
+            if (jdbcTemplate.getDataSource() == null) return false;
+            try (java.sql.Connection conn = jdbcTemplate.getDataSource().getConnection()) {
+                String dbProduct = conn.getMetaData().getDatabaseProductName();
+                return dbProduct != null && dbProduct.equalsIgnoreCase("H2");
+            }
+        } catch (Exception e) {
+            return false;
         }
     }
 
