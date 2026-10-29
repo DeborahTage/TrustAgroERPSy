@@ -9,6 +9,10 @@ backend/.m2/
 backend/data/
 *.class
 
+# Maven local dependency repositories
+.m2/
+**/.m2/
+
 # Local env files / secrets
 /.env*
 !/.env.example
