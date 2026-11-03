@@ -22,10 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -77,9 +75,6 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (isH2Database()) {
-            refreshEnumCheckConstraints();
-        }
         migrateLegacyRoles();
         if (seedDemoUsers) {
             seedUsers();
@@ -93,101 +88,6 @@ public class DataSeeder implements CommandLineRunner {
             }
         } else {
             log.info("Demo master-data seeding disabled (app.seed.demo-master-data=false)");
-        }
-    }
-
-    private boolean isH2Database() {
-        try {
-            if (jdbcTemplate.getDataSource() == null) return false;
-            try (java.sql.Connection conn = jdbcTemplate.getDataSource().getConnection()) {
-                String dbProduct = conn.getMetaData().getDatabaseProductName();
-                return dbProduct != null && dbProduct.equalsIgnoreCase("H2");
-            }
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * Hibernate/H2 keeps stale CHECK constraints on enum columns after Role values change.
-     * H2-specific; safely no-ops / warns on PostgreSQL and other dialects.
-     */
-    private void refreshEnumCheckConstraints() {
-        try {
-            dropAllCheckConstraints("users");
-            dropAllCheckConstraints("notifications");
-            alterToVarchar("users", "role", 64);
-            alterToVarchar("notifications", "target_role", 64);
-            dropAllCheckConstraints("users");
-            dropAllCheckConstraints("notifications");
-        } catch (Exception e) {
-            log.warn("Enum CHECK constraint refresh skipped (non-H2 or unsupported dialect): {}", e.getMessage());
-        }
-    }
-
-    private void dropAllCheckConstraints(String tableName) {
-        try {
-            List<String> names = jdbcTemplate.queryForList(
-                    "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
-                            "WHERE LOWER(TABLE_NAME) = LOWER(?) AND CONSTRAINT_TYPE = 'CHECK'",
-                    String.class,
-                    tableName
-            );
-            try {
-                names.addAll(jdbcTemplate.queryForList(
-                        "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.CONSTRAINTS " +
-                                "WHERE LOWER(TABLE_NAME) = LOWER(?) AND CONSTRAINT_TYPE = 'CHECK'",
-                        String.class,
-                        tableName
-                ));
-            } catch (Exception ignored) {
-                // CONSTRAINTS view may not exist on all H2 versions / Postgres
-            }
-            names.stream().distinct().forEach(name -> {
-                try {
-                    jdbcTemplate.execute("ALTER TABLE " + tableName + " DROP CONSTRAINT IF EXISTS " + name);
-                    log.info("Dropped CHECK constraint {} on {}", name, tableName);
-                } catch (Exception e) {
-                    log.warn("Could not drop constraint {}: {}", name, e.getMessage());
-                }
-            });
-            try {
-                jdbcTemplate.execute("ALTER TABLE " + tableName + " DROP CONSTRAINT IF EXISTS CONSTRAINT_6A");
-            } catch (Exception ignored) {
-                // ignore
-            }
-        } catch (Exception e) {
-            log.warn("Could not list CHECK constraints on {}: {}", tableName, e.getMessage());
-        }
-    }
-
-    private void alterToVarchar(String table, String column, int length) {
-        try {
-            jdbcTemplate.execute("ALTER TABLE " + table + " ALTER COLUMN " + column + " VARCHAR(" + length + ")");
-            log.info("Altered {}.{} to VARCHAR({})", table, column, length);
-        } catch (Exception e) {
-            log.warn("Could not alter {}.{}: {}", table, column, e.getMessage());
-        }
-    }
-
-    private void recreateRoleCheck(String table, String column) {
-        try {
-            String allowed = Arrays.stream(Role.values())
-                    .map(r -> "'" + r.name() + "'")
-                    .collect(Collectors.joining(", "));
-            String constraintName = table + "_" + column + "_chk";
-            try {
-                jdbcTemplate.execute("ALTER TABLE " + table + " DROP CONSTRAINT IF EXISTS " + constraintName);
-            } catch (Exception ignored) {
-                // ignore
-            }
-            jdbcTemplate.execute(
-                    "ALTER TABLE " + table + " ADD CONSTRAINT " + constraintName +
-                            " CHECK (" + column + " IN (" + allowed + ") OR " + column + " IS NULL)"
-            );
-            log.info("Recreated CHECK constraint {} for {}.{}", constraintName, table, column);
-        } catch (Exception e) {
-            log.warn("Could not recreate CHECK on {}.{}: {}", table, column, e.getMessage());
         }
     }
 

@@ -13,6 +13,20 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: trust_agro_real_pg_test
+          POSTGRES_USER: real_pg_ci
+          POSTGRES_PASSWORD: real_pg_ci_only_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U real_pg_ci -d trust_agro_real_pg_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK 17
@@ -31,7 +45,32 @@ jobs:
 
       - name: Test and package backend
         working-directory: backend
+        env:
+          REAL_POSTGRES_JDBC_URL: jdbc:postgresql://localhost:5432/trust_agro_real_pg_test
+          REAL_POSTGRES_USERNAME: real_pg_ci
+          REAL_POSTGRES_PASSWORD: real_pg_ci_only_password
         run: mvn -B test package -Dmaven.repo.local=$HOME/.m2/repository
+
+      - name: Verify real PostgreSQL test execution
+        working-directory: backend
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree
+
+          report = Path("target/surefire-reports/TEST-com.trustagro.schema.RealPostgresVerificationTest.xml")
+          if not report.is_file():
+              raise SystemExit(f"Missing Surefire report: {report}")
+
+          suite = ElementTree.parse(report).getroot()
+          tests = int(suite.attrib.get("tests", "0"))
+          skipped = int(suite.attrib.get("skipped", "0"))
+          failures = int(suite.attrib.get("failures", "0"))
+          errors = int(suite.attrib.get("errors", "0"))
+          print(f"RealPostgresVerificationTest: tests={tests}, skipped={skipped}, failures={failures}, errors={errors}")
+          if (tests, skipped, failures, errors) != (8, 0, 0, 0):
+              raise SystemExit("Real PostgreSQL integration test must execute all eight tests without skips or failures")
+          PY
 
       - name: Upload backend test reports
         if: always()

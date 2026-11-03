@@ -18,6 +18,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -71,5 +72,19 @@ class DataSeederTest {
         verify(masterDataRepository, atLeastOnce()).save(any());
         assertFalse(masterDataDb.isEmpty());
         assertTrue(masterDataDb.containsKey(MasterDataCategory.BREED + ":COBB_500"));
+    }
+
+    @Test
+    void migratesCrmAgentToCrmManagerForUsersAndNotifications() {
+        DataSeeder seeder = new DataSeeder(
+                userRepository, passwordEncoder, masterDataRepository, jdbcTemplate, false, false);
+
+        seeder.run();
+
+        verify(jdbcTemplate).update(
+                eq("UPDATE users SET role = ? WHERE role = ?"), eq("CRM_MANAGER"), eq("CRM_AGENT"));
+        verify(jdbcTemplate).update(
+                eq("UPDATE notifications SET target_role = ? WHERE target_role = ?"),
+                eq("CRM_MANAGER"), eq("CRM_AGENT"));
     }
 }
