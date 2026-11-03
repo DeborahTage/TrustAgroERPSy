@@ -1,41 +1,36 @@
 package com.trustagro.finance.dto;
 
-import com.trustagro.finance.entity.PaymentMethod;
 import com.trustagro.finance.entity.TransactionType;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Data
 public class TransactionRequest {
-    @NotNull private TransactionType transactionType;
-    @NotNull @Size(max = 80) private String category;
-    @NotNull @Positive private BigDecimal amount;
-    private PaymentMethod paymentMethod;
-    @Size(max = 80)
-    private String department;
-    private Long farmId;
-    private Long clientId;
+    @NotNull
+    private TransactionType transactionType;
+
+    @NotNull
+    @DecimalMin(value = "0", inclusive = false)
+    @Digits(integer = 36, fraction = 2)
+    private BigDecimal amount;
+
+    @NotBlank
+    @Size(max = 255)
+    private String debitAccountCode;
+
+    @NotBlank
+    @Size(max = 255)
+    private String creditAccountCode;
+
     @Size(max = 60)
-    private String referenceType;
-    private Long referenceId;
+    private String referenceType = "MANUAL";
+
     @Size(max = 300)
     private String description;
-    private LocalDate transactionDate;
-
-    public TransactionType getTransactionType() { return transactionType; }
-    public String getCategory() { return category; }
-    public BigDecimal getAmount() { return amount; }
-    public PaymentMethod getPaymentMethod() { return paymentMethod; }
-    public String getDepartment() { return department; }
-    public Long getFarmId() { return farmId; }
-    public Long getClientId() { return clientId; }
-    public String getReferenceType() { return referenceType; }
-    public Long getReferenceId() { return referenceId; }
-    public String getDescription() { return description; }
-    public LocalDate getTransactionDate() { return transactionDate; }
 }

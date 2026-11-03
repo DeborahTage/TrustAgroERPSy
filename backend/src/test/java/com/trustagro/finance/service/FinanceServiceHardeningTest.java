@@ -5,6 +5,8 @@ import com.trustagro.finance.repository.ChartOfAccountRepository;
 import com.trustagro.finance.repository.FinanceAuditLogRepository;
 import com.trustagro.finance.repository.FinanceTransactionRepository;
 import com.trustagro.finance.repository.InvoiceRepository;
+import com.trustagro.common.exception.BusinessException;
+import com.trustagro.common.exception.ResourceNotFoundException;
 import com.trustagro.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,6 +117,77 @@ class FinanceServiceHardeningTest {
 
         assertEquals(99L, result.getId());
         verify(transactionRepository, never()).save(any());
+        verify(chartOfAccountRepository, never()).save(any());
+        assertEquals(0, BigDecimal.ZERO.compareTo(cash.getBalance()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(revenue.getBalance()));
+    }
+
+    @Test
+    void missingDebitAccountIsRejectedWithoutChanges() {
+        assertRejectedWithoutChanges(() -> post(new BigDecimal("10.00"), null, "4100"));
+    }
+
+    @Test
+    void missingCreditAccountIsRejectedWithoutChanges() {
+        assertRejectedWithoutChanges(() -> post(new BigDecimal("10.00"), "1000", null));
+    }
+
+    @Test
+    void bothAccountsMissingAreRejectedWithoutChanges() {
+        assertRejectedWithoutChanges(() -> post(new BigDecimal("10.00"), null, null));
+    }
+
+    @Test
+    void sameAccountIsRejectedWithoutChanges() {
+        assertRejectedWithoutChanges(() -> post(new BigDecimal("10.00"), "1000", "1000"));
+    }
+
+    @Test
+    void invalidDebitAccountIsRejectedWithoutChanges() {
+        when(chartOfAccountRepository.findByAccountCode("9999")).thenReturn(Optional.empty());
+        assertRejectedWithoutChanges(() -> post(new BigDecimal("10.00"), "9999", "4100"),
+                ResourceNotFoundException.class);
+    }
+
+    @Test
+    void invalidCreditAccountIsRejectedWithoutChanges() {
+        when(chartOfAccountRepository.findByAccountCode("9999")).thenReturn(Optional.empty());
+        assertRejectedWithoutChanges(() -> post(new BigDecimal("10.00"), "1000", "9999"),
+                ResourceNotFoundException.class);
+    }
+
+    @Test
+    void zeroAmountIsRejectedWithoutChanges() {
+        assertRejectedWithoutChanges(() -> post(BigDecimal.ZERO, "1000", "4100"));
+    }
+
+    @Test
+    void negativeAmountIsRejectedWithoutChanges() {
+        assertRejectedWithoutChanges(() -> post(new BigDecimal("-0.01"), "1000", "4100"));
+    }
+
+    @Test
+    void amountRoundedToZeroIsRejectedWithoutChanges() {
+        assertRejectedWithoutChanges(() -> post(new BigDecimal("0.001"), "1000", "4100"));
+    }
+
+    @Test
+    void amountExceedingDatabasePrecisionIsRejectedWithoutChanges() {
+        assertRejectedWithoutChanges(() -> post(BigDecimal.TEN.pow(36), "1000", "4100"));
+    }
+
+    @Test
+    void validPairedPostingRoundsAmountToDatabaseScaleAndUpdatesBothAccounts() {
+        FinanceTransaction transaction = post(new BigDecimal("10.126"), "1000", "4100");
+
+        assertEquals(new BigDecimal("10.13"), transaction.getAmount());
+        assertEquals(cash, transaction.getDebitAccount());
+        assertEquals(revenue, transaction.getCreditAccount());
+        assertEquals(new BigDecimal("10.13"), cash.getBalance());
+        assertEquals(new BigDecimal("10.13"), revenue.getBalance());
+        verify(transactionRepository).save(transaction);
+        verify(chartOfAccountRepository, times(2)).save(any());
+        verify(auditLogRepository).save(any());
     }
 
     @Test
@@ -168,5 +241,29 @@ class FinanceServiceHardeningTest {
         a.setAccountType(type);
         a.setBalance(BigDecimal.ZERO);
         return a;
+    }
+
+    private FinanceTransaction post(BigDecimal amount, String debit, String credit) {
+        return financeService.postTransaction(TransactionType.INCOME, amount,
+                BusinessUnit.GENERAL, debit, credit, "test posting",
+                "TEST", "TEST_POSTING", 1L);
+    }
+
+    private void assertRejectedWithoutChanges(Runnable posting) {
+        assertRejectedWithoutChanges(posting, BusinessException.class);
+    }
+
+    private void assertRejectedWithoutChanges(Runnable posting, Class<? extends RuntimeException> exceptionType) {
+        BigDecimal cashBefore = cash.getBalance();
+        BigDecimal revenueBefore = revenue.getBalance();
+
+        assertThrows(exceptionType, posting::run);
+
+        assertEquals(cashBefore, cash.getBalance());
+        assertEquals(revenueBefore, revenue.getBalance());
+        verify(chartOfAccountRepository, never()).save(any());
+        verify(transactionRepository, never()).save(any());
+        verify(auditLogRepository, never()).save(any());
+        verify(auditService, never()).log(anyString(), anyString(), anyString(), any(), any(), anyString());
     }
 }

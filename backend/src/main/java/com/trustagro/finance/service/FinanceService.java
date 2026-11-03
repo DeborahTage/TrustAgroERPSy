@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 public class FinanceService {
 
     private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+    private static final int FINANCE_AMOUNT_PRECISION = 38;
+    private static final int FINANCE_AMOUNT_SCALE = 2;
 
     private final FinanceTransactionRepository transactionRepository;
     private final ChartOfAccountRepository chartOfAccountRepository;
@@ -104,7 +106,26 @@ public class FinanceService {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("Finance amount must be greater than zero");
         }
-        if (debitAccountCode != null && debitAccountCode.equals(creditAccountCode)) {
+        BigDecimal postedAmount = amount.setScale(FINANCE_AMOUNT_SCALE, RoundingMode.HALF_UP);
+        if (postedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Finance amount must be greater than zero after rounding to two decimal places");
+        }
+        if (postedAmount.precision() > FINANCE_AMOUNT_PRECISION) {
+            throw new BusinessException("Finance amount exceeds the supported precision");
+        }
+        if (type == null) {
+            throw new BusinessException("Finance transaction type is required");
+        }
+
+        String debitCode = debitAccountCode != null ? debitAccountCode.trim() : null;
+        String creditCode = creditAccountCode != null ? creditAccountCode.trim() : null;
+        if (debitCode == null || debitCode.isBlank()) {
+            throw new BusinessException("Debit account is required");
+        }
+        if (creditCode == null || creditCode.isBlank()) {
+            throw new BusinessException("Credit account is required");
+        }
+        if (debitCode.equals(creditCode)) {
             throw new BusinessException("Debit and credit accounts must differ");
         }
 
@@ -117,9 +138,14 @@ public class FinanceService {
             }
         }
 
+        ChartOfAccount debitCoa = chartOfAccountRepository.findByAccountCode(debitCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Debit account not found: " + debitCode));
+        ChartOfAccount creditCoa = chartOfAccountRepository.findByAccountCode(creditCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Credit account not found: " + creditCode));
+
         FinanceTransaction t = new FinanceTransaction();
         t.setTransactionType(type);
-        t.setAmount(amount.setScale(2, RoundingMode.HALF_UP));
+        t.setAmount(postedAmount);
         t.setBusinessUnit(unit != null ? unit : BusinessUnit.GENERAL);
         t.setDescription(description);
         t.setSourceModule(sourceModule);
@@ -133,27 +159,18 @@ public class FinanceService {
                 ? SecurityContextHolder.getContext().getAuthentication().getName() : "system";
         userRepository.findByEmail(email).ifPresent(t::setRecordedBy);
 
-        if (debitAccountCode != null) {
-            ChartOfAccount debitCoa = chartOfAccountRepository.findByAccountCode(debitAccountCode)
-                    .orElseThrow(() -> new ResourceNotFoundException("Debit account not found: " + debitAccountCode));
-            t.setDebitAccount(debitCoa);
-            updateAccountBalance(debitCoa, t.getAmount(), true);
-        }
-
-        if (creditAccountCode != null) {
-            ChartOfAccount creditCoa = chartOfAccountRepository.findByAccountCode(creditAccountCode)
-                    .orElseThrow(() -> new ResourceNotFoundException("Credit account not found: " + creditAccountCode));
-            t.setCreditAccount(creditCoa);
-            updateAccountBalance(creditCoa, t.getAmount(), false);
-        }
+        t.setDebitAccount(debitCoa);
+        t.setCreditAccount(creditCoa);
+        updateAccountBalance(debitCoa, t.getAmount(), true);
+        updateAccountBalance(creditCoa, t.getAmount(), false);
 
         FinanceTransaction saved = transactionRepository.save(t);
 
         FinanceAuditLog log = new FinanceAuditLog();
         log.setTransactionId(saved.getId());
         log.setAction("POSTED");
-        log.setDebitAccount(debitAccountCode != null ? debitAccountCode : "");
-        log.setCreditAccount(creditAccountCode != null ? creditAccountCode : "");
+        log.setDebitAccount(debitCode);
+        log.setCreditAccount(creditCode);
         log.setAmount(saved.getAmount());
         log.setSourceModule(sourceModule != null ? sourceModule : "UNKNOWN");
         log.setReferenceType(referenceType);
@@ -164,8 +181,8 @@ public class FinanceService {
         auditService.log("FINANCE_POSTED", "FINANCE", "FinanceTransaction", saved.getId(),
                 null,
                 "amount=" + saved.getAmount()
-                        + ",debit=" + (debitAccountCode != null ? debitAccountCode : "")
-                        + ",credit=" + (creditAccountCode != null ? creditAccountCode : "")
+                        + ",debit=" + debitCode
+                        + ",credit=" + creditCode
                         + ",source=" + (sourceModule != null ? sourceModule : "UNKNOWN")
                         + ",refType=" + (referenceType != null ? referenceType : "")
                         + ",refId=" + (referenceId != null ? referenceId : ""));

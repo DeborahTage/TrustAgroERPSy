@@ -30,18 +30,18 @@ public class FinanceTransaction {
 
     private String category;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 38, scale = 2)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "debit_account_id")
+    @JoinColumn(name = "debit_account_id", nullable = false)
     private ChartOfAccount debitAccount;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "credit_account_id")
+    @JoinColumn(name = "credit_account_id", nullable = false)
     private ChartOfAccount creditAccount;
 
     @Column(name = "source_module")

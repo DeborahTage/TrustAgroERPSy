@@ -2,16 +2,18 @@ package com.trustagro.finance.controller;
 
 import com.trustagro.common.response.ApiResponse;
 import com.trustagro.finance.entity.FinanceTransaction;
+import com.trustagro.finance.entity.BusinessUnit;
 import com.trustagro.finance.service.FinanceService;
 import com.trustagro.finance.service.InvoiceService;
 import com.trustagro.finance.service.ReconciliationService;
-import com.trustagro.finance.entity.TransactionType;
-import com.trustagro.finance.entity.BusinessUnit;
+import com.trustagro.finance.dto.TransactionRequest;
+import com.trustagro.finance.dto.TransactionResponse;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -49,16 +51,23 @@ public class FinanceController {
 
     @PostMapping("/transactions")
     @PreAuthorize("hasAuthority('finance:create')")
-    public ResponseEntity<ApiResponse<FinanceTransaction>> postTransaction(@RequestBody Map<String, Object> req) {
-        TransactionType type = TransactionType.valueOf(req.getOrDefault("transactionType", "INCOME").toString());
-        BigDecimal amount = new BigDecimal(req.get("amount").toString());
-        String debit = (String) req.get("debitAccountCode");
-        String credit = (String) req.get("creditAccountCode");
-        String description = (String) req.getOrDefault("description", "");
-        String refType = (String) req.getOrDefault("referenceType", "MANUAL");
-        FinanceTransaction tx = financeService.postTransaction(type, amount, BusinessUnit.GENERAL,
-                debit, credit, description, "MANUAL", refType, null);
-        return ResponseEntity.ok(ApiResponse.success(tx));
+    public ResponseEntity<ApiResponse<TransactionResponse>> postTransaction(@Valid @RequestBody TransactionRequest req) {
+        FinanceTransaction tx = financeService.postTransaction(req.getTransactionType(), req.getAmount(),
+                BusinessUnit.GENERAL,
+                req.getDebitAccountCode(), req.getCreditAccountCode(), req.getDescription(),
+                "MANUAL", req.getReferenceType(), null);
+        TransactionResponse response = new TransactionResponse();
+        response.setId(tx.getId());
+        response.setTransactionType(tx.getTransactionType());
+        response.setCategory(tx.getCategory());
+        response.setAmount(tx.getAmount());
+        response.setDebitAccountCode(req.getDebitAccountCode().trim());
+        response.setCreditAccountCode(req.getCreditAccountCode().trim());
+        response.setReferenceType(tx.getReferenceType());
+        response.setDescription(tx.getDescription());
+        response.setTransactionDate(tx.getTransactionDate());
+        response.setCreatedAt(tx.getCreatedAt());
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/accounts")
