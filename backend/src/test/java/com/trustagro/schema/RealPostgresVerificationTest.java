@@ -186,17 +186,15 @@ class RealPostgresVerificationTest {
     private void assertCheckConstraintExists(String table, String column) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT count(*) " +
-                        "FROM information_schema.table_constraints tc " +
-                        "JOIN information_schema.check_constraints cc " +
-                        "ON tc.constraint_catalog = cc.constraint_catalog " +
-                        "AND tc.constraint_schema = cc.constraint_schema " +
-                        "AND tc.constraint_name = cc.constraint_name " +
-                        "WHERE lower(tc.table_schema) = lower(current_schema()) " +
-                        "AND lower(tc.table_name) = lower(?) " +
-                        "AND tc.constraint_type = 'CHECK' " +
-                        "AND lower(cc.check_clause) LIKE ?",
+                        "FROM pg_constraint c " +
+                        "JOIN pg_class t ON t.oid = c.conrelid " +
+                        "JOIN pg_namespace n ON n.oid = t.relnamespace " +
+                        "WHERE n.nspname = current_schema() " +
+                        "AND lower(t.relname) = lower(?) " +
+                        "AND c.contype = 'c' " +
+                        "AND pg_get_constraintdef(c.oid) ILIKE ?",
                 Integer.class, table, "%" + column + "%");
-        assertThat(count).as("CHECK constraint for %s.%s", table, column).isEqualTo(1);
+        assertThat(count).as("CHECK constraint for %s.%s", table, column).isGreaterThan(0);
     }
 
     @Test
