@@ -45,6 +45,9 @@ public class DailyFarmRecordService {
 
     public List<DailyFarmRecordResponse> getAll() {
         List<Long> scope = farmAccessService.accessibleFarmIdsOrNull();
+        if (scope != null && scope.isEmpty()) {
+            return List.of();
+        }
         return recordRepository.findAll().stream()
                 .filter(r -> scope == null || scope.contains(r.getFarm().getId()))
                 .map(this::toResponse)
@@ -127,16 +130,71 @@ public class DailyFarmRecordService {
         return toResponse(saved);
     }
 
+    @Transactional
     public DailyFarmRecordResponse update(Long id, DailyFarmRecordRequest req) {
-        DailyFarmRecord record = findById(id);
+        DailyFarmRecord record = recordRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Daily record not found: " + id));
         farmAccessService.assertCanAccessFarm(record.getFarm().getId());
         farmAccessService.assertCanAccessFarm(req.getFarmId());
+
+        Long previousFlockId = record.getFlock().getId();
+        int previousBirdReduction = nvl(record.getMortality()) + nvl(record.getCulledChickens());
+        Long previousSiloId = record.getSilo() != null ? record.getSilo().getId() : null;
+        BigDecimal previousFeedConsumed = nvl(record.getFeedConsumed());
+
         Farm farm = farmRepository.findById(req.getFarmId())
                 .orElseThrow(() -> new ResourceNotFoundException("Farm not found"));
-        Flock flock = flockRepository.findById(req.getFlockId())
-                .orElseThrow(() -> new ResourceNotFoundException("Flock not found"));
+        List<Long> flockIds = java.util.stream.Stream.of(previousFlockId, req.getFlockId())
+                .distinct().sorted().toList();
+        Map<Long, Flock> flocks = flockRepository.findAllByIdForUpdate(flockIds).stream()
+                .collect(Collectors.toMap(Flock::getId, flock -> flock));
+        Flock previousFlock = flocks.get(previousFlockId);
+        Flock flock = flocks.get(req.getFlockId());
+        if (previousFlock == null) {
+            throw new ResourceNotFoundException("Previous flock not found");
+        }
+        if (flock == null) {
+            throw new ResourceNotFoundException("Flock not found");
+        }
+        if (!flock.getFarm().getId().equals(farm.getId())) {
+            throw new BusinessException("Flock does not belong to the selected farm");
+        }
+
+        int available = nvl(flock.getCurrentBirdCount());
+        if (previousFlockId.equals(flock.getId())) {
+            available += previousBirdReduction;
+        }
+
         mapRequest(req, record, farm, flock);
-        return toResponse(recordRepository.save(record));
+        applyLines(req, record);
+        int mortalityFromLines = record.getMortalityLines().stream()
+                .mapToInt(line -> line.getDeathCount() != null ? line.getDeathCount() : 0)
+                .sum();
+        int mortality = !record.getMortalityLines().isEmpty()
+                ? mortalityFromLines
+                : (req.getMortality() != null ? req.getMortality() : 0);
+        record.setMortality(mortality);
+        int newBirdReduction = mortality + nvl(req.getCulledChickens());
+        if (newBirdReduction > available) {
+            throw new BusinessException("Mortality + culled exceeds available birds (" + available + ")");
+        }
+
+        validateAndAggregateFeed(record);
+        feedService.reconcileConsumption(previousSiloId, previousFeedConsumed,
+                req.getSiloId(), nvl(record.getFeedConsumed()));
+        inventoryService.reverseStockOutsForReference(
+                "DAILY_FARM_RECORD", record.getId(), "DAILY_FARM_RECORD_REVERSAL", farmAccessService.currentUser());
+
+        if (!previousFlockId.equals(flock.getId())) {
+            previousFlock.setCurrentBirdCount(nvl(previousFlock.getCurrentBirdCount()) + previousBirdReduction);
+            flockRepository.save(previousFlock);
+        }
+        flock.setCurrentBirdCount(available - newBirdReduction);
+
+        DailyFarmRecord saved = recordRepository.save(record);
+        stockOutLines(saved);
+        flockRepository.save(flock);
+        return toResponse(saved);
     }
 
     private void applyLines(DailyFarmRecordRequest req, DailyFarmRecord record) {
@@ -266,6 +324,7 @@ public class DailyFarmRecordService {
         if (req.getDiseaseCaseId() != null) {
             diseaseCaseRepository.findById(req.getDiseaseCaseId()).ifPresent(record::setDiseaseCase);
         }
+        record.setSilo(null);
         if (req.getSiloId() != null) {
             com.trustagro.feed.entity.Silo silo = new com.trustagro.feed.entity.Silo();
             silo.setId(req.getSiloId());
@@ -280,6 +339,10 @@ public class DailyFarmRecordService {
 
     private BigDecimal nvl(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
+    }
+
+    private int nvl(Integer value) {
+        return value != null ? value : 0;
     }
 
     public DailyFarmRecordResponse toResponse(DailyFarmRecord r) {

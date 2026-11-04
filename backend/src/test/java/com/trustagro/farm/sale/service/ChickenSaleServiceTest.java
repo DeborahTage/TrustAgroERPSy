@@ -26,8 +26,10 @@ import com.trustagro.farm.sale.repository.FlockPopulationEventRepository;
 import com.trustagro.finance.entity.FinanceTransaction;
 import com.trustagro.finance.entity.Invoice;
 import com.trustagro.finance.entity.PaymentMethod;
+import com.trustagro.finance.entity.TransactionType;
 import com.trustagro.finance.repository.InvoiceRepository;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.finance.service.FlockCOGSService;
 import com.trustagro.notification.service.NotificationService;
 import com.trustagro.user.entity.User;
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -248,7 +251,14 @@ class ChickenSaleServiceTest {
         var invoiced = service.invoice(sale.getId());
         assertEquals(ChickenSaleStatus.INVOICED, invoiced.getStatus());
         assertNotNull(invoiced.getInvoiceNumber());
-        verify(financeService).postTransaction(any(), any(), any(), eq("1200"), eq("4100"), any(), eq("CHICKEN_SALE"), eq("INVOICE_REVENUE"), any());
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(financeService).postTransactions(postingsCaptor.capture());
+        assertEquals(1, postingsCaptor.getValue().size());
+        assertEquals(TransactionType.INCOME, postingsCaptor.getValue().get(0).transactionType());
+        assertEquals(new BigDecimal("7500.00"), postingsCaptor.getValue().get(0).amount());
+        assertEquals("1200", postingsCaptor.getValue().get(0).debitAccountCode());
+        assertEquals("4100", postingsCaptor.getValue().get(0).creditAccountCode());
+        assertEquals("INVOICE_REVENUE", postingsCaptor.getValue().get(0).referenceType());
         verify(auditService).log(eq("INVOICE"), eq("CHICKEN_SALE"), eq("ChickenSale"), any(), any(), any());
     }
 

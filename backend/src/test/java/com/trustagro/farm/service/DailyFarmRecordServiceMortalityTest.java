@@ -6,6 +6,7 @@ import com.trustagro.farm.dto.DailyMortalityLineRequest;
 import com.trustagro.farm.entity.DailyFarmRecord;
 import com.trustagro.farm.entity.Farm;
 import com.trustagro.farm.entity.Flock;
+import com.trustagro.feed.entity.Silo;
 import com.trustagro.farm.repository.DailyFarmRecordRepository;
 import com.trustagro.farm.repository.FarmRepository;
 import com.trustagro.farm.repository.FlockRepository;
@@ -84,8 +85,8 @@ class DailyFarmRecordServiceMortalityTest {
         lenient().when(farmAccessService.currentUser()).thenReturn(user);
         lenient().when(userRepository.findByEmail("fm@test.com")).thenReturn(Optional.of(user));
         when(farmRepository.findById(1L)).thenReturn(Optional.of(farm));
-        when(flockRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(flock));
-        when(recordRepository.existsByFarmIdAndFlockIdAndDate(any(), any(), any())).thenReturn(false);
+        lenient().when(flockRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(flock));
+        lenient().when(recordRepository.existsByFarmIdAndFlockIdAndDate(any(), any(), any())).thenReturn(false);
         lenient().when(recordRepository.save(any())).thenAnswer(inv -> {
             DailyFarmRecord r = inv.getArgument(0);
             if (r.getId() == null) setId(r, ids.getAndIncrement());
@@ -137,6 +138,93 @@ class DailyFarmRecordServiceMortalityTest {
         req.setMortalityLines(List.of(m1, m2));
 
         assertThrows(BusinessException.class, () -> service.create(req));
+    }
+
+    @Test
+    void updateReconcilesPreviousAndNewFlockAndSiloEffects() {
+        Flock nextFlock = new Flock();
+        nextFlock.setBatchCode("B-2");
+        nextFlock.setFarm(farm);
+        nextFlock.setCurrentBirdCount(50);
+        nextFlock.setStartDate(LocalDate.now().minusDays(7));
+        setId(nextFlock, 11L);
+
+        DailyFarmRecord record = existingRecord(3, 1, 8, 30L, flock);
+        when(recordRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(record));
+        when(flockRepository.findAllByIdForUpdate(List.of(10L, 11L))).thenReturn(List.of(flock, nextFlock));
+
+        DailyFarmRecordRequest req = updateRequest(11L, 2, 2, 4, 20L);
+        service.update(50L, req);
+
+        assertEquals(104, flock.getCurrentBirdCount());
+        assertEquals(46, nextFlock.getCurrentBirdCount());
+        assertEquals(11L, record.getFlock().getId());
+        assertEquals(new java.math.BigDecimal("4"), record.getFeedConsumed());
+        verify(feedService).reconcileConsumption(30L, new java.math.BigDecimal("8"),
+                20L, new java.math.BigDecimal("4"));
+        verify(inventoryService).reverseStockOutsForReference(
+                "DAILY_FARM_RECORD", 50L, "DAILY_FARM_RECORD_REVERSAL", farmAccessService.currentUser());
+    }
+
+    @Test
+    void repeatedUpdateReplacesPriorFlockEffectInsteadOfApplyingItTwice() {
+        DailyFarmRecord record = existingRecord(2, 1, 5, 30L, flock);
+        when(recordRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(record));
+        when(flockRepository.findAllByIdForUpdate(List.of(10L))).thenReturn(List.of(flock));
+        DailyFarmRecordRequest req = updateRequest(10L, 3, 1, 5, 30L);
+
+        service.update(50L, req);
+        int afterFirstUpdate = flock.getCurrentBirdCount();
+        service.update(50L, req);
+
+        assertEquals(99, afterFirstUpdate);
+        assertEquals(afterFirstUpdate, flock.getCurrentBirdCount());
+        verify(feedService, times(2)).reconcileConsumption(
+                30L, new java.math.BigDecimal("5"), 30L, new java.math.BigDecimal("5"));
+        verify(inventoryService, times(2)).reverseStockOutsForReference(
+                "DAILY_FARM_RECORD", 50L, "DAILY_FARM_RECORD_REVERSAL", farmAccessService.currentUser());
+    }
+
+    @Test
+    void invalidUpdatedMortalityDoesNotReverseInventoryOrSiloEffects() {
+        flock.setCurrentBirdCount(2);
+        DailyFarmRecord record = existingRecord(1, 0, 5, 30L, flock);
+        when(recordRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(record));
+        when(flockRepository.findAllByIdForUpdate(List.of(10L))).thenReturn(List.of(flock));
+
+        assertThrows(BusinessException.class,
+                () -> service.update(50L, updateRequest(10L, 4, 0, 3, 30L)));
+
+        verifyNoInteractions(feedService, inventoryService);
+    }
+
+    private DailyFarmRecord existingRecord(int mortality, int culled, int consumed,
+                                           Long siloId, Flock recordFlock) {
+        DailyFarmRecord record = new DailyFarmRecord();
+        setId(record, 50L);
+        record.setDate(LocalDate.now());
+        record.setFarm(farm);
+        record.setFlock(recordFlock);
+        record.setMortality(mortality);
+        record.setCulledChickens(culled);
+        record.setFeedConsumed(new java.math.BigDecimal(consumed));
+        Silo silo = new Silo();
+        silo.setId(siloId);
+        record.setSilo(silo);
+        return record;
+    }
+
+    private DailyFarmRecordRequest updateRequest(Long flockId, int mortality, int culled,
+                                                 int consumed, Long siloId) {
+        DailyFarmRecordRequest req = new DailyFarmRecordRequest();
+        req.setDate(LocalDate.now());
+        req.setFarmId(1L);
+        req.setFlockId(flockId);
+        req.setMortality(mortality);
+        req.setCulledChickens(culled);
+        req.setFeedConsumed(new java.math.BigDecimal(consumed));
+        req.setSiloId(siloId);
+        return req;
     }
 
     private static void setId(Object entity, Long id) {

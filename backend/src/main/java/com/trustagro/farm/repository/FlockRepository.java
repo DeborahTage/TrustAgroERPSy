@@ -22,4 +22,8 @@ public interface FlockRepository extends JpaRepository<Flock, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT f FROM Flock f WHERE f.id = :id")
     Optional<Flock> findByIdForUpdate(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT f FROM Flock f WHERE f.id IN :ids ORDER BY f.id")
+    List<Flock> findAllByIdForUpdate(@Param("ids") List<Long> ids);
 }

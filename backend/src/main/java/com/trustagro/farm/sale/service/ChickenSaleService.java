@@ -23,6 +23,7 @@ import com.trustagro.farm.sale.repository.FlockPopulationEventRepository;
 import com.trustagro.finance.entity.*;
 import com.trustagro.finance.repository.InvoiceRepository;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.finance.service.FlockCOGSService;
 import com.trustagro.notification.service.NotificationService;
 import com.trustagro.user.entity.Role;
@@ -72,6 +73,9 @@ public class ChickenSaleService {
     @Transactional(readOnly = true)
     public List<ChickenSaleResponse> list(ChickenSaleStatus status, Long customerId, Long flockId, Long farmId) {
         List<Long> scope = farmAccessService.accessibleFarmIdsOrNull();
+        if (scope != null && scope.isEmpty()) {
+            return List.of();
+        }
         if (farmId != null) {
             farmAccessService.assertCanAccessFarm(farmId);
         }
@@ -220,20 +224,24 @@ public class ChickenSaleService {
 
         Invoice savedInvoice = invoiceRepository.save(invoice);
 
+        List<FinancePostingRequest> postings = new java.util.ArrayList<>();
         BigDecimal netRevenue = sale.getSubtotal().subtract(sale.getDiscountAmount()).max(ZERO);
         if (netRevenue.compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(
+            postings.add(FinancePostingRequest.of(
                     TransactionType.INCOME, netRevenue, BusinessUnit.POULTRY_FARM,
                     AccountCode.ASSET_RECEIVABLE.getCode(), AccountCode.REV_POULTRY_SALES.getCode(),
                     "Chicken sale invoice " + savedInvoice.getInvoiceNumber(),
-                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_REVENUE, savedInvoice.getId());
+                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_REVENUE, savedInvoice.getId()));
         }
         if (sale.getTaxAmount().compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(
+            postings.add(FinancePostingRequest.of(
                     TransactionType.TRANSFER, sale.getTaxAmount(), BusinessUnit.POULTRY_FARM,
                     AccountCode.ASSET_RECEIVABLE.getCode(), AccountCode.LIABILITY_VAT.getCode(),
                     "VAT on chicken sale invoice " + savedInvoice.getInvoiceNumber(),
-                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_VAT, savedInvoice.getId());
+                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_VAT, savedInvoice.getId()));
+        }
+        if (!postings.isEmpty()) {
+            financeService.postTransactions(postings);
         }
 
         sale.setInvoice(savedInvoice);

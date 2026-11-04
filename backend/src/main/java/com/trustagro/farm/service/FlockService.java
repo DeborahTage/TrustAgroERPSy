@@ -36,7 +36,7 @@ public class FlockService {
         List<Long> scope = farmAccessService.accessibleFarmIdsOrNull();
         List<Flock> flocks = scope == null
                 ? flockRepository.findAll()
-                : flockRepository.findByFarmIdIn(scope);
+                : (scope.isEmpty() ? List.of() : flockRepository.findByFarmIdIn(scope));
         return flocks.stream().map(this::toResponse).collect(Collectors.toList());
     }
 

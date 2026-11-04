@@ -14,9 +14,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Database-backed farm scope. Empty {@code User.farmIds} means global access
- * (main/global Farm Manager). Non-empty lists restrict FARM_MANAGER / FARM_WORKER /
- * EXTENSION_WORKER to assigned farms. Supervisory roles always have global access.
+ * Database-backed farm scope.
+ * Only explicitly authorized supervisory roles (ADMIN, GENERAL_MANAGER, OPERATIONS_MANAGER)
+ * retain global farm access.
+ * Non-supervisory roles (including FARM_MANAGER, FARM_WORKER, EXTENSION_WORKER) must be
+ * explicitly assigned to farms. Null or empty farmIds for non-supervisory users results in
+ * NO farm access.
  */
 @Service
 @RequiredArgsConstructor
@@ -38,11 +41,7 @@ public class FarmAccessService {
             return false;
         }
         Role role = RoleCompatibility.normalize(user.getRole());
-        if (role == Role.ADMIN || role == Role.GENERAL_MANAGER || role == Role.OPERATIONS_MANAGER) {
-            return true;
-        }
-        List<Long> farmIds = user.getFarmIds();
-        return farmIds == null || farmIds.isEmpty();
+        return role == Role.ADMIN || role == Role.GENERAL_MANAGER || role == Role.OPERATIONS_MANAGER;
     }
 
     public boolean canAccessFarm(User user, Long farmId) {
@@ -67,7 +66,8 @@ public class FarmAccessService {
     }
 
     /**
-     * @return {@code null} when the user may see all farms; otherwise the allowed IDs.
+     * @return {@code null} when the user may see all farms (supervisory); otherwise the allowed IDs.
+     * Non-supervisory users with null/empty farmIds receive an empty list (no farm access).
      */
     public List<Long> accessibleFarmIdsOrNull() {
         User user = currentUser();

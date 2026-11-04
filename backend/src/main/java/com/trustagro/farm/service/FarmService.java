@@ -65,7 +65,7 @@ public class FarmService {
         List<Long> scope = farmAccessService.accessibleFarmIdsOrNull();
         List<Farm> farms = scope == null
                 ? farmRepository.findAll()
-                : farmRepository.findByIdIn(scope);
+                : (scope.isEmpty() ? List.of() : farmRepository.findByIdIn(scope));
         return farms.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
