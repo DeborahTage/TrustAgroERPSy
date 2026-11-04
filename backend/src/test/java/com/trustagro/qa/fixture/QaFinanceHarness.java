@@ -16,6 +16,7 @@ import com.trustagro.user.repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +64,15 @@ public final class QaFinanceHarness {
 
         lenient().when(chartOfAccountRepository.findByAccountCode(anyString()))
                 .thenAnswer(inv -> Optional.ofNullable(accounts.get(inv.getArgument(0))));
+        lenient().when(chartOfAccountRepository.findByAccountCodeInForUpdate(any()))
+                .thenAnswer(inv -> {
+                    List<String> codes = inv.getArgument(0);
+                    return codes.stream()
+                            .map(accounts::get)
+                            .filter(java.util.Objects::nonNull)
+                            .sorted(Comparator.comparing(ChartOfAccount::getId))
+                            .toList();
+                });
         lenient().when(chartOfAccountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(auditLogRepository.save(any(FinanceAuditLog.class))).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
@@ -72,7 +82,7 @@ public final class QaFinanceHarness {
                     String key = key(inv.getArgument(0), inv.getArgument(1), inv.getArgument(2));
                     return Optional.ofNullable(bySourceKey.get(key));
                 });
-        lenient().when(transactionRepository.save(any(FinanceTransaction.class))).thenAnswer(inv -> {
+        lenient().when(transactionRepository.saveAndFlush(any(FinanceTransaction.class))).thenAnswer(inv -> {
             FinanceTransaction t = inv.getArgument(0);
             if (t.getId() == null) {
                 t.setId(ids.getAndIncrement());

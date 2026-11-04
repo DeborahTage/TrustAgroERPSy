@@ -7,6 +7,7 @@ import com.trustagro.crm.entity.CrmClient;
 import com.trustagro.crm.repository.CrmClientRepository;
 import com.trustagro.finance.entity.*;
 import com.trustagro.finance.repository.InvoiceRepository;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.finance.service.FinanceService;
 import com.trustagro.notification.service.NotificationService;
 import com.trustagro.training.dto.*;
@@ -223,11 +224,17 @@ class TrainingServiceTest {
         assertEquals(RegistrationStatus.CONFIRMED, confirmed.getStatus());
         assertEquals(1, session.getConfirmedCount());
 
-        ArgumentCaptor<TransactionType> typeCap = ArgumentCaptor.forClass(TransactionType.class);
-        verify(financeService).postTransaction(typeCap.capture(), eq(new BigDecimal("10000.00")),
-                eq(BusinessUnit.TRAINING), eq("1200"), eq("4500"), any(), eq("TRAINING"),
-                eq("INVOICE_REVENUE"), any());
-        assertEquals(TransactionType.INCOME, typeCap.getValue());
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCap = ArgumentCaptor.forClass(List.class);
+        verify(financeService).postTransactions(postingsCap.capture());
+        assertEquals(1, postingsCap.getValue().size());
+        FinancePostingRequest posting = postingsCap.getValue().get(0);
+        assertEquals(TransactionType.INCOME, posting.transactionType());
+        assertEquals(new BigDecimal("10000.00"), posting.amount());
+        assertEquals(BusinessUnit.TRAINING, posting.businessUnit());
+        assertEquals("1200", posting.debitAccountCode());
+        assertEquals("4500", posting.creditAccountCode());
+        assertEquals("TRAINING", posting.sourceModule());
+        assertEquals("INVOICE_REVENUE", posting.referenceType());
         verify(auditService).log(eq("REGISTRATION_CONFIRMED"), eq("TRAINING"), eq("TrainingRegistration"), any(), any(), any());
         verify(notificationService, atLeastOnce()).createRoleNotification(any(), any(), any());
     }

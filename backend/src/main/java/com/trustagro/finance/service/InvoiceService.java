@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,17 +48,19 @@ public class InvoiceService {
 
         AccountCode accountCode = getRevenueAccountForUnit(unit);
         // Revenue recognition only on subtotal — VAT is liability, not income
-        financeService.postTransaction(TransactionType.INCOME, subtotal, unit,
+        List<FinancePostingRequest> postings = new ArrayList<>();
+        postings.add(FinancePostingRequest.of(TransactionType.INCOME, subtotal, unit,
                 AccountCode.ASSET_CASH.getCode(), accountCode.getCode(),
                 "POS Invoice " + saved.getInvoiceNumber(),
-                FinanceSourceTypes.MODULE_INVOICE, FinanceSourceTypes.REF_INVOICE_REVENUE, saved.getId());
+                FinanceSourceTypes.MODULE_INVOICE, FinanceSourceTypes.REF_INVOICE_REVENUE, saved.getId()));
 
         if (vatAmount.compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(TransactionType.TRANSFER, vatAmount, unit,
+            postings.add(FinancePostingRequest.of(TransactionType.TRANSFER, vatAmount, unit,
                     AccountCode.ASSET_CASH.getCode(), AccountCode.LIABILITY_VAT.getCode(),
                     "VAT from Invoice " + saved.getInvoiceNumber(),
-                    FinanceSourceTypes.MODULE_INVOICE, FinanceSourceTypes.REF_INVOICE_VAT, saved.getId());
+                    FinanceSourceTypes.MODULE_INVOICE, FinanceSourceTypes.REF_INVOICE_VAT, saved.getId()));
         }
+        financeService.postTransactions(postings);
 
         return saved;
     }

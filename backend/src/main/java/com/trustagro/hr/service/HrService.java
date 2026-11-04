@@ -10,6 +10,7 @@ import com.trustagro.finance.entity.FinanceTransaction;
 import com.trustagro.finance.entity.PaymentMethod;
 import com.trustagro.finance.entity.TransactionType;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.hr.dto.*;
 import com.trustagro.hr.entity.*;
 import com.trustagro.hr.repository.*;
@@ -1105,18 +1106,22 @@ public class HrService {
         }
 
         String description = "Payroll " + period.getPeriodCode();
+        List<FinancePostingRequest> postings = new ArrayList<>();
         if (nvl(run.getGrossAmount()).compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(TransactionType.EXPENSE, run.getGrossAmount(), BusinessUnit.GENERAL,
+            postings.add(FinancePostingRequest.of(TransactionType.EXPENSE, run.getGrossAmount(), BusinessUnit.GENERAL,
                     AccountCode.EXP_SALARIES.getCode(), AccountCode.LIABILITY_SALARY_PAYABLE.getCode(),
                     description + " — gross salary expense", SOURCE_MODULE,
-                    FinanceSourceTypes.REF_HR_PAYROLL_EXPENSE, run.getId());
+                    FinanceSourceTypes.REF_HR_PAYROLL_EXPENSE, run.getId()));
         }
         if (nvl(run.getDeductionAmount()).compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(TransactionType.TRANSFER, run.getDeductionAmount(), BusinessUnit.GENERAL,
+            postings.add(FinancePostingRequest.of(TransactionType.TRANSFER, run.getDeductionAmount(), BusinessUnit.GENERAL,
                     AccountCode.LIABILITY_SALARY_PAYABLE.getCode(),
                     AccountCode.LIABILITY_PAYROLL_DEDUCTIONS.getCode(),
                     description + " — withheld deductions", SOURCE_MODULE,
-                    FinanceSourceTypes.REF_HR_PAYROLL_DEDUCTION, run.getId());
+                    FinanceSourceTypes.REF_HR_PAYROLL_DEDUCTION, run.getId()));
+        }
+        if (!postings.isEmpty()) {
+            financeService.postTransactions(postings);
         }
 
         User processor = currentUser();

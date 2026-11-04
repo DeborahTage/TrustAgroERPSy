@@ -7,6 +7,7 @@ import com.trustagro.finance.entity.FinanceTransaction;
 import com.trustagro.finance.entity.TransactionType;
 import com.trustagro.finance.repository.FinanceAuditLogRepository;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.common.exception.FinancePostingConflictException;
 import com.trustagro.finance.service.InvoiceService;
 import com.trustagro.finance.service.ReconciliationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -137,5 +138,38 @@ class FinanceControllerValidationTest {
                 "MANUAL",
                 "MANUAL",
                 null);
+    }
+
+    @Test
+    void conflictingFinanceReferenceReturnsStructuredConflictResponse() throws Exception {
+        when(financeService.postTransaction(
+                eq(TransactionType.INCOME),
+                eq(new BigDecimal("125.50")),
+                any(),
+                eq("CASH-100"),
+                eq("REV-100"),
+                eq("Manual revenue entry"),
+                eq("MANUAL"),
+                eq("MANUAL"),
+                eq(null)))
+                .thenThrow(new FinancePostingConflictException(
+                        "Finance posting reference MANUAL/MANUAL/42 already exists with different posting details"));
+
+        mockMvc.perform(post("/api/finance/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "transactionType":"INCOME",
+                                  "amount":125.50,
+                                  "debitAccountCode":"CASH-100",
+                                  "creditAccountCode":"REV-100",
+                                  "referenceType":"MANUAL",
+                                  "description":"Manual revenue entry"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(
+                        "Finance posting reference MANUAL/MANUAL/42 already exists with different posting details"));
     }
 }

@@ -9,6 +9,7 @@ import com.trustagro.crm.repository.CrmClientRepository;
 import com.trustagro.finance.entity.*;
 import com.trustagro.finance.repository.InvoiceRepository;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.notification.service.NotificationService;
 import com.trustagro.training.dto.*;
 import com.trustagro.training.entity.*;
@@ -769,20 +770,24 @@ public class TrainingService {
         Invoice savedInvoice = invoiceRepository.save(invoice);
         reg.setInvoice(savedInvoice);
 
+        List<FinancePostingRequest> postings = new ArrayList<>();
         BigDecimal netRevenue = invoice.getSubtotal();
         if (netRevenue.compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(
+            postings.add(FinancePostingRequest.of(
                     TransactionType.INCOME, netRevenue, BusinessUnit.TRAINING,
                     AccountCode.ASSET_RECEIVABLE.getCode(), AccountCode.REV_TRAINING.getCode(),
                     "Training invoice " + savedInvoice.getInvoiceNumber(),
-                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_REVENUE, savedInvoice.getId());
+                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_REVENUE, savedInvoice.getId()));
         }
         if (reg.getTaxAmount().compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(
+            postings.add(FinancePostingRequest.of(
                     TransactionType.TRANSFER, reg.getTaxAmount(), BusinessUnit.TRAINING,
                     AccountCode.ASSET_RECEIVABLE.getCode(), AccountCode.LIABILITY_VAT.getCode(),
                     "VAT on training invoice " + savedInvoice.getInvoiceNumber(),
-                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_VAT, savedInvoice.getId());
+                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_VAT, savedInvoice.getId()));
+        }
+        if (!postings.isEmpty()) {
+            financeService.postTransactions(postings);
         }
     }
 

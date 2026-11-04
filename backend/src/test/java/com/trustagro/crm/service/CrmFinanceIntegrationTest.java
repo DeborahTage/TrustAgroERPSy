@@ -13,6 +13,7 @@ import com.trustagro.crm.repository.CustomerOrderRepository;
 import com.trustagro.finance.entity.*;
 import com.trustagro.finance.repository.InvoiceRepository;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.notification.service.NotificationService;
 import com.trustagro.security.Permissions;
 import com.trustagro.user.entity.User;
@@ -131,16 +132,19 @@ class CrmFinanceIntegrationTest {
         OrderResponse invoiced = service.createInvoice(100L);
         assertNotNull(invoiced.getInvoiceId());
 
-        ArgumentCaptor<TransactionType> incomeType = ArgumentCaptor.forClass(TransactionType.class);
-        verify(financeService).postTransaction(incomeType.capture(), eq(new BigDecimal("10000.00")),
-                eq(BusinessUnit.GENERAL), eq(AR), eq(REV), anyString(),
-                eq(FinanceSourceTypes.MODULE_CRM), eq(FinanceSourceTypes.REF_INVOICE_REVENUE), any());
-        assertEquals(TransactionType.INCOME, incomeType.getValue());
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(financeService).postTransactions(postingsCaptor.capture());
+        assertEquals(1, postingsCaptor.getValue().size());
+        FinancePostingRequest posting = postingsCaptor.getValue().get(0);
+        assertEquals(TransactionType.INCOME, posting.transactionType());
+        assertEquals(new BigDecimal("10000.00"), posting.amount());
+        assertEquals(AR, posting.debitAccountCode());
+        assertEquals(REV, posting.creditAccountCode());
+        assertEquals(FinanceSourceTypes.REF_INVOICE_REVENUE, posting.referenceType());
 
         // Second invoice call — no second INCOME
         service.createInvoice(100L);
-        verify(financeService, times(1)).postTransaction(eq(TransactionType.INCOME), any(), any(), any(), any(),
-                any(), any(), any(), any());
+        verify(financeService, times(1)).postTransactions(anyList());
 
         assertEquals(0, new BigDecimal("10000.00").compareTo(
                 order.getTotalAmount().subtract(order.getPaidAmount())));

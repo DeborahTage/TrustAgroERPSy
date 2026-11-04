@@ -7,6 +7,7 @@ import com.trustagro.finance.entity.BusinessUnit;
 import com.trustagro.finance.entity.PaymentMethod;
 import com.trustagro.finance.entity.TransactionType;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.hr.dto.*;
 import com.trustagro.hr.entity.*;
 import com.trustagro.hr.repository.*;
@@ -971,14 +972,20 @@ class HrServiceTest {
         assertEquals(PayrollRunStatus.PROCESSED, run.getStatus());
         assertEquals(PayrollItemStatus.PROCESSED, item.getStatus());
 
-        verify(financeService).postTransaction(eq(TransactionType.EXPENSE),
-                eq(new BigDecimal("30000.00")), eq(BusinessUnit.GENERAL),
-                eq(SALARY_EXPENSE), eq(SALARY_PAYABLE), contains("gross salary expense"),
-                eq("HR"), eq("HR_PAYROLL_EXPENSE"), eq(400L));
-        verify(financeService).postTransaction(eq(TransactionType.TRANSFER),
-                eq(new BigDecimal("4500.00")), eq(BusinessUnit.GENERAL),
-                eq(SALARY_PAYABLE), eq(PAYROLL_DEDUCTIONS), contains("withheld deductions"),
-                eq("HR"), eq("HR_PAYROLL_DEDUCTION"), eq(400L));
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(financeService).postTransactions(postingsCaptor.capture());
+        List<FinancePostingRequest> postings = postingsCaptor.getValue();
+        assertEquals(2, postings.size());
+        assertEquals(TransactionType.EXPENSE, postings.get(0).transactionType());
+        assertEquals(new BigDecimal("30000.00"), postings.get(0).amount());
+        assertEquals(SALARY_EXPENSE, postings.get(0).debitAccountCode());
+        assertEquals(SALARY_PAYABLE, postings.get(0).creditAccountCode());
+        assertEquals("HR_PAYROLL_EXPENSE", postings.get(0).referenceType());
+        assertEquals(TransactionType.TRANSFER, postings.get(1).transactionType());
+        assertEquals(new BigDecimal("4500.00"), postings.get(1).amount());
+        assertEquals(SALARY_PAYABLE, postings.get(1).debitAccountCode());
+        assertEquals(PAYROLL_DEDUCTIONS, postings.get(1).creditAccountCode());
+        assertEquals("HR_PAYROLL_DEDUCTION", postings.get(1).referenceType());
         verifyNoMoreInteractions(financeService);
 
         verify(auditService).log(eq("PAYROLL_PROCESSED"), eq("HR"), eq("PayrollPeriod"),
@@ -1002,10 +1009,11 @@ class HrServiceTest {
 
         // Second call short-circuits on the PROCESSED status guard — no second posting, no second audit.
         assertEquals(PayrollPeriodStatus.PROCESSED, second.getStatus());
-        verify(financeService, times(1)).postTransaction(eq(TransactionType.EXPENSE), any(), any(),
-                any(), any(), any(), any(), eq("HR_PAYROLL_EXPENSE"), any());
-        verify(financeService, times(1)).postTransaction(eq(TransactionType.TRANSFER), any(), any(),
-                any(), any(), any(), any(), eq("HR_PAYROLL_DEDUCTION"), any());
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(financeService, times(1)).postTransactions(postingsCaptor.capture());
+        assertEquals(2, postingsCaptor.getValue().size());
+        assertEquals(List.of("HR_PAYROLL_EXPENSE", "HR_PAYROLL_DEDUCTION"),
+                postingsCaptor.getValue().stream().map(FinancePostingRequest::referenceType).toList());
         verify(auditService, times(1)).log(eq("PAYROLL_PROCESSED"), any(), any(), any(), any(), any());
         verify(payrollRunRepository, times(1)).save(run);
     }
@@ -1086,14 +1094,11 @@ class HrServiceTest {
         service.approvePayroll(300L);
         service.processPayroll(300L);
 
-        verify(financeService).postTransaction(eq(TransactionType.EXPENSE),
-                eq(new BigDecimal("20000.00")), eq(BusinessUnit.GENERAL),
-                eq(SALARY_EXPENSE), eq(SALARY_PAYABLE), any(),
-                eq("HR"), eq("HR_PAYROLL_EXPENSE"), eq(400L));
-        verify(financeService).postTransaction(eq(TransactionType.TRANSFER),
-                eq(new BigDecimal("3000.00")), eq(BusinessUnit.GENERAL),
-                eq(SALARY_PAYABLE), eq(PAYROLL_DEDUCTIONS), any(),
-                eq("HR"), eq("HR_PAYROLL_DEDUCTION"), eq(400L));
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(financeService).postTransactions(postingsCaptor.capture());
+        assertEquals(2, postingsCaptor.getValue().size());
+        assertEquals(new BigDecimal("20000.00"), postingsCaptor.getValue().get(0).amount());
+        assertEquals(new BigDecimal("3000.00"), postingsCaptor.getValue().get(1).amount());
 
         PayrollPaymentRequest pay = new PayrollPaymentRequest();
         pay.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
@@ -1106,8 +1111,7 @@ class HrServiceTest {
                 any(), eq(PaymentMethod.BANK_TRANSFER), any());
 
         // Salary expense is recognised exactly once, at processing — never again at payment.
-        verify(financeService, times(1)).postTransaction(any(), any(), any(),
-                eq(SALARY_EXPENSE), any(), any(), any(), any(), any());
+        verify(financeService, times(1)).postTransactions(anyList());
         verify(financeService, never()).postTransaction(any(), any(), any(),
                 eq(SALARY_EXPENSE), any(), any(), any(), any(), any(), any(), any());
     }

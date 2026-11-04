@@ -28,7 +28,7 @@ public class InvoiceController {
     }
 
     @PostMapping("/pos")
-    @PreAuthorize("hasAnyAuthority('finance:create','pharmacy:sale')")
+    @PreAuthorize("hasAuthority('finance:create')")
     public ResponseEntity<ApiResponse<Invoice>> createPOS(@RequestBody Map<String, Object> req) {
         String clientName = req.containsKey("clientName")
                 ? req.get("clientName").toString()

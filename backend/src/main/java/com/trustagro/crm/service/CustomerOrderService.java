@@ -14,6 +14,7 @@ import com.trustagro.crm.repository.CustomerOrderRepository;
 import com.trustagro.finance.entity.*;
 import com.trustagro.finance.repository.InvoiceRepository;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.notification.service.NotificationService;
 import com.trustagro.user.entity.Role;
 import com.trustagro.user.entity.User;
@@ -314,20 +315,24 @@ public class CustomerOrderService {
         }
 
         // Never double-post revenue: only post after a newly persisted invoice
+        List<FinancePostingRequest> postings = new ArrayList<>();
         BigDecimal netRevenue = subtotal.subtract(nvl(order.getDiscountAmount())).max(ZERO);
         if (netRevenue.compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(
+            postings.add(FinancePostingRequest.of(
                     TransactionType.INCOME, netRevenue, BusinessUnit.GENERAL,
                     AccountCode.ASSET_RECEIVABLE.getCode(), AccountCode.REV_OTHER.getCode(),
                     "CRM order invoice " + savedInvoice.getInvoiceNumber(),
-                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_REVENUE, savedInvoice.getId());
+                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_REVENUE, savedInvoice.getId()));
         }
         if (nvl(order.getTaxAmount()).compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(
+            postings.add(FinancePostingRequest.of(
                     TransactionType.TRANSFER, order.getTaxAmount(), BusinessUnit.GENERAL,
                     AccountCode.ASSET_RECEIVABLE.getCode(), AccountCode.LIABILITY_VAT.getCode(),
                     "VAT on CRM order invoice " + savedInvoice.getInvoiceNumber(),
-                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_VAT, savedInvoice.getId());
+                    SOURCE_MODULE, FinanceSourceTypes.REF_INVOICE_VAT, savedInvoice.getId()));
+        }
+        if (!postings.isEmpty()) {
+            financeService.postTransactions(postings);
         }
 
         order.setInvoice(savedInvoice);

@@ -16,6 +16,7 @@ import com.trustagro.crm.repository.CustomerOrderRepository;
 import com.trustagro.finance.entity.*;
 import com.trustagro.finance.repository.InvoiceRepository;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.notification.service.NotificationService;
 import com.trustagro.security.Permissions;
 import com.trustagro.security.RolePermissionCatalog;
@@ -139,11 +140,15 @@ class CustomerOrderServiceTest {
         assertNotNull(first.getInvoiceId());
         assertEquals(order.getInvoice().getInvoiceNumber(), first.getInvoiceNumber());
 
-        ArgumentCaptor<TransactionType> typeCap = ArgumentCaptor.forClass(TransactionType.class);
-        verify(financeService).postTransaction(typeCap.capture(), eq(new BigDecimal("1000.00")),
-                eq(BusinessUnit.GENERAL), eq(AR), eq(REV), anyString(),
-                eq(FinanceSourceTypes.MODULE_CRM), eq(FinanceSourceTypes.REF_INVOICE_REVENUE), any());
-        assertEquals(TransactionType.INCOME, typeCap.getValue());
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(financeService).postTransactions(postingsCaptor.capture());
+        assertEquals(1, postingsCaptor.getValue().size());
+        FinancePostingRequest posting = postingsCaptor.getValue().get(0);
+        assertEquals(TransactionType.INCOME, posting.transactionType());
+        assertEquals(new BigDecimal("1000.00"), posting.amount());
+        assertEquals(AR, posting.debitAccountCode());
+        assertEquals(REV, posting.creditAccountCode());
+        assertEquals(FinanceSourceTypes.REF_INVOICE_REVENUE, posting.referenceType());
         verify(auditService).log(eq("INVOICE"), eq("CRM"), eq("CustomerOrder"), eq(10L), isNull(), anyString());
         verify(invoiceRepository, times(1)).save(any(Invoice.class));
 
@@ -151,8 +156,7 @@ class CustomerOrderServiceTest {
         OrderResponse second = service.createInvoice(10L);
         assertEquals(first.getInvoiceId(), second.getInvoiceId());
         assertEquals(first.getInvoiceNumber(), second.getInvoiceNumber());
-        verify(financeService, times(1)).postTransaction(eq(TransactionType.INCOME), any(), any(), any(), any(),
-                any(), any(), any(), any());
+        verify(financeService, times(1)).postTransactions(anyList());
         verify(invoiceRepository, times(1)).save(any(Invoice.class));
     }
 
@@ -341,12 +345,15 @@ class CustomerOrderServiceTest {
 
         service.createInvoice(40L);
 
-        verify(financeService).postTransaction(eq(TransactionType.INCOME), eq(new BigDecimal("1000.00")),
-                eq(BusinessUnit.GENERAL), eq(AR), eq(REV), anyString(),
-                eq(FinanceSourceTypes.MODULE_CRM), eq(FinanceSourceTypes.REF_INVOICE_REVENUE), any());
-        verify(financeService).postTransaction(eq(TransactionType.TRANSFER), eq(new BigDecimal("100.00")),
-                eq(BusinessUnit.GENERAL), eq(AR), eq(AccountCode.LIABILITY_VAT.getCode()), anyString(),
-                eq(FinanceSourceTypes.MODULE_CRM), eq(FinanceSourceTypes.REF_INVOICE_VAT), any());
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(financeService).postTransactions(postingsCaptor.capture());
+        assertEquals(2, postingsCaptor.getValue().size());
+        assertEquals(TransactionType.INCOME, postingsCaptor.getValue().get(0).transactionType());
+        assertEquals(new BigDecimal("1000.00"), postingsCaptor.getValue().get(0).amount());
+        assertEquals(REV, postingsCaptor.getValue().get(0).creditAccountCode());
+        assertEquals(TransactionType.TRANSFER, postingsCaptor.getValue().get(1).transactionType());
+        assertEquals(new BigDecimal("100.00"), postingsCaptor.getValue().get(1).amount());
+        assertEquals(AccountCode.LIABILITY_VAT.getCode(), postingsCaptor.getValue().get(1).creditAccountCode());
     }
 
     @Test

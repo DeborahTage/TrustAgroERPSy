@@ -6,6 +6,7 @@ import com.trustagro.finance.repository.FinanceAuditLogRepository;
 import com.trustagro.finance.repository.FinanceTransactionRepository;
 import com.trustagro.finance.repository.InvoiceRepository;
 import com.trustagro.common.exception.BusinessException;
+import com.trustagro.common.exception.FinancePostingConflictException;
 import com.trustagro.common.exception.ResourceNotFoundException;
 import com.trustagro.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,9 +65,17 @@ class FinanceServiceHardeningTest {
         lenient().when(chartOfAccountRepository.findByAccountCode("5120")).thenReturn(Optional.of(expense));
         lenient().when(chartOfAccountRepository.findByAccountCode("2000")).thenReturn(Optional.of(ap));
         lenient().when(chartOfAccountRepository.findByAccountCode("5010")).thenReturn(Optional.of(cogs));
+        lenient().when(chartOfAccountRepository.findByAccountCodeInForUpdate(anyList()))
+                .thenAnswer(invocation -> {
+                    List<String> codes = invocation.getArgument(0);
+                    return codes.stream()
+                            .map(chartOfAccountRepository::findByAccountCode)
+                            .flatMap(Optional::stream)
+                            .toList();
+                });
         lenient().when(chartOfAccountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(auditLogRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        lenient().when(transactionRepository.save(any())).thenAnswer(inv -> {
+        lenient().when(transactionRepository.saveAndFlush(any())).thenAnswer(inv -> {
             FinanceTransaction t = inv.getArgument(0);
             if (t.getId() == null) {
                 t.setId(ids.getAndIncrement());
@@ -89,7 +98,7 @@ class FinanceServiceHardeningTest {
                 "Partial payment", "CHICKEN_SALE", "PAYMENT", 10L);
 
         ArgumentCaptor<FinanceTransaction> cap = ArgumentCaptor.forClass(FinanceTransaction.class);
-        verify(transactionRepository, times(2)).save(cap.capture());
+        verify(transactionRepository, times(2)).saveAndFlush(cap.capture());
         List<FinanceTransaction> posted = cap.getAllValues();
         assertEquals(TransactionType.INCOME, posted.get(0).getTransactionType());
         assertEquals(0, new BigDecimal("75000.00").compareTo(posted.get(0).getAmount()));
@@ -107,7 +116,13 @@ class FinanceServiceHardeningTest {
     void duplicateSourceReferenceIsIdempotent() {
         FinanceTransaction first = new FinanceTransaction();
         first.setId(99L);
+        first.setTransactionType(TransactionType.INCOME);
         first.setAmount(new BigDecimal("5000.00"));
+        first.setDebitAccount(cash);
+        first.setCreditAccount(revenue);
+        first.setSourceModule("PHARMACY");
+        first.setReferenceType("PHARMACY_SALE_REVENUE");
+        first.setReferenceId(5L);
         when(transactionRepository.findBySourceModuleAndReferenceTypeAndReferenceId(
                 "PHARMACY", "PHARMACY_SALE_REVENUE", 5L)).thenReturn(Optional.of(first));
 
@@ -116,10 +131,53 @@ class FinanceServiceHardeningTest {
                 "retry", "PHARMACY", "PHARMACY_SALE_REVENUE", 5L);
 
         assertEquals(99L, result.getId());
-        verify(transactionRepository, never()).save(any());
+        verify(transactionRepository, never()).saveAndFlush(any());
         verify(chartOfAccountRepository, never()).save(any());
+        verify(chartOfAccountRepository, never()).findByAccountCodeInForUpdate(anyList());
         assertEquals(0, BigDecimal.ZERO.compareTo(cash.getBalance()));
         assertEquals(0, BigDecimal.ZERO.compareTo(revenue.getBalance()));
+    }
+
+    @Test
+    void conflictingDuplicateReferenceIsRejectedWithoutLockingOrChanges() {
+        FinanceTransaction first = new FinanceTransaction();
+        first.setId(100L);
+        first.setTransactionType(TransactionType.INCOME);
+        first.setAmount(new BigDecimal("5000.00"));
+        first.setDebitAccount(cash);
+        first.setCreditAccount(revenue);
+        first.setSourceModule("PHARMACY");
+        first.setReferenceType("PHARMACY_SALE_REVENUE");
+        first.setReferenceId(5L);
+        when(transactionRepository.findBySourceModuleAndReferenceTypeAndReferenceId(
+                "PHARMACY", "PHARMACY_SALE_REVENUE", 5L)).thenReturn(Optional.of(first));
+
+        assertThrows(FinancePostingConflictException.class, () -> financeService.postTransaction(
+                TransactionType.INCOME, new BigDecimal("5000.01"), BusinessUnit.PHARMACY,
+                "1000", "4100", "conflicting retry",
+                "PHARMACY", "PHARMACY_SALE_REVENUE", 5L));
+
+        verify(chartOfAccountRepository, never()).findByAccountCodeInForUpdate(anyList());
+        verify(chartOfAccountRepository, never()).save(any());
+        verify(transactionRepository, never()).saveAndFlush(any());
+        verify(auditLogRepository, never()).save(any());
+        verify(auditService, never()).log(anyString(), anyString(), anyString(), any(), any(), anyString());
+    }
+
+    @Test
+    void postingBatchLocksTheCompleteAccountSetOnceBeforeSavingTransactions() {
+        List<FinancePostingRequest> requests = List.of(
+                FinancePostingRequest.of(TransactionType.TRANSFER, BigDecimal.ONE, BusinessUnit.GENERAL,
+                        "1000", "4100", "first", "TEST", "ENTRY_ONE", 1L),
+                FinancePostingRequest.of(TransactionType.TRANSFER, BigDecimal.ONE, BusinessUnit.GENERAL,
+                        "1200", "2000", "second", "TEST", "ENTRY_TWO", 2L));
+
+        List<FinanceTransaction> postings = financeService.postTransactions(requests);
+
+        assertEquals(2, postings.size());
+        verify(chartOfAccountRepository, times(1))
+                .findByAccountCodeInForUpdate(List.of("1000", "4100", "1200", "2000"));
+        verify(transactionRepository, times(2)).saveAndFlush(any());
     }
 
     @Test
@@ -185,8 +243,9 @@ class FinanceServiceHardeningTest {
         assertEquals(revenue, transaction.getCreditAccount());
         assertEquals(new BigDecimal("10.13"), cash.getBalance());
         assertEquals(new BigDecimal("10.13"), revenue.getBalance());
-        verify(transactionRepository).save(transaction);
+        verify(transactionRepository).saveAndFlush(transaction);
         verify(chartOfAccountRepository, times(2)).save(any());
+        verify(chartOfAccountRepository).findByAccountCodeInForUpdate(List.of("1000", "4100"));
         verify(auditLogRepository).save(any());
     }
 
@@ -196,7 +255,7 @@ class FinanceServiceHardeningTest {
                 "Vet Rx", "VETERINARY", "VETERINARY_PRESCRIPTION", 7L);
 
         ArgumentCaptor<FinanceTransaction> cap = ArgumentCaptor.forClass(FinanceTransaction.class);
-        verify(transactionRepository).save(cap.capture());
+        verify(transactionRepository).saveAndFlush(cap.capture());
         FinanceTransaction t = cap.getValue();
         assertEquals(TransactionType.EXPENSE, t.getTransactionType());
         assertEquals(inventory, t.getCreditAccount());
@@ -210,7 +269,7 @@ class FinanceServiceHardeningTest {
                 "INVENTORY", "STOCK_IN", 3L);
 
         ArgumentCaptor<FinanceTransaction> cap = ArgumentCaptor.forClass(FinanceTransaction.class);
-        verify(transactionRepository).save(cap.capture());
+        verify(transactionRepository).saveAndFlush(cap.capture());
         assertEquals(TransactionType.TRANSFER, cap.getValue().getTransactionType());
         assertEquals(inventory, cap.getValue().getDebitAccount());
         assertEquals(ap, cap.getValue().getCreditAccount());
@@ -262,7 +321,7 @@ class FinanceServiceHardeningTest {
         assertEquals(cashBefore, cash.getBalance());
         assertEquals(revenueBefore, revenue.getBalance());
         verify(chartOfAccountRepository, never()).save(any());
-        verify(transactionRepository, never()).save(any());
+        verify(transactionRepository, never()).saveAndFlush(any());
         verify(auditLogRepository, never()).save(any());
         verify(auditService, never()).log(anyString(), anyString(), anyString(), any(), any(), anyString());
     }
