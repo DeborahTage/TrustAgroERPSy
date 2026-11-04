@@ -25,7 +25,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        return toUserDetails(user);
+    }
 
+    public UserDetails toUserDetails(User user) {
+        if (user == null) {
+            throw new UsernameNotFoundException("User must not be null");
+        }
         var canonical = RoleCompatibility.normalize(user.getRole());
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_" + canonical.name()));

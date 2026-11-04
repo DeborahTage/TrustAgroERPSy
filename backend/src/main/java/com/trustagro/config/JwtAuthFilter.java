@@ -2,6 +2,8 @@ package com.trustagro.config;
 
 import com.trustagro.auth.service.CustomUserDetailsService;
 import com.trustagro.auth.service.JwtService;
+import com.trustagro.user.entity.User;
+import com.trustagro.user.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -23,6 +26,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -36,15 +40,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             String email = jwtService.extractEmail(token);
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-                if (jwtService.isValid(token, userDetails)) {
-                    UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+                User user = userRepository.findByEmail(email).orElse(null);
+                Long tokenVersion = jwtService.extractTokenVersion(token);
+                if (user != null && user.getTokenVersion() != null
+                        && user.getTokenVersion().equals(tokenVersion)) {
+                    UserDetails userDetails = userDetailsService.toUserDetails(user);
+                    if (jwtService.isValid(token, userDetails)) {
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    } else {
+                        SecurityContextHolder.clearContext();
+                    }
+                } else {
+                    SecurityContextHolder.clearContext();
                 }
             }
-        } catch (JwtException | IllegalArgumentException ex) {
+        } catch (JwtException | AuthenticationException | IllegalArgumentException ex) {
             SecurityContextHolder.clearContext();
         }
         chain.doFilter(request, response);

@@ -46,12 +46,18 @@ public class JwtService {
     }
 
     public String generateToken(String email, String role, List<String> permissions, List<Long> farmIds) {
+        return generateToken(email, role, permissions, farmIds, 0L);
+    }
+
+    public String generateToken(String email, String role, List<String> permissions, List<Long> farmIds,
+                                long tokenVersion) {
         var builder = Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .claim("permissions", permissions)
-                .claim("farmIds", farmIds);
+                .claim("farmIds", farmIds)
+                .claim("tokenVersion", tokenVersion);
         if (role != null) {
             builder.claim("role", role);
         }
@@ -88,10 +94,17 @@ public class JwtService {
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
+    public Long extractTokenVersion(String token) {
+        Object version = Jwts.parserBuilder().setSigningKey(getKey()).build()
+                .parseClaimsJws(token).getBody().get("tokenVersion");
+        return version instanceof Number number ? number.longValue() : null;
+    }
+
     public boolean isValid(String token, UserDetails userDetails) {
         try {
             String email = extractEmail(token);
             return email.equals(userDetails.getUsername()) &&
+                    userDetails.isEnabled() &&
                     !Jwts.parserBuilder().setSigningKey(getKey()).build()
                             .parseClaimsJws(token).getBody().getExpiration().before(new Date());
         } catch (JwtException e) {

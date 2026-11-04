@@ -98,4 +98,40 @@ class AuthSecurityTest {
         var details = uds.loadUserByUsername("bob@trustagro.com");
         assertFalse(details.isEnabled());
     }
+
+    @Test
+    void logoutRevokesAllIssuedTokensForTheUser() {
+        User user = new User();
+        user.setId(17L);
+        user.setEmail("alice@trustagro.com");
+        user.setTokenVersion(0L);
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+        authService.logout(user.getEmail());
+
+        assertEquals(1L, user.getTokenVersion());
+        verify(userRepository).save(user);
+        verify(auditService).log("LOGOUT", "SECURITY", "User", 17L, null, "User JWTs revoked");
+    }
+
+    @Test
+    void passwordChangeRevokesAllPreviouslyIssuedTokens() {
+        User user = new User();
+        user.setId(18L);
+        user.setPassword("old-hash");
+        user.setTokenVersion(0L);
+        when(userRepository.findByEmail("alice@trustagro.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password12", "old-hash")).thenReturn(true);
+        when(passwordEncoder.matches("newPassword123", "old-hash")).thenReturn(false);
+        when(passwordEncoder.encode("newPassword123")).thenReturn("new-hash");
+
+        com.trustagro.auth.dto.ChangePasswordRequest request =
+                new com.trustagro.auth.dto.ChangePasswordRequest();
+        request.setCurrentPassword("password12");
+        request.setNewPassword("newPassword123");
+        authService.changePassword("alice@trustagro.com", request);
+
+        assertEquals(1L, user.getTokenVersion());
+        verify(userRepository).save(user);
+    }
 }

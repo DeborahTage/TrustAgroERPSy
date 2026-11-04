@@ -17,9 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Authentication endpoints. JWT logout is client-side only (no server-side token revoke).
- */
+/** Authentication endpoints. */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -50,15 +48,10 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Password updated", null));
     }
 
-    /**
-     * Audit logout. JWT remains valid until expiry — clients must discard the token.
-     * There is no server-side session or token blacklist.
-     */
     @PostMapping("/logout")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal UserDetails userDetails) {
         authService.logout(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(
-                "Logged out. Discard the JWT client-side; server does not revoke tokens.", null));
+        return ResponseEntity.ok(ApiResponse.success("Logged out and tokens revoked", null));
     }
 }
