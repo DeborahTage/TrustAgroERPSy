@@ -79,7 +79,7 @@ class GoldenVetPharmacyDispenseScenarioTest {
         rx.setFarmId(1L);
         rx.setFlockId(2L);
 
-        when(prescriptionRepository.findById(70L)).thenReturn(Optional.of(rx));
+        when(prescriptionRepository.findByIdForUpdate(70L)).thenReturn(Optional.of(rx));
         when(prescriptionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(farmCostAllocationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(inventoryService.stockOut(any())).thenAnswer(inv -> {

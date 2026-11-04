@@ -4,6 +4,7 @@ import com.trustagro.farm.entity.Flock;
 import com.trustagro.finance.entity.FinanceTransaction;
 import com.trustagro.finance.entity.TransactionType;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.inventory.entity.InventoryItem;
 import com.trustagro.inventory.entity.MovementType;
 import com.trustagro.inventory.entity.StockBatch;
@@ -154,8 +155,14 @@ public class PharmacyService {
 
     @Transactional
     public void approvePrescription(Long rxId, User user) {
-        PharmacyPrescription rx = rxRepository.findById(rxId)
+        PharmacyPrescription rx = rxRepository.findByIdForUpdate(rxId)
                 .orElseThrow(() -> new IllegalArgumentException("Prescription not found"));
+        if ("Dispensed".equalsIgnoreCase(rx.getStatus())) {
+            throw new IllegalStateException("A dispensed prescription cannot be re-approved");
+        }
+        if (!"Pending".equalsIgnoreCase(rx.getStatus()) && !"Approved".equalsIgnoreCase(rx.getStatus())) {
+            throw new IllegalStateException("Only a pending prescription can be approved");
+        }
         rx.setStatus("Approved");
         rx.setProcessedBy(user);
         rxRepository.save(rx);
@@ -164,19 +171,27 @@ public class PharmacyService {
 
     @Transactional
     public void dispensePrescription(Long rxId, User user) {
-        PharmacyPrescription rx = rxRepository.findById(rxId)
+        PharmacyPrescription rx = rxRepository.findByIdForUpdate(rxId)
                 .orElseThrow(() -> new IllegalArgumentException("Prescription not found"));
 
         if (!"Approved".equalsIgnoreCase(rx.getStatus())) {
             throw new IllegalStateException("Prescription must be Approved before dispensing");
         }
+        validatePrescriptionPatient(rx);
 
         List<PrescriptionItem> items = rxItemRepository.findByPrescriptionId(rxId);
+        if (items.isEmpty()) {
+            throw new IllegalStateException("Prescription has no prescribed medicines");
+        }
         BigDecimal totalCost = BigDecimal.ZERO;
 
         for (PrescriptionItem item : items) {
             InventoryItem drug = item.getInventoryItem();
-            double qtyToDeduct = item.getQuantityPrescribed().doubleValue();
+            BigDecimal remaining = remainingPrescriptionQuantity(item);
+            if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalStateException("Prescription medicine has no remaining quantity");
+            }
+            double qtyToDeduct = remaining.doubleValue();
 
             // Deduct from Inventory
             inventoryService.stockOut(
@@ -186,6 +201,7 @@ public class PharmacyService {
                     null,
                     user
             );
+            item.setQuantityDispensed(nvl(item.getQuantityDispensed()).add(remaining));
 
             // Calculate cost (internal cost or retail depending on type)
             BigDecimal unitPrice = drug.getRetailPrice() != null ? drug.getRetailPrice() : BigDecimal.ZERO;
@@ -223,6 +239,10 @@ public class PharmacyService {
 
     @Transactional
     public PharmacySale processSale(PosSaleRequest request, User user) {
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new IllegalArgumentException("A pharmacy sale must contain at least one item");
+        }
+
         PharmacySale sale = new PharmacySale();
         sale.setSaleCode("SAL-" + System.currentTimeMillis());
         sale.setSoldBy(user);
@@ -248,15 +268,27 @@ public class PharmacyService {
             }
         }
 
-        if (request.getPrescriptionId() != null) {
-            PharmacyPrescription rx = rxRepository.findById(request.getPrescriptionId()).orElse(null);
-            if (rx != null) {
-                sale.setPrescription(rx);
-                sale.setPatient(rx.getPatient());
-                rx.setStatus("Dispensed");
-                rx.setProcessedBy(user);
-                rxRepository.save(rx);
+        Map<Long, InventoryItem> itemsById = new HashMap<>();
+        Map<Long, BigDecimal> requestedByItem = new HashMap<>();
+        for (SaleItemDto itemDto : request.getItems()) {
+            if (itemDto == null || itemDto.getItemId() == null || itemDto.getQty() == null
+                    || itemDto.getQty().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Sale items require an item and a quantity greater than zero");
             }
+            InventoryItem item = inventoryItemRepository.findById(itemDto.getItemId()).orElseThrow();
+            itemsById.put(itemDto.getItemId(), item);
+            requestedByItem.merge(itemDto.getItemId(), itemDto.getQty(), BigDecimal::add);
+        }
+
+        PharmacyPrescription rx = resolvePrescription(request, user);
+        List<PrescriptionItem> prescribedItems = rx != null
+                ? rxItemRepository.findByPrescriptionId(rx.getId()) : List.of();
+        if (rx != null) {
+            validatePrescriptionForSale(rx, prescribedItems, requestedByItem);
+            sale.setPrescription(rx);
+            sale.setPatient(rx.getPatient());
+        } else if (itemsById.values().stream().anyMatch(item -> Boolean.TRUE.equals(item.getIsControlled()))) {
+            throw new IllegalStateException("Controlled medicines require a valid approved prescription.");
         }
 
         BigDecimal subtotal = BigDecimal.ZERO;
@@ -264,12 +296,7 @@ public class PharmacyService {
         List<PharmacySaleItem> saleItems = new ArrayList<>();
 
         for (SaleItemDto itemDto : request.getItems()) {
-            InventoryItem item = inventoryItemRepository.findById(itemDto.getItemId()).orElseThrow();
-
-            if (Boolean.TRUE.equals(item.getIsControlled()) && sale.getPrescription() == null
-                    && (request.getPrescriptionNumber() == null || request.getPrescriptionNumber().isBlank())) {
-                throw new IllegalStateException("Sale blocked: " + item.getItemName() + " requires a prescription.");
-            }
+            InventoryItem item = itemsById.get(itemDto.getItemId());
 
             Map<String, Object> outResult = inventoryService.stockOut(
                 itemDto.getItemId(),
@@ -308,6 +335,10 @@ public class PharmacyService {
             saleItems.add(si);
         }
 
+        if (rx != null) {
+            updatePrescriptionDispensedQuantities(rx, prescribedItems, requestedByItem, user);
+        }
+
         BigDecimal tax = subtotal.multiply(BigDecimal.valueOf(0.15)).setScale(2, java.math.RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(tax);
 
@@ -340,6 +371,188 @@ public class PharmacyService {
                 Role.GENERAL_MANAGER);
 
         return savedSale;
+    }
+
+    private PharmacyPrescription resolvePrescription(PosSaleRequest request, User user) {
+        PharmacyPrescription rx = null;
+        if (request.getPrescriptionId() != null) {
+            rx = rxRepository.findByIdForUpdate(request.getPrescriptionId())
+                    .orElseThrow(() -> new IllegalArgumentException("Prescription not found"));
+        } else if (request.getPrescriptionNumber() != null && !request.getPrescriptionNumber().isBlank()) {
+            String code = request.getPrescriptionNumber().trim();
+            rx = rxRepository.findByPrescriptionCodeForUpdate(code).orElse(null);
+            if (rx == null) {
+                com.trustagro.veterinary.entity.Prescription vetPrescription =
+                        vetRxRepository.findByPrescriptionNumberForUpdate(code).orElse(null);
+                if (vetPrescription != null) {
+                    validateCanonicalPrescription(vetPrescription);
+                    rx = rxRepository.findByVetPrescriptionIdForUpdate(vetPrescription.getId()).orElse(null);
+                    if (rx == null) {
+                        rx = createPharmacyPrescription(vetPrescription, user);
+                    } else {
+                        rx.setVetPrescription(vetPrescription);
+                    }
+                }
+            }
+        }
+        if (rx != null && request.getPrescriptionNumber() != null
+                && !request.getPrescriptionNumber().isBlank()
+                && !rx.getPrescriptionCode().equalsIgnoreCase(request.getPrescriptionNumber().trim())) {
+            boolean canonicalCodeMatches = rx.getVetPrescription() != null
+                    && rx.getVetPrescription().getPrescriptionNumber()
+                    .equalsIgnoreCase(request.getPrescriptionNumber().trim());
+            if (!canonicalCodeMatches) {
+                throw new IllegalArgumentException("Prescription number does not match the selected prescription");
+            }
+        }
+        if (rx != null && rx.getVetPrescription() != null) {
+            var canonical = vetRxRepository.findByIdForUpdate(rx.getVetPrescription().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Veterinary prescription not found"));
+            validateCanonicalPrescription(canonical);
+            rx.setVetPrescription(canonical);
+        }
+        return rx;
+    }
+
+    private PharmacyPrescription createPharmacyPrescription(
+            com.trustagro.veterinary.entity.Prescription vetPrescription, User user) {
+        PharmacyPatient patient = null;
+        if (vetPrescription.getFlockId() != null) {
+            patient = patientRepository.findByFlockId(vetPrescription.getFlockId()).orElseGet(() -> {
+                PharmacyPatient newPatient = new PharmacyPatient();
+                newPatient.setPatientName("Flock-" + vetPrescription.getFlockId());
+                newPatient.setSpecies("Chicken");
+                Flock flock = new Flock();
+                flock.setId(vetPrescription.getFlockId());
+                newPatient.setFlock(flock);
+                return patientRepository.save(newPatient);
+            });
+        }
+        if (patient == null || !Boolean.TRUE.equals(patient.getIsActive())) {
+            throw new IllegalStateException("Prescription has no active patient");
+        }
+        if (vetPrescription.getInventoryItem() == null || vetPrescription.getQuantity() == null
+                || !Double.isFinite(vetPrescription.getQuantity()) || vetPrescription.getQuantity() <= 0) {
+            throw new IllegalStateException("Prescription has invalid medicine or quantity");
+        }
+
+        PharmacyPrescription pharmacyPrescription = new PharmacyPrescription();
+        pharmacyPrescription.setPrescriptionCode(vetPrescription.getPrescriptionNumber());
+        pharmacyPrescription.setVetPrescription(vetPrescription);
+        pharmacyPrescription.setPatient(patient);
+        pharmacyPrescription.setPrescribedBy(vetPrescription.getCreatedByVet() != null
+                ? vetPrescription.getCreatedByVet() : user);
+        pharmacyPrescription.setDiagnosis(vetPrescription.getDrugName());
+        pharmacyPrescription.setStatus("Approved");
+        pharmacyPrescription = rxRepository.save(pharmacyPrescription);
+
+        PrescriptionItem item = new PrescriptionItem();
+        item.setPrescription(pharmacyPrescription);
+        item.setInventoryItem(vetPrescription.getInventoryItem());
+        item.setDosage(vetPrescription.getDosageInstruction());
+        item.setFrequency(vetPrescription.getFrequency());
+        item.setDurationDays(vetPrescription.getDurationDays());
+        item.setQuantityPrescribed(BigDecimal.valueOf(vetPrescription.getQuantity()));
+        item.setQuantityDispensed(BigDecimal.ZERO);
+        item.setIsActive(true);
+        rxItemRepository.save(item);
+        return pharmacyPrescription;
+    }
+
+    private void validateCanonicalPrescription(com.trustagro.veterinary.entity.Prescription prescription) {
+        if (prescription.getStatus() != com.trustagro.veterinary.entity.PrescriptionStatus.APPROVED) {
+            throw new IllegalStateException("Veterinary prescription must be APPROVED before dispensing");
+        }
+    }
+
+    private void validatePrescriptionForSale(PharmacyPrescription rx, List<PrescriptionItem> prescribedItems,
+                                             Map<Long, BigDecimal> requestedByItem) {
+        if (!"Approved".equalsIgnoreCase(rx.getStatus())) {
+            throw new IllegalStateException("Prescription must be Approved before dispensing");
+        }
+        validatePrescriptionPatient(rx);
+        if (prescribedItems.isEmpty()) {
+            throw new IllegalStateException("Prescription has no prescribed medicines");
+        }
+
+        Map<Long, BigDecimal> remainingByItem = new HashMap<>();
+        for (PrescriptionItem item : prescribedItems) {
+            if (item.getInventoryItem() != null && !Boolean.FALSE.equals(item.getIsActive())) {
+                remainingByItem.merge(item.getInventoryItem().getId(),
+                        remainingPrescriptionQuantity(item), BigDecimal::add);
+            }
+        }
+        requestedByItem.forEach((itemId, quantity) -> {
+            BigDecimal remaining = remainingByItem.get(itemId);
+            if (remaining == null) {
+                throw new IllegalStateException(
+                        "Medicine is not prescribed on prescription " + rx.getPrescriptionCode());
+            }
+            if (quantity.compareTo(remaining) > 0) {
+                throw new IllegalStateException(
+                        "Sale quantity exceeds the remaining prescribed quantity for "
+                                + prescribedItems.stream()
+                                .filter(item -> item.getInventoryItem() != null
+                                        && itemId.equals(item.getInventoryItem().getId()))
+                                .map(item -> item.getInventoryItem().getItemName())
+                                .findFirst().orElse("medicine"));
+            }
+        });
+    }
+
+    private void updatePrescriptionDispensedQuantities(PharmacyPrescription rx,
+                                                        List<PrescriptionItem> prescribedItems,
+                                                        Map<Long, BigDecimal> requestedByItem, User user) {
+        Map<Long, BigDecimal> remainingToRecord = new HashMap<>(requestedByItem);
+        for (PrescriptionItem item : prescribedItems) {
+            if (item.getInventoryItem() == null || Boolean.FALSE.equals(item.getIsActive())) {
+                continue;
+            }
+            Long itemId = item.getInventoryItem().getId();
+            BigDecimal toRecord = remainingToRecord.get(itemId);
+            if (toRecord == null || toRecord.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+            BigDecimal lineRemaining = remainingPrescriptionQuantity(item);
+            BigDecimal lineDispensed = toRecord.min(lineRemaining);
+            item.setQuantityDispensed(nvl(item.getQuantityDispensed()).add(lineDispensed));
+            remainingToRecord.put(itemId, toRecord.subtract(lineDispensed));
+        }
+
+        boolean fullyDispensed = prescribedItems.stream()
+                .filter(item -> !Boolean.FALSE.equals(item.getIsActive()))
+                .allMatch(item -> remainingPrescriptionQuantity(item).compareTo(BigDecimal.ZERO) <= 0);
+        rx.setStatus(fullyDispensed ? "Dispensed" : "Approved");
+        rx.setProcessedBy(user);
+        rxRepository.save(rx);
+        if (fullyDispensed && rx.getVetPrescription() != null) {
+            var vetPrescription = rx.getVetPrescription();
+            var now = LocalDateTime.now();
+            vetPrescription.setStatus(com.trustagro.veterinary.entity.PrescriptionStatus.COMPLETED);
+            vetPrescription.setDispensedBy(user);
+            vetPrescription.setDispensedAt(now);
+            vetPrescription.setCompletedAt(now);
+            vetRxRepository.save(vetPrescription);
+        }
+    }
+
+    private void validatePrescriptionPatient(PharmacyPrescription rx) {
+        if (rx.getPatient() == null || !Boolean.TRUE.equals(rx.getPatient().getIsActive())) {
+            throw new IllegalStateException("Prescription has no active patient");
+        }
+    }
+
+    private BigDecimal remainingPrescriptionQuantity(PrescriptionItem item) {
+        BigDecimal prescribed = nvl(item.getQuantityPrescribed());
+        BigDecimal dispensed = nvl(item.getQuantityDispensed());
+        if (prescribed.compareTo(BigDecimal.ZERO) <= 0 || dispensed.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalStateException("Prescription has invalid medicine quantities");
+        }
+        return prescribed.subtract(dispensed).max(BigDecimal.ZERO);
+    }
+
+    private BigDecimal nvl(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 
     /**
@@ -377,8 +590,9 @@ public class PharmacyService {
         invoice.setDueDate(java.time.LocalDate.now().plusDays(isCredit ? 14 : 0));
         invoice = invoiceRepository.save(invoice);
 
+        List<FinancePostingRequest> postings = new ArrayList<>();
         if (subtotal.compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(
+            postings.add(FinancePostingRequest.of(
                     com.trustagro.finance.entity.TransactionType.INCOME,
                     subtotal,
                     com.trustagro.finance.entity.BusinessUnit.PHARMACY,
@@ -389,10 +603,10 @@ public class PharmacyService {
                     com.trustagro.finance.entity.FinanceSourceTypes.REF_PHARMACY_SALE_REVENUE,
                     savedSale.getId(),
                     pm,
-                    java.time.LocalDate.now());
+                    java.time.LocalDate.now()));
         }
         if (tax.compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postTransaction(
+            postings.add(FinancePostingRequest.of(
                     com.trustagro.finance.entity.TransactionType.TRANSFER,
                     tax,
                     com.trustagro.finance.entity.BusinessUnit.PHARMACY,
@@ -403,17 +617,22 @@ public class PharmacyService {
                     com.trustagro.finance.entity.FinanceSourceTypes.REF_PHARMACY_SALE_VAT,
                     savedSale.getId(),
                     pm,
-                    java.time.LocalDate.now());
+                    java.time.LocalDate.now()));
         }
         if (totalCogs != null && totalCogs.compareTo(BigDecimal.ZERO) > 0) {
-            financeService.postCogs(
+            postings.add(FinancePostingRequest.of(
+                    com.trustagro.finance.entity.TransactionType.EXPENSE,
                     totalCogs,
                     com.trustagro.finance.entity.BusinessUnit.PHARMACY,
                     com.trustagro.finance.entity.AccountCode.COGS_PHARMACY.getCode(),
+                    com.trustagro.finance.entity.AccountCode.ASSET_INVENTORY.getCode(),
                     "Pharmacy COGS " + savedSale.getSaleCode(),
                     com.trustagro.finance.entity.FinanceSourceTypes.MODULE_PHARMACY,
                     com.trustagro.finance.entity.FinanceSourceTypes.REF_PHARMACY_SALE_COGS,
-                    savedSale.getId());
+                    savedSale.getId()));
+        }
+        if (!postings.isEmpty()) {
+            financeService.postTransactions(postings);
         }
     }
 

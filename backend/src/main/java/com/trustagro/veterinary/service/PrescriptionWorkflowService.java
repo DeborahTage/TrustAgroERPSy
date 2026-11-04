@@ -141,7 +141,7 @@ public class PrescriptionWorkflowService {
 
     @Transactional
     public PrescriptionResponse updateDraft(Long id, PrescriptionRequest req) {
-        Prescription p = require(id);
+        Prescription p = requireForUpdate(id);
         if (p.getStatus() != PrescriptionStatus.DRAFT) {
             throw new BusinessException("Only DRAFT prescriptions can be edited");
         }
@@ -156,7 +156,7 @@ public class PrescriptionWorkflowService {
 
     @Transactional
     public PrescriptionResponse submit(Long id) {
-        Prescription p = require(id);
+        Prescription p = requireForUpdate(id);
         if (p.getStatus() != PrescriptionStatus.DRAFT && p.getStatus() != PrescriptionStatus.SUBMITTED) {
             throw new BusinessException("Only DRAFT prescriptions can be submitted");
         }
@@ -171,7 +171,7 @@ public class PrescriptionWorkflowService {
 
     @Transactional
     public PrescriptionResponse approve(Long id) {
-        Prescription p = require(id);
+        Prescription p = requireForUpdate(id);
         if (!APPROVABLE.contains(p.getStatus())) {
             throw new BusinessException("Prescription cannot be approved from status " + p.getStatus());
         }
@@ -198,7 +198,7 @@ public class PrescriptionWorkflowService {
 
     @Transactional
     public PrescriptionResponse reject(Long id, RejectPrescriptionRequest req) {
-        Prescription p = require(id);
+        Prescription p = requireForUpdate(id);
         if (!APPROVABLE.contains(p.getStatus())) {
             throw new BusinessException("Prescription cannot be rejected from status " + p.getStatus());
         }
@@ -225,7 +225,7 @@ public class PrescriptionWorkflowService {
 
     @Transactional
     public PrescriptionResponse cancel(Long id) {
-        Prescription p = require(id);
+        Prescription p = requireForUpdate(id);
         if (!CANCELABLE.contains(p.getStatus())) {
             throw new BusinessException("Prescription cannot be cancelled from status " + p.getStatus());
         }
@@ -239,7 +239,7 @@ public class PrescriptionWorkflowService {
 
     @Transactional
     public PrescriptionResponse dispense(Long id, DispensePrescriptionRequest req) {
-        Prescription p = require(id);
+        Prescription p = requireForUpdate(id);
         if (p.getStatus() == PrescriptionStatus.DISPENSED || p.getStatus() == PrescriptionStatus.COMPLETED) {
             throw new BusinessException("Prescription already dispensed");
         }
@@ -429,6 +429,11 @@ public class PrescriptionWorkflowService {
 
     private Prescription require(Long id) {
         return prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found: " + id));
+    }
+
+    private Prescription requireForUpdate(Long id) {
+        return prescriptionRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription not found: " + id));
     }
 
