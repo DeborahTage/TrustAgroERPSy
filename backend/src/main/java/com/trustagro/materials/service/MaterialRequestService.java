@@ -13,6 +13,7 @@ import com.trustagro.finance.entity.FinanceTransaction;
 import com.trustagro.finance.entity.PaymentMethod;
 import com.trustagro.finance.entity.TransactionType;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.inventory.entity.InventoryItem;
 import com.trustagro.inventory.entity.Supplier;
 import com.trustagro.inventory.repository.InventoryItemRepository;
@@ -431,6 +432,7 @@ public class MaterialRequestService {
         receipt.setPosted(false);
         receipt = goodsReceiptRepository.save(receipt);
 
+        List<FinancePostingRequest> financePostings = new ArrayList<>();
         for (GoodsReceiptRequest.LineReceipt lr : body.getLines()) {
             MaterialRequestLine line = resolveLine(mr, lr.getLineId(), lr.getInventoryItemId());
             BigDecimal qty = lr.getQuantityReceived();
@@ -466,17 +468,22 @@ public class MaterialRequestService {
             stockData.put("referenceType", FinanceSourceTypes.REF_MATERIAL_RECEIPT);
             stockData.put("referenceId", receipt.getId() * 100_000L + line.getId());
 
-            Map<String, Object> stockResult = inventoryService.stockIn(
+            Map<String, Object> stockResult = inventoryService.stockInForFinanceBatch(
                     line.getInventoryItem().getId(),
                     qty.doubleValue(),
                     stockData,
-                    me);
+                    me,
+                    financePostings);
             Object batchId = stockResult.get("batchId");
             if (batchId != null) {
                 gl.setStockMovementId(Long.valueOf(batchId.toString()));
                 line.setLastStockMovementId(gl.getStockMovementId());
             }
             line.setQuantityReceived(nz(line.getQuantityReceived()).add(qty).setScale(3, RoundingMode.HALF_UP));
+        }
+
+        if (!financePostings.isEmpty()) {
+            financeService.postTransactions(financePostings);
         }
 
         receipt.setPosted(true);
@@ -532,6 +539,7 @@ public class MaterialRequestService {
         event.setPosted(false);
         event = issueEventRepository.save(event);
 
+        List<FinancePostingRequest> postings = new ArrayList<>();
         for (IssueRequest.LineIssue li : body.getLines()) {
             MaterialRequestLine line = resolveLine(mr, li.getLineId(), null);
             BigDecimal qty = li.getQuantityIssued();
@@ -578,17 +586,22 @@ public class MaterialRequestService {
                 cost = unitCost.multiply(qty).setScale(2, RoundingMode.HALF_UP);
             }
             if (cost.compareTo(BigDecimal.ZERO) > 0) {
-                financeService.postInventoryConsumption(
+                postings.add(FinancePostingRequest.of(
+                        TransactionType.EXPENSE,
                         cost,
                         BusinessUnit.GENERAL,
                         AccountCode.EXP_ADMIN.getCode(),
+                        AccountCode.ASSET_INVENTORY.getCode(),
                         "Material issue " + event.getIssueNumber() + " line " + line.getId(),
                         FinanceSourceTypes.MODULE_MATERIALS,
                         FinanceSourceTypes.REF_MATERIAL_ISSUE,
-                        event.getId() * 100_000L + line.getId());
+                        event.getId() * 100_000L + line.getId()));
             }
         }
 
+        if (!postings.isEmpty()) {
+            financeService.postTransactions(postings);
+        }
         event.setPosted(true);
         issueEventRepository.save(event);
         updateInternalFulfillmentStatus(mr);

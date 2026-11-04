@@ -3,7 +3,6 @@ package com.trustagro.inventory.controller;
 import com.trustagro.common.exception.BusinessException;
 import com.trustagro.inventory.dto.InventoryItemResponse;
 import com.trustagro.inventory.entity.InventoryItem;
-import com.trustagro.inventory.entity.ItemCategory;
 import com.trustagro.inventory.entity.ItemStatus;
 import com.trustagro.inventory.entity.PurchaseOrder;
 import com.trustagro.inventory.entity.PurchaseOrderStatus;
@@ -21,10 +20,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -39,10 +36,6 @@ public class InventoryController {
     private final StockMovementRepository movementRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final UserRepository userRepository;
-
-    // Categories that pharmacy can dispense
-    private static final Set<ItemCategory> PHARMACY_CATEGORIES =
-            Set.of(ItemCategory.DRUG, ItemCategory.VACCINE);
 
     public InventoryController(InventoryService inventoryService,
                                InventoryItemRepository itemRepository,
@@ -95,7 +88,7 @@ public class InventoryController {
     }
 
     @PostMapping("/items")
-    @PreAuthorize("hasAnyAuthority('inventory:create','inventory:update','pharmacy:sale','admin')")
+    @PreAuthorize("hasAnyAuthority('inventory:create','admin')")
     public ResponseEntity<InventoryItem> createItem(@RequestBody InventoryItem item) {
         if (item.getSku() == null || item.getSku().isBlank()) {
             String prefix = item.getCategory() != null ? item.getCategory().name() : "PHARM";
@@ -110,11 +103,12 @@ public class InventoryController {
         if (item.getStorageLocation() == null) {
             item.setStorageLocation("Pharmacy POS");
         }
+        item.setCurrentStock(0.0);
         return ResponseEntity.ok(itemRepository.save(item));
     }
 
     @PutMapping("/items/{id}")
-    @PreAuthorize("hasAnyAuthority('inventory:update','inventory:create','pharmacy:sale','admin')")
+    @PreAuthorize("hasAnyAuthority('inventory:update','admin')")
     public ResponseEntity<InventoryItem> updateItem(@PathVariable Long id, @RequestBody InventoryItem item) {
         return itemRepository.findById(id).map(existing -> {
             if (item.getItemName() != null && !item.getItemName().isBlank()) existing.setItemName(item.getItemName());
@@ -126,7 +120,6 @@ public class InventoryController {
             }
             if (item.getSellingPrice() != null) existing.setSellingPrice(item.getSellingPrice());
             if (item.getSubcategory() != null) existing.setSubcategory(item.getSubcategory());
-            if (item.getCurrentStock() != null) existing.setCurrentStock(item.getCurrentStock());
             return ResponseEntity.ok(itemRepository.save(existing));
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -344,30 +337,10 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.getPharmacyCatalog());
     }
 
-    /**
-     * Called by PharmacyService on each sale to deduct from inventory stock.
-     */
     @PostMapping("/pharmacy-deduct")
-    @PreAuthorize("hasAnyAuthority('pharmacy:sale','pharmacy:dispense')")
-    public ResponseEntity<Map<String, Object>> pharmacyDeduct(@RequestBody Map<String, Object> data, Authentication auth) {
-        try {
-            if (data.get("itemId") == null || data.get("quantity") == null) {
-                return ResponseEntity.badRequest().body(Map.of("error", "itemId and quantity are required"));
-            }
-            Long itemId = Long.valueOf(data.get("itemId").toString());
-            Double qty = Double.valueOf(data.get("quantity").toString());
-            if (qty <= 0) {
-                return ResponseEntity.badRequest().body(Map.of("error", "quantity must be greater than zero"));
-            }
-            Map<String, Object> result = inventoryService.stockOut(itemId, qty, "SALE", null, getUser(auth));
-            return ResponseEntity.ok(result);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            log.warn("PHARMACY_DEDUCT validation error: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("PHARMACY_DEDUCT_ERROR: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(Map.of("error", "Deduction failed: " + e.getMessage()));
-        }
+    @PreAuthorize("denyAll()")
+    public ResponseEntity<Void> pharmacyDeduct() {
+        return ResponseEntity.status(403).build();
     }
 
     @PostMapping("/transfer")

@@ -1,6 +1,11 @@
 package com.trustagro.inventory.service;
 
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.entity.AccountCode;
+import com.trustagro.finance.entity.BusinessUnit;
+import com.trustagro.finance.entity.FinanceSourceTypes;
+import com.trustagro.finance.entity.TransactionType;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.audit.service.AuditService;
 import com.trustagro.common.exception.ResourceNotFoundException;
 import com.trustagro.inventory.dto.*;
@@ -115,6 +120,21 @@ public class InventoryService {
 
     @Transactional
     public Map<String, Object> stockIn(Long itemId, Double quantity, Map<String, Object> data, User user) {
+        return stockIn(itemId, quantity, data, user, null);
+    }
+
+    @Transactional
+    public Map<String, Object> stockInForFinanceBatch(Long itemId, Double quantity,
+                                                      Map<String, Object> data, User user,
+                                                      List<FinancePostingRequest> financePostings) {
+        if (financePostings == null) {
+            throw new IllegalArgumentException("Finance posting batch is required");
+        }
+        return stockIn(itemId, quantity, data, user, financePostings);
+    }
+
+    private Map<String, Object> stockIn(Long itemId, Double quantity, Map<String, Object> data,
+                                        User user, List<FinancePostingRequest> financePostings) {
         InventoryItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory item not found: " + itemId));
 
@@ -192,12 +212,20 @@ public class InventoryService {
 
         // Auto-create inventory receipt on AP (asset, not expense). Failures are fatal for integrity.
         if (batch.getUnitCost() != null && batch.getUnitCost().compareTo(java.math.BigDecimal.ZERO) > 0) {
-            financeService.postInventoryReceipt(
-                    batch.getUnitCost().multiply(java.math.BigDecimal.valueOf(quantity)),
-                    "Stock receipt: " + item.getItemName() + " x" + quantity,
-                    com.trustagro.finance.entity.FinanceSourceTypes.MODULE_INVENTORY,
-                    com.trustagro.finance.entity.FinanceSourceTypes.REF_STOCK_IN,
-                    batch.getId());
+            java.math.BigDecimal receiptAmount =
+                    batch.getUnitCost().multiply(java.math.BigDecimal.valueOf(quantity));
+            String description = "Stock receipt: " + item.getItemName() + " x" + quantity;
+            if (financePostings == null) {
+                financeService.postInventoryReceipt(
+                        receiptAmount, description, FinanceSourceTypes.MODULE_INVENTORY,
+                        FinanceSourceTypes.REF_STOCK_IN, batch.getId());
+            } else {
+                financePostings.add(FinancePostingRequest.of(
+                        TransactionType.TRANSFER, receiptAmount, BusinessUnit.GENERAL,
+                        AccountCode.ASSET_INVENTORY.getCode(), AccountCode.LIABILITY_AP.getCode(),
+                        description, FinanceSourceTypes.MODULE_INVENTORY,
+                        FinanceSourceTypes.REF_STOCK_IN, batch.getId()));
+            }
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -220,6 +248,10 @@ public class InventoryService {
     @Transactional
     public Map<String, Object> stockOut(Long itemId, Double quantity, String reason, Long referenceId, User user,
                                         Long batchId, String referenceType, String movementTypeOverride) {
+        if (quantity == null || !Double.isFinite(quantity) || quantity <= 0) {
+            throw new IllegalArgumentException("Stock-out quantity must be a positive finite number");
+        }
+
         InventoryItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory item not found: " + itemId));
 
@@ -309,7 +341,86 @@ public class InventoryService {
         }
         auditService.log("STOCK_OUT", "INVENTORY", "InventoryItem", itemId,
                 null, "qty=" + quantity + ",reason=" + reason + ",newStock=" + newStock);
+        if (!movements.isEmpty()) {
+            result.put("movementId", movements.get(0).getId());
+        }
         return result;
+    }
+
+    @Transactional
+    public void reverseStockOutsForReference(String referenceType, Long referenceId,
+                                             String reversalReferenceType, User user) {
+        List<StockMovement> originalMovements =
+                movementRepository.findByReferenceTypeAndReferenceId(referenceType, referenceId).stream()
+                        .filter(movement -> movement.getMovementType() == MovementType.ISSUE
+                                || movement.getMovementType() == MovementType.SALE
+                                || movement.getMovementType() == MovementType.INTERNAL_CONSUMPTION)
+                        .toList();
+        if (originalMovements.isEmpty()) {
+            return;
+        }
+
+        List<Long> originalIds = originalMovements.stream().map(StockMovement::getId).toList();
+        Map<Long, Double> alreadyReversed = new HashMap<>();
+        movementRepository.findByReferenceTypeAndReferenceIdIn(reversalReferenceType, originalIds)
+                .forEach(movement -> alreadyReversed.merge(
+                        movement.getReferenceId(), movement.getQuantity(), Double::sum));
+
+        List<Long> itemIds = originalMovements.stream()
+                .map(movement -> movement.getItem().getId()).distinct().sorted().toList();
+        Map<Long, InventoryItem> itemsById = itemRepository.findAllByIdForUpdate(itemIds).stream()
+                .collect(java.util.stream.Collectors.toMap(InventoryItem::getId, item -> item));
+
+        List<Long> batchIds = originalMovements.stream()
+                .map(StockMovement::getBatch)
+                .filter(Objects::nonNull)
+                .map(StockBatch::getId).distinct().sorted().toList();
+        Map<Long, StockBatch> batchesById = batchIds.isEmpty() ? Map.of()
+                : batchRepository.findAllByIdForUpdate(batchIds).stream()
+                .collect(java.util.stream.Collectors.toMap(StockBatch::getId, batch -> batch));
+
+        List<StockMovement> reversals = new ArrayList<>();
+        for (StockMovement original : originalMovements) {
+            double remaining = original.getQuantity()
+                    - alreadyReversed.getOrDefault(original.getId(), 0.0);
+            if (remaining <= 0) {
+                continue;
+            }
+
+            InventoryItem item = itemsById.get(original.getItem().getId());
+            if (item == null) {
+                throw new ResourceNotFoundException("Inventory item not found: " + original.getItem().getId());
+            }
+            item.setCurrentStock((item.getCurrentStock() != null ? item.getCurrentStock() : 0.0) + remaining);
+            itemRepository.save(item);
+
+            StockBatch batch = original.getBatch() != null ? batchesById.get(original.getBatch().getId()) : null;
+            if (batch != null) {
+                batch.setQuantityRemaining((batch.getQuantityRemaining() != null
+                        ? batch.getQuantityRemaining() : 0.0) + remaining);
+                batchRepository.save(batch);
+            }
+
+            StockMovement reversal = new StockMovement();
+            reversal.setItem(item);
+            reversal.setBatch(batch);
+            reversal.setMovementType(MovementType.RETURN);
+            reversal.setQuantity(remaining);
+            reversal.setUnitCost(original.getUnitCost());
+            reversal.setTotalCost(original.getUnitCost() != null
+                    ? original.getUnitCost().multiply(BigDecimal.valueOf(remaining)) : original.getTotalCost());
+            reversal.setReferenceType(reversalReferenceType);
+            reversal.setReferenceId(original.getId());
+            reversal.setReasonCode(referenceType);
+            reversal.setCreatedBy(user);
+            reversals.add(reversal);
+        }
+
+        if (!reversals.isEmpty()) {
+            movementRepository.saveAll(reversals);
+            auditService.log("STOCK_OUT_REVERSED", "INVENTORY", "DailyFarmRecord", referenceId,
+                    null, "reversedMovements=" + reversals.size());
+        }
     }
 
     private MovementType resolveMovementType(String reason, String override) {

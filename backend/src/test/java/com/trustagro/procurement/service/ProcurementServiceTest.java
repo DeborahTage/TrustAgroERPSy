@@ -9,6 +9,7 @@ import com.trustagro.finance.entity.FinanceTransaction;
 import com.trustagro.finance.entity.PaymentMethod;
 import com.trustagro.finance.entity.TransactionType;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.inventory.entity.InventoryItem;
 import com.trustagro.inventory.entity.PurchaseOrder;
 import com.trustagro.inventory.entity.PurchaseOrderItem;
@@ -153,10 +154,24 @@ class ProcurementServiceTest {
                 .thenAnswer(inv -> tx(901L));
 
         AtomicLong batchIds = new AtomicLong(500);
-        lenient().when(inventoryService.stockIn(anyLong(), anyDouble(), any(), any())).thenAnswer(inv -> {
+        lenient().when(inventoryService.stockInForFinanceBatch(
+                anyLong(), anyDouble(), anyMap(), any(), anyList())).thenAnswer(inv -> {
             Map<String, Object> result = new LinkedHashMap<>();
-            result.put("batchId", batchIds.getAndIncrement());
+            long batchId = batchIds.getAndIncrement();
+            result.put("batchId", batchId);
             result.put("newStock", inv.getArgument(1));
+            Map<String, Object> data = inv.getArgument(2);
+            Object unitCost = data.get("unitCost");
+            if (unitCost != null && new BigDecimal(unitCost.toString()).compareTo(BigDecimal.ZERO) > 0) {
+                double quantity = inv.getArgument(1);
+                List<FinancePostingRequest> postings = inv.getArgument(4);
+                postings.add(FinancePostingRequest.of(TransactionType.TRANSFER,
+                        new BigDecimal(unitCost.toString()).multiply(BigDecimal.valueOf(quantity)),
+                        BusinessUnit.GENERAL, AccountCode.ASSET_INVENTORY.getCode(),
+                        AccountCode.LIABILITY_AP.getCode(),
+                        "Stock receipt: " + feedItem.getItemName() + " x" + quantity,
+                        FinanceSourceTypes.MODULE_INVENTORY, FinanceSourceTypes.REF_STOCK_IN, batchId));
+            }
             return result;
         });
     }
@@ -293,7 +308,18 @@ class ProcurementServiceTest {
         var posted = service.postGoodsReceipt(grn.getId());
         assertEquals(GoodsReceiptStatus.POSTED, posted.getStatus());
         assertEquals(PurchaseOrderStatus.FULLY_RECEIVED, po.getStatus());
-        verify(inventoryService, times(1)).stockIn(eq(20L), eq(100.0), anyMap(), eq(approver));
+        verify(inventoryService, times(1)).stockInForFinanceBatch(
+                eq(20L), eq(100.0), anyMap(), eq(approver), anyList());
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(financeService).postTransactions(postingsCaptor.capture());
+        assertEquals(1, postingsCaptor.getValue().size());
+        FinancePostingRequest posting = postingsCaptor.getValue().get(0);
+        assertEquals(TransactionType.TRANSFER, posting.transactionType());
+        assertEquals(0, new BigDecimal("10000.00").compareTo(posting.amount()));
+        assertEquals(AccountCode.ASSET_INVENTORY.getCode(), posting.debitAccountCode());
+        assertEquals(AP, posting.creditAccountCode());
+        assertEquals(FinanceSourceTypes.REF_STOCK_IN, posting.referenceType());
+        assertEquals(500L, posting.referenceId());
         verify(auditService).log(eq("GRN_POSTED"), eq("PROCUREMENT"),
                 eq("GoodsReceipt"), eq(grn.getId()), isNull(), eq(grn.getGrnNumber()));
         verify(notificationService).createRoleNotification(eq("GRN posted"),
@@ -317,7 +343,8 @@ class ProcurementServiceTest {
         service.postGoodsReceipt(81L);
         assertEquals(PurchaseOrderStatus.PARTIALLY_RECEIVED, po.getStatus());
         assertEquals(40.0, poi.getQuantityReceived(), 1e-9);
-        verify(inventoryService, times(1)).stockIn(eq(20L), eq(40.0), anyMap(), eq(approver));
+        verify(inventoryService, times(1)).stockInForFinanceBatch(
+                eq(20L), eq(40.0), anyMap(), eq(approver), anyList());
 
         // Second GRN: remaining 60
         GoodsReceipt grn2 = goodsReceipt(82L, po, GoodsReceiptStatus.DRAFT);
@@ -328,8 +355,11 @@ class ProcurementServiceTest {
         service.postGoodsReceipt(82L);
         assertEquals(PurchaseOrderStatus.FULLY_RECEIVED, po.getStatus());
         assertEquals(100.0, poi.getQuantityReceived(), 1e-9);
-        verify(inventoryService, times(1)).stockIn(eq(20L), eq(60.0), anyMap(), eq(approver));
-        verify(inventoryService, times(2)).stockIn(anyLong(), anyDouble(), any(), any());
+        verify(inventoryService, times(1)).stockInForFinanceBatch(
+                eq(20L), eq(60.0), anyMap(), eq(approver), anyList());
+        verify(inventoryService, times(2)).stockInForFinanceBatch(
+                anyLong(), anyDouble(), anyMap(), any(), anyList());
+        verify(financeService, times(2)).postTransactions(anyList());
     }
 
     @Test
@@ -344,7 +374,8 @@ class ProcurementServiceTest {
 
         BusinessException ex = assertThrows(BusinessException.class, () -> service.createGoodsReceipt(req));
         assertTrue(ex.getMessage().contains("Cannot receive more than remaining"));
-        verify(inventoryService, never()).stockIn(anyLong(), anyDouble(), any(), any());
+        verify(inventoryService, never()).stockInForFinanceBatch(
+                anyLong(), anyDouble(), anyMap(), any(), anyList());
         verify(goodsReceiptItemRepository, never()).save(any());
     }
 
@@ -364,7 +395,8 @@ class ProcurementServiceTest {
 
         var second = service.postGoodsReceipt(90L);
         assertEquals(GoodsReceiptStatus.POSTED, second.getStatus());
-        verify(inventoryService, times(1)).stockIn(anyLong(), anyDouble(), any(), any());
+        verify(inventoryService, times(1)).stockInForFinanceBatch(
+                anyLong(), anyDouble(), anyMap(), any(), anyList());
         verify(auditService, times(1)).log(eq("GRN_POSTED"), any(), any(), any(), any(), any());
     }
 
@@ -434,7 +466,8 @@ class ProcurementServiceTest {
         assertEquals(SupplierInvoiceStatus.APPROVED, approved.getStatus());
 
         verify(financeService, never()).postInventoryReceipt(any(), any(), any(), any(), any());
-        verify(inventoryService, never()).stockIn(anyLong(), anyDouble(), any(), any());
+        verify(inventoryService, never()).stockInForFinanceBatch(
+                anyLong(), anyDouble(), anyMap(), any(), anyList());
         verify(auditService).log(eq("PROC_SINV_APPROVED"), eq("PROCUREMENT"),
                 eq("SupplierInvoice"), eq(200L), isNull(), eq(approver.getEmail()));
     }
@@ -469,7 +502,8 @@ class ProcurementServiceTest {
                 eq(PaymentMethod.BANK_TRANSFER),
                 any());
         verify(financeService, never()).postInventoryReceipt(any(), any(), any(), any(), any());
-        verify(inventoryService, never()).stockIn(anyLong(), anyDouble(), any(), any());
+        verify(inventoryService, never()).stockInForFinanceBatch(
+                anyLong(), anyDouble(), anyMap(), any(), anyList());
         verify(auditService).log(eq("PROC_PAYMENT_RECORDED"), eq("PROCUREMENT"),
                 eq("SupplierPayment"), any(), isNull(), startsWith("SPAY-"));
     }

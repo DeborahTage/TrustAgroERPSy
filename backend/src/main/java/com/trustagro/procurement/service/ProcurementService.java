@@ -9,6 +9,7 @@ import com.trustagro.finance.entity.FinanceSourceTypes;
 import com.trustagro.finance.entity.PaymentMethod;
 import com.trustagro.finance.entity.TransactionType;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.inventory.entity.*;
 import com.trustagro.inventory.repository.InventoryItemRepository;
 import com.trustagro.inventory.repository.PurchaseOrderItemRepository;
@@ -419,6 +420,7 @@ public class ProcurementService {
             throw new BusinessException("GRN has no lines to post");
         }
 
+        List<FinancePostingRequest> financePostings = new ArrayList<>();
         for (GoodsReceiptItem line : lines) {
             PurchaseOrderItem poi = line.getPurchaseOrderItem();
             double remaining = remainingQty(poi);
@@ -447,8 +449,8 @@ public class ProcurementService {
             data.put("referenceType", FinanceSourceTypes.REF_PROCUREMENT_GRN);
             data.put("referenceId", grn.getId());
 
-            Map<String, Object> stockResult = inventoryService.stockIn(
-                    line.getItem().getId(), line.getReceivedQty(), data, me);
+            Map<String, Object> stockResult = inventoryService.stockInForFinanceBatch(
+                    line.getItem().getId(), line.getReceivedQty(), data, me, financePostings);
             Object batchId = stockResult.get("batchId");
             if (batchId != null) {
                 line.setStockBatchId(Long.valueOf(batchId.toString()));
@@ -458,6 +460,10 @@ public class ProcurementService {
             double newReceived = poi.getQuantityReceived() + line.getReceivedQty();
             poi.setQuantityReceived(newReceived);
             purchaseOrderItemRepository.save(poi);
+        }
+
+        if (!financePostings.isEmpty()) {
+            financeService.postTransactions(financePostings);
         }
 
         refreshPoReceiptStatus(po);

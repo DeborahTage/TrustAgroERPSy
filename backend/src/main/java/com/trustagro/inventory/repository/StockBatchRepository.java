@@ -1,7 +1,9 @@
 package com.trustagro.inventory.repository;
 
 import com.trustagro.inventory.entity.StockBatch;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -23,4 +25,8 @@ public interface StockBatchRepository extends JpaRepository<StockBatch, Long> {
     List<StockBatch> findByItemIdOrderByReceivedDateAsc(Long itemId);
 
     List<StockBatch> findByExpiryDate(LocalDate expiryDate);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM StockBatch b WHERE b.id IN :ids ORDER BY b.id")
+    List<StockBatch> findAllByIdForUpdate(@Param("ids") List<Long> ids);
 }

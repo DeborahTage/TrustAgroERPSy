@@ -10,6 +10,7 @@ import com.trustagro.inventory.entity.RequisitionStatus;
 import com.trustagro.inventory.repository.InternalRequisitionRepository;
 import com.trustagro.inventory.repository.InventoryItemRepository;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.user.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -117,6 +119,7 @@ public class RequisitionService {
         req.setIssuedBy(user);
         req.setIssuedAt(LocalDateTime.now());
 
+        List<FinancePostingRequest> postings = new ArrayList<>();
         for (RequisitionItem ri : req.getItems()) {
             ri.setQuantityIssued(ri.getQuantityApproved());
             // Call InventoryService to physically deduct stock
@@ -131,18 +134,22 @@ public class RequisitionService {
 
                 // One posting per requisition item line via composite reference: requisitionId * 100000 + itemId
                 Long lineRef = req.getId() * 100_000L + ri.getItem().getId();
-                financeService.postInventoryConsumption(
+                postings.add(FinancePostingRequest.of(
+                        com.trustagro.finance.entity.TransactionType.EXPENSE,
                         ri.getUnitCost().multiply(java.math.BigDecimal.valueOf(ri.getQuantityIssued())),
                         com.trustagro.finance.entity.BusinessUnit.GENERAL,
                         "5120",
+                        com.trustagro.finance.entity.AccountCode.ASSET_INVENTORY.getCode(),
                         desc,
                         com.trustagro.finance.entity.FinanceSourceTypes.MODULE_INVENTORY,
                         com.trustagro.finance.entity.FinanceSourceTypes.REF_REQUISITION,
-                        lineRef
-                );
+                        lineRef));
             }
         }
 
+        if (!postings.isEmpty()) {
+            financeService.postTransactions(postings);
+        }
         return requisitionRepository.save(req);
     }
 }

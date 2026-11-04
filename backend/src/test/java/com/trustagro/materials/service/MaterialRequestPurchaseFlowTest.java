@@ -6,8 +6,11 @@ import com.trustagro.farm.repository.FarmRepository;
 import com.trustagro.farm.service.FarmAccessService;
 import com.trustagro.finance.entity.FinanceSourceTypes;
 import com.trustagro.finance.entity.FinanceTransaction;
+import com.trustagro.finance.entity.AccountCode;
+import com.trustagro.finance.entity.BusinessUnit;
 import com.trustagro.finance.entity.TransactionType;
 import com.trustagro.finance.service.FinanceService;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.inventory.entity.InventoryItem;
 import com.trustagro.inventory.entity.Supplier;
 import com.trustagro.inventory.repository.InventoryItemRepository;
@@ -29,6 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -200,7 +204,21 @@ class MaterialRequestPurchaseFlowTest {
         Map<String, Object> stockResult = new HashMap<>();
         stockResult.put("batchId", 77L);
         stockResult.put("newStock", 50.0);
-        when(inventoryService.stockIn(eq(10L), eq(50.0), anyMap(), eq(storeUser))).thenReturn(stockResult);
+        when(inventoryService.stockInForFinanceBatch(
+                eq(10L), eq(50.0), anyMap(), eq(storeUser), anyList())).thenAnswer(invocation -> {
+            List<FinancePostingRequest> postings = invocation.getArgument(4);
+            postings.add(FinancePostingRequest.of(
+                    TransactionType.TRANSFER,
+                    new BigDecimal("1000.000"),
+                    BusinessUnit.GENERAL,
+                    AccountCode.ASSET_INVENTORY.getCode(),
+                    AccountCode.LIABILITY_AP.getCode(),
+                    "Stock receipt: Vaccine x50.0",
+                    FinanceSourceTypes.MODULE_INVENTORY,
+                    FinanceSourceTypes.REF_STOCK_IN,
+                    77L));
+            return stockResult;
+        });
 
         GoodsReceiptRequest body = new GoodsReceiptRequest();
         GoodsReceiptRequest.LineReceipt lr = new GoodsReceiptRequest.LineReceipt();
@@ -212,7 +230,19 @@ class MaterialRequestPurchaseFlowTest {
 
         var resp = service.registerGoodsReceipt(200L, body);
         assertEquals(0, new BigDecimal("50.000").compareTo(resp.getLines().get(0).getQuantityReceived()));
-        verify(inventoryService, times(1)).stockIn(eq(10L), eq(50.0), anyMap(), eq(storeUser));
+        verify(inventoryService, times(1)).stockInForFinanceBatch(
+                eq(10L), eq(50.0), anyMap(), eq(storeUser), anyList());
+        ArgumentCaptor<List<FinancePostingRequest>> postingsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(financeService).postTransactions(postingsCaptor.capture());
+        assertEquals(1, postingsCaptor.getValue().size());
+        FinancePostingRequest posting = postingsCaptor.getValue().get(0);
+        assertEquals(TransactionType.TRANSFER, posting.transactionType());
+        assertEquals(0, new BigDecimal("1000.00").compareTo(posting.amount()));
+        assertEquals(AccountCode.ASSET_INVENTORY.getCode(), posting.debitAccountCode());
+        assertEquals(AccountCode.LIABILITY_AP.getCode(), posting.creditAccountCode());
+        assertEquals(FinanceSourceTypes.MODULE_INVENTORY, posting.sourceModule());
+        assertEquals(FinanceSourceTypes.REF_STOCK_IN, posting.referenceType());
+        assertEquals(77L, posting.referenceId());
 
         // payment path never stocks
         verify(inventoryService, never()).stockOut(any(), any(), any(), any(), any());

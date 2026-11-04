@@ -1,6 +1,7 @@
 package com.trustagro.qa.e2e;
 
 import com.trustagro.finance.entity.*;
+import com.trustagro.finance.service.FinancePostingRequest;
 import com.trustagro.inventory.entity.InventoryItem;
 import com.trustagro.inventory.entity.PurchaseOrder;
 import com.trustagro.inventory.entity.PurchaseOrderItem;
@@ -92,7 +93,8 @@ class GoldenProcurementApFinanceScenarioTest {
         supplier = QaEntities.supplier(10L, "SUP-1", "Feed Co");
         feedItem = QaEntities.item(20L, "FEED-1", "Layer Feed", 0.0, new BigDecimal("100.00"));
 
-        when(inventoryService.stockIn(anyLong(), anyDouble(), anyMap(), any())).thenAnswer(inv -> {
+        when(inventoryService.stockInForFinanceBatch(
+                anyLong(), anyDouble(), anyMap(), any(), anyList())).thenAnswer(inv -> {
             stockInCalls.incrementAndGet();
             double qty = inv.getArgument(1);
             Map<String, Object> data = inv.getArgument(2);
@@ -100,12 +102,17 @@ class GoldenProcurementApFinanceScenarioTest {
                     ? new BigDecimal(data.get("unitCost").toString())
                     : new BigDecimal("100.00");
             BigDecimal amount = unitCost.multiply(BigDecimal.valueOf(qty));
-            finance.finance().postInventoryReceipt(
+            List<FinancePostingRequest> postings = inv.getArgument(4);
+            postings.add(FinancePostingRequest.of(
+                    TransactionType.TRANSFER,
                     amount,
-                    "GRN stock-in",
-                    FinanceSourceTypes.MODULE_PROCUREMENT,
-                    FinanceSourceTypes.REF_PROCUREMENT_GRN,
-                    ((Number) data.get("referenceId")).longValue());
+                    BusinessUnit.GENERAL,
+                    AccountCode.ASSET_INVENTORY.getCode(),
+                    AccountCode.LIABILITY_AP.getCode(),
+                    "Stock receipt: " + feedItem.getItemName() + " x" + qty,
+                    FinanceSourceTypes.MODULE_INVENTORY,
+                    FinanceSourceTypes.REF_STOCK_IN,
+                    500L));
             feedItem.setCurrentStock(feedItem.getCurrentStock() + qty);
             Map<String, Object> result = new HashMap<>();
             result.put("batchId", 500L);

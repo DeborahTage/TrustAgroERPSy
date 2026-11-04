@@ -7,10 +7,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface StockMovementRepository extends JpaRepository<StockMovement, Long> {
     List<StockMovement> findByItemId(Long itemId);
+    List<StockMovement> findByReferenceTypeAndReferenceId(String referenceType, Long referenceId);
+    List<StockMovement> findByReferenceTypeAndReferenceIdIn(String referenceType, Collection<Long> referenceIds);
 
     @Query("SELECT m FROM StockMovement m WHERE m.item.id = :itemId AND m.movementType = 'SALE' AND m.createdAt >= :since ORDER BY m.createdAt ASC")
     List<StockMovement> findRecentSalesByItemId(@Param("itemId") Long itemId, @Param("since") LocalDateTime since);
