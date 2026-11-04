@@ -11,7 +11,7 @@ class ProductionConfigValidatorTest {
     void missingJwtSecretFailsFast() {
         ProductionConfigValidator validator = new ProductionConfigValidator();
         ReflectionTestUtils.setField(validator, "jwtSecret", "");
-        ReflectionTestUtils.setField(validator, "dbPassword", "secure-db-password");
+        ReflectionTestUtils.setField(validator, "dbPassword", "generated-database-password-material-2026");
         setValidDatabaseConfig(validator);
         ReflectionTestUtils.setField(validator, "corsAllowedOrigins", "https://app.example.com");
 
@@ -24,7 +24,7 @@ class ProductionConfigValidatorTest {
     void shortJwtSecretFailsFast() {
         ProductionConfigValidator validator = new ProductionConfigValidator();
         ReflectionTestUtils.setField(validator, "jwtSecret", "too-short");
-        ReflectionTestUtils.setField(validator, "dbPassword", "secure-db-password");
+        ReflectionTestUtils.setField(validator, "dbPassword", "generated-database-password-material-2026");
         setValidDatabaseConfig(validator);
         ReflectionTestUtils.setField(validator, "corsAllowedOrigins", "https://app.example.com");
 
@@ -35,7 +35,7 @@ class ProductionConfigValidatorTest {
     @Test
     void blankDbPasswordFailsFast() {
         ProductionConfigValidator validator = new ProductionConfigValidator();
-        ReflectionTestUtils.setField(validator, "jwtSecret", "LocalDevOnlyTrustAgroJwtSecretKeyMustBeLongEnough123");
+        ReflectionTestUtils.setField(validator, "jwtSecret", "generated-jwt-signing-material-with-sufficient-length-2026");
         ReflectionTestUtils.setField(validator, "dbPassword", "  ");
         setValidDatabaseConfig(validator);
         ReflectionTestUtils.setField(validator, "corsAllowedOrigins", "https://app.example.com");
@@ -81,6 +81,14 @@ class ProductionConfigValidatorTest {
     }
 
     @Test
+    void wildcardCorsFailsEvenWhenExplicitOriginsAreAlsoConfigured() {
+        ProductionConfigValidator validator = validValidator();
+        ReflectionTestUtils.setField(validator, "corsAllowedOrigins", "https://app.example.org,*");
+
+        assertThrows(IllegalStateException.class, validator::validate);
+    }
+
+    @Test
     void emptyCorsFailsFast() {
         ProductionConfigValidator validator = validValidator();
         ReflectionTestUtils.setField(validator, "corsAllowedOrigins", "  ,  ");
@@ -93,6 +101,31 @@ class ProductionConfigValidatorTest {
     void validConfigPasses() {
         ProductionConfigValidator validator = validValidator();
         assertDoesNotThrow(validator::validate);
+    }
+
+    @Test
+    void documentedPlaceholderJwtSecretFailsFast() {
+        ProductionConfigValidator validator = validValidator();
+        ReflectionTestUtils.setField(validator, "jwtSecret", "<generate-secure-secret>");
+
+        assertThrows(IllegalStateException.class, validator::validate);
+    }
+
+    @Test
+    void postgresSuperuserIsRejectedAsApplicationDatabaseRole() {
+        ProductionConfigValidator validator = validValidator();
+        ReflectionTestUtils.setField(validator, "dbUsername", "postgres");
+
+        assertThrows(IllegalStateException.class, validator::validate);
+    }
+
+    @Test
+    void exampleInitialAdminCredentialsAreRejected() {
+        ProductionConfigValidator validator = validValidator();
+        ReflectionTestUtils.setField(validator, "initialAdminEmail", "admin@example.com");
+        ReflectionTestUtils.setField(validator, "initialAdminPassword", "generated-admin-password-material");
+
+        assertThrows(IllegalStateException.class, validator::validate);
     }
 
     @Test
@@ -124,8 +157,8 @@ class ProductionConfigValidatorTest {
 
     private ProductionConfigValidator validValidator() {
         ProductionConfigValidator validator = new ProductionConfigValidator();
-        ReflectionTestUtils.setField(validator, "jwtSecret", "LocalDevOnlyTrustAgroJwtSecretKeyMustBeLongEnough123");
-        ReflectionTestUtils.setField(validator, "dbPassword", "secure-db-password");
+        ReflectionTestUtils.setField(validator, "jwtSecret", "generated-jwt-signing-material-with-sufficient-length-2026");
+        ReflectionTestUtils.setField(validator, "dbPassword", "generated-database-password-material-2026");
         setValidDatabaseConfig(validator);
         ReflectionTestUtils.setField(validator, "corsAllowedOrigins", "https://app.example.com");
         ReflectionTestUtils.setField(validator, "seedDemoUsers", false);

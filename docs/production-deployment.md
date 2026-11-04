@@ -7,11 +7,11 @@ Browser / SPA (React)
         |
         | HTTPS
         v
-  Frontend (nginx static)     optional: same-origin /api proxy
+  Frontend (nginx static + same-origin /api proxy)
         |
-        | REACT_APP_API_URL → backend
+        | /api → backend (internal network)
         v
-  Backend (Spring Boot 3, port 8081)
+  Backend (Spring Boot 3, internal port 8081)
         |  JWT auth, department RBAC, Actuator /actuator/health
         v
   PostgreSQL 15
@@ -41,31 +41,45 @@ export SPRING_PROFILES_ACTIVE=prod
 
 | Variable | Purpose |
 |----------|---------|
-| `APP_JWT_SECRET` | JWT HMAC secret, **≥ 32 characters** |
+| `APP_JWT_SECRET` | Generated JWT HMAC secret, **≥ 32 characters** |
 | `DB_URL` | JDBC URL, e.g. `jdbc:postgresql://host:5432/trust_agro_db` |
-| `DB_USERNAME` | DB user |
-| `DB_PASSWORD` | DB password (must be non-blank) |
+| `DB_USERNAME` | Least-privilege application database role (must not be `postgres`) |
+| `DB_PASSWORD` | Generated application-role password, **≥ 24 characters** |
 | `APP_CORS_ALLOWED_ORIGINS` | Comma-separated explicit origins (not sole `*`) |
+| `DB_BOOTSTRAP_USERNAME` | PostgreSQL container initialization/superuser account; never used by the backend |
+| `DB_BOOTSTRAP_PASSWORD` | Generated bootstrap password; never used by the backend |
+| `INITIAL_ADMIN_EMAIL` | Optional one-time administrator email; required with its password only on an empty install |
+| `INITIAL_ADMIN_PASSWORD` | One-time generated administrator password, **≥ 16 characters** |
 
-Optional: `SERVER_PORT`, `UPLOAD_DIR`, `REACT_APP_API_URL` (frontend build-time).
+Optional: `SERVER_PORT`, `UPLOAD_DIR`.
 
-Copy `.env.example` → `.env` and fill values. **Never commit real secrets.**
+Copy `.env.example` → `.env`; generate separate values for the bootstrap password,
+application database password, and JWT secret (for example with
+`openssl rand -base64 48`). Never reuse the bootstrap credentials for the backend
+and never commit `.env` or generated credentials. The backend refuses known
+example placeholders, weak production passwords, and the PostgreSQL superuser.
+If the database already contains an administrator, leave the one-time admin
+variables blank. On a clean database, set them explicitly or provision the first
+administrator through an approved out-of-band process; production startup fails
+closed rather than starting with no administrator.
 
-`ProductionConfigValidator` (`@Profile("prod")`) aborts startup if JWT/password/CORS rules fail. Error messages do not echo secret values.
+`ProductionConfigValidator` (`@Profile("prod")`) aborts startup if required
+secret, runtime-role, database, seed, or CORS rules fail. Error messages do not
+echo secret values.
 
 ---
 
 ## Schema strategy
 
 - **Flyway:** Spring Boot runs Flyway migrations automatically on startup from `classpath:db/migration/`.
-  - Baseline migration `V1__initial_schema.sql` establishes all 129 tables, primary keys, identity sequences, indexes, and constraints.
+  - `V1__initial_schema.sql` establishes the baseline schema; subsequent migrations apply reviewed schema changes.
   - `spring.flyway.baseline-on-migrate=true` and `spring.flyway.baseline-version=1` allow existing databases to adopt Flyway without reapplying the baseline script.
 - **Hibernate validation:** In `prod`, `spring.jpa.hibernate.ddl-auto=validate` ensures the application's JPA entity mappings strictly match the Flyway-managed schema.
 - **local:** `spring.jpa.hibernate.ddl-auto=update` with Flyway disabled for rapid local H2 iteration.
 
 ### PostgreSQL bootstrap (staging / empty database)
 
-Because Flyway automatically applies `V1__initial_schema.sql` on backend startup, starting a clean staging or production stack requires no manual DDL commands:
+Because Flyway automatically applies pending migrations on backend startup, starting a clean staging or production stack requires no manual application DDL commands:
 
 ```bash
 # 1. Prepare .env with secrets and optional INITIAL_ADMIN_EMAIL / INITIAL_ADMIN_PASSWORD
@@ -77,11 +91,11 @@ docker compose up -d
 
 The backend container will:
 1. Wait for PostgreSQL to be healthy.
-2. Execute Flyway migrations (`V1__initial_schema.sql`).
+2. Execute Flyway migrations V1 through V3.
 3. Validate entity mappings against the database schema (`ddl-auto=validate`).
 4. Seed canonical role permissions via `RoleSeeder`.
 5. Seed number sequences via `ProcurementDataInitializer` and `HrDataInitializer`.
-6. Provision the initial administrator account via `InitialAdminProvisioner` (if `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` are configured and no admin exists).
+6. Provision the initial administrator account via `InitialAdminProvisioner` when one-time credentials are configured and no admin exists; startup fails closed if a clean database has no administrator credentials.
 
 ---
 
@@ -93,7 +107,7 @@ For staging and production:
 1. Supply `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` in `.env`.
 2. On initial startup with an empty database, `InitialAdminProvisioner` creates the administrator account with `Role.ADMIN` and a BCrypt-hashed password.
 3. If an administrator account already exists, `InitialAdminProvisioner` cleanly skips creation.
-4. If `INITIAL_ADMIN_EMAIL` / `INITIAL_ADMIN_PASSWORD` are left blank, the application starts with zero users and logs a clear setup notice, allowing administrators to be inserted via secure out-of-band management.
+4. If one-time initial administrator credentials are left blank and no administrator exists, production startup fails. Provision through an approved out-of-band process or set generated one-time credentials.
 
 ---
 
@@ -124,8 +138,7 @@ From the repo root (after filling `.env`):
 
 ```bash
 cp .env.example .env
-# edit .env — set APP_JWT_SECRET, DB_PASSWORD, CORS, REACT_APP_API_URL
-# If the host already uses 5432, set POSTGRES_PORT=5434 (or another free port)
+# edit .env — provide generated bootstrap, application DB, and JWT credentials plus CORS
 
 # Build artifacts on the host (images copy these; they do not run Maven/npm inside Docker)
 cd backend && mvn -B test package && cd ..
@@ -135,11 +148,25 @@ docker compose build
 docker compose up -d
 ```
 
-Services: `postgres:15`, `backend` (`SPRING_PROFILES_ACTIVE=prod`, port `${BACKEND_PORT:-8081}`), `frontend` (nginx on `${FRONTEND_PORT:-3000}`).
+Services: `postgres:15`, `backend` (`SPRING_PROFILES_ACTIVE=prod`, internal port 8081), and `frontend` (nginx on `${FRONTEND_PORT:-3000}`). PostgreSQL and backend ports are internal to the Compose network; the frontend proxies `/api/` to the backend on the same origin. The local CRA development server proxies API requests to `localhost:8081`.
+
+On a new PostgreSQL volume, the initialization script creates the configured
+application role with database-connect and public-schema usage/create privileges;
+the application connects only as this role. Initialization scripts run only
+when PostgreSQL creates an empty data directory. For an existing volume, have a
+database administrator create the application login and assess ownership of
+existing application tables and sequences. Granting CONNECT and USAGE/CREATE on
+`public` alone is not sufficient: Flyway must be able to alter its existing
+objects, so the runtime role must own those objects (or the database must be
+migrated under an explicitly approved ownership strategy). Then set the runtime
+`DB_USERNAME` and `DB_PASSWORD`. Do not change the stored PostgreSQL bootstrap
+credentials to the application credentials.
 
 Backend image: Temurin JRE 17, non-root user, copies `backend/target/trust-agro-backend-1.0.0.jar`, healthcheck on Actuator.
 
-Frontend image: nginx copies `frontend/build/` (built on the host with `REACT_APP_API_URL`). Rebuild the frontend image after changing that URL.
+Frontend image: nginx copies `frontend/build/`. The build uses relative `/api/...`
+requests, which nginx proxies to the backend; no API hostname is embedded in the
+production bundle.
 
 Optional: `COMPOSE_PROJECT_NAME=trustagro_staging` to isolate volumes from other Compose projects on the same host.
 
@@ -150,7 +177,8 @@ Optional: `COMPOSE_PROJECT_NAME=trustagro_staging` to isolate volumes from other
 ### Dump
 
 ```bash
-pg_dump -h localhost -U trustagro -d trust_agro_db -Fc -f trust_agro_$(date +%Y%m%d).dump
+docker compose exec -T postgres sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' \
+  > trust_agro_$(date +%Y%m%d).dump
 ```
 
 ### Restore
@@ -158,9 +186,9 @@ pg_dump -h localhost -U trustagro -d trust_agro_db -Fc -f trust_agro_$(date +%Y%
 Restore onto a **separate** database. Never restore over the live staging/production database as the first test.
 
 ```bash
-# inside the postgres container, or with PGPASSWORD from your secret store
-createdb -h localhost -U trustagro trust_agro_restore_test
-pg_restore -h localhost -U trustagro -d trust_agro_restore_test --no-owner trust_agro_YYYYMMDD.dump
+docker compose exec postgres sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" createdb -U "$POSTGRES_USER" trust_agro_restore_test'
+docker compose exec -T postgres sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_restore -U "$POSTGRES_USER" -d trust_agro_restore_test --no-owner' \
+  < trust_agro_YYYYMMDD.dump
 ```
 
 Overwriting the live database is a last-resort recovery step, not a validation procedure.
@@ -192,6 +220,17 @@ Store dumps encrypted offline. Test restores on a staging database regularly.
 3. Restart backend instances.
 4. Users must log in again.
 5. Never log or commit the secret. Do not put secrets in image layers — use runtime env / secret manager.
+
+---
+
+## Rate limiting & horizontal scaling
+
+Login rate limiting is implemented in-memory (`AuthService`) with an eviction-bounded window (5 failed attempts per 15-minute window per IP and per email account).
+
+**Single-Instance Architecture Note:**
+- The in-memory tracker is local to the JVM instance and resets on container restart.
+- In a horizontally scaled deployment (multiple backend containers behind a load balancer), rate-limiting state is not synchronized across instances.
+- **Pre-Scaling Recommendation:** Before scaling backend services beyond a single container, implement a shared rate-limiting store (such as Redis token buckets) or configure ingress rate limiting at the reverse-proxy layer (e.g. Nginx `limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;`).
 
 ---
 

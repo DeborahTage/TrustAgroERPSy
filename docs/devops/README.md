@@ -65,21 +65,26 @@ Production requires these variables (names only; never commit their values):
 - `SPRING_PROFILES_ACTIVE` — set to `prod` by deployment tooling; the app's
   default is also `prod`.
 - `DB_URL`
-- `DB_USERNAME`
-- `DB_PASSWORD`
+- `DB_USERNAME` — least-privilege app role, not the PostgreSQL bootstrap account.
+- `DB_PASSWORD` — generated app-role secret (at least 24 characters).
 - `APP_JWT_SECRET` — at least 32 characters.
 - `APP_CORS_ALLOWED_ORIGINS` — explicit comma-separated origins, not a sole
   wildcard.
+- `DB_BOOTSTRAP_USERNAME` / `DB_BOOTSTRAP_PASSWORD` — Compose initialization
+  credentials; the backend must never use these.
+- `INITIAL_ADMIN_EMAIL` / `INITIAL_ADMIN_PASSWORD` — optional one-time values
+  only when no administrator exists (the password must be at least 16 characters).
 
-Optional/runtime or build-time settings include `SERVER_PORT`, `UPLOAD_DIR`,
-`POSTGRES_PORT`, `BACKEND_PORT`, `FRONTEND_PORT`, and `REACT_APP_API_URL`.
-`REACT_APP_API_URL` is embedded in the frontend at build time.
+Optional runtime settings include `SERVER_PORT`, `UPLOAD_DIR`, and
+`FRONTEND_PORT`. The production frontend uses a relative `/api` path through
+nginx; the local CRA server proxies the same path to localhost:8081.
 
 Use a local `.env` file or a deployment secret manager for credentials. The
 root `.env.example` contains placeholders and configuration examples only.
 Local `.env*` files, token/log files, and common private-key formats are
-gitignored. The production validator fails startup for missing JWT, database,
-or CORS settings and rejects demo seeding. Do not put credentials in workflow
+gitignored. The production validator fails startup for missing or placeholder JWT/database
+credentials and CORS settings, rejects the PostgreSQL superuser as the app role,
+and rejects demo seeding. Do not put credentials in workflow
 YAML, Docker build arguments, logs, or frontend variables.
 
 ## Health and logs

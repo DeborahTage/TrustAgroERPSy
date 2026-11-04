@@ -68,8 +68,8 @@ jobs:
           failures = int(suite.attrib.get("failures", "0"))
           errors = int(suite.attrib.get("errors", "0"))
           print(f"RealPostgresVerificationTest: tests={tests}, skipped={skipped}, failures={failures}, errors={errors}")
-          if (tests, skipped, failures, errors) != (8, 0, 0, 0):
-              raise SystemExit("Real PostgreSQL integration test must execute all eight tests without skips or failures")
+          if (tests, skipped, failures, errors) != (20, 0, 0, 0):
+              raise SystemExit("Real PostgreSQL integration test must execute all twenty tests without skips or failures")
           PY
 
       - name: Upload backend test reports

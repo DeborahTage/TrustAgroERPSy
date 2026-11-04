@@ -35,6 +35,7 @@ public class InitialAdminProvisioner implements CommandLineRunner {
     private final String initialAdminPassword;
     private final String initialAdminName;
     private final String initialAdminPhone;
+    private final boolean productionProfile;
 
     public InitialAdminProvisioner(
             UserRepository userRepository,
@@ -42,13 +43,16 @@ public class InitialAdminProvisioner implements CommandLineRunner {
             @Value("${app.admin.initial-email:${INITIAL_ADMIN_EMAIL:}}") String initialAdminEmail,
             @Value("${app.admin.initial-password:${INITIAL_ADMIN_PASSWORD:}}") String initialAdminPassword,
             @Value("${app.admin.initial-name:${INITIAL_ADMIN_NAME:System Administrator}}") String initialAdminName,
-            @Value("${app.admin.initial-phone:${INITIAL_ADMIN_PHONE:+251900000000}}") String initialAdminPhone) {
+            @Value("${app.admin.initial-phone:${INITIAL_ADMIN_PHONE:+251900000000}}") String initialAdminPhone,
+            @Value("${spring.profiles.active:}") String activeProfiles) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.initialAdminEmail = initialAdminEmail;
         this.initialAdminPassword = initialAdminPassword;
         this.initialAdminName = initialAdminName;
         this.initialAdminPhone = initialAdminPhone;
+        this.productionProfile = java.util.Arrays.stream(activeProfiles.split(","))
+                .map(String::trim).anyMatch("prod"::equalsIgnoreCase);
     }
 
     @Override
@@ -60,6 +64,10 @@ public class InitialAdminProvisioner implements CommandLineRunner {
 
         if (initialAdminEmail == null || initialAdminEmail.isBlank()
                 || initialAdminPassword == null || initialAdminPassword.isBlank()) {
+            if (productionProfile) {
+                throw new IllegalStateException(
+                        "No administrator exists. Configure one-time INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD or provision an administrator out of band.");
+            }
             log.warn("No administrator account found in database and INITIAL_ADMIN_EMAIL / INITIAL_ADMIN_PASSWORD " +
                     "are not configured. System is locked until an administrator account is provisioned.");
             return;
@@ -68,6 +76,12 @@ public class InitialAdminProvisioner implements CommandLineRunner {
         if (initialAdminPassword.trim().length() < 8) {
             throw new IllegalStateException(
                     "Initial administrator provisioning failed: INITIAL_ADMIN_PASSWORD must be at least 8 characters");
+        }
+        if (productionProfile && (ProductionSecretRules.isExampleEmail(initialAdminEmail)
+                || initialAdminPassword.trim().length() < 16
+                || ProductionSecretRules.isPlaceholder(initialAdminPassword))) {
+            throw new IllegalStateException(
+                    "Initial administrator provisioning failed: configure a non-example email and generated password of at least 16 characters");
         }
 
         String email = initialAdminEmail.trim().toLowerCase();

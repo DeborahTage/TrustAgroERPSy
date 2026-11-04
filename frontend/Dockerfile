@@ -1,4 +1,4 @@
-# Runtime image — package the verified CRA build from `CI=true npm run build`.
+# Runtime image — package the verified same-origin CRA build from `CI=true npm run build`.
 # Build order: npm ci && CI=true npm run build  &&  docker compose build
 FROM nginx:1.25-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf

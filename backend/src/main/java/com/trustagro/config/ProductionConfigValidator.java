@@ -27,6 +27,12 @@ public class ProductionConfigValidator {
     @Value("${DB_USERNAME:${spring.datasource.username:}}")
     private String dbUsername;
 
+    @Value("${INITIAL_ADMIN_EMAIL:${app.admin.initial-email:}}")
+    private String initialAdminEmail;
+
+    @Value("${INITIAL_ADMIN_PASSWORD:${app.admin.initial-password:}}")
+    private String initialAdminPassword;
+
     @Value("${app.cors.allowed-origins:}")
     private String corsAllowedOrigins;
 
@@ -45,13 +51,17 @@ public class ProductionConfigValidator {
             throw new IllegalStateException(
                     "Production misconfiguration: APP_JWT_SECRET / app.jwt.secret is required and must be at least 32 characters");
         }
-        if (jwtSecret.length() < 32) {
+        if (jwtSecret.length() < 32 || ProductionSecretRules.isPlaceholder(jwtSecret)) {
             throw new IllegalStateException(
-                    "Production misconfiguration: APP_JWT_SECRET / app.jwt.secret must be at least 32 characters");
+                    "Production misconfiguration: APP_JWT_SECRET must be a generated secret of at least 32 characters");
         }
         if (dbPassword == null || dbPassword.isBlank()) {
             throw new IllegalStateException(
                     "Production misconfiguration: DB_PASSWORD / spring.datasource.password is required");
+        }
+        if (dbPassword.length() < 24 || ProductionSecretRules.isPlaceholder(dbPassword)) {
+            throw new IllegalStateException(
+                    "Production misconfiguration: DB_PASSWORD must be a generated secret of at least 24 characters");
         }
         if (dbUrl == null || dbUrl.isBlank()) {
             throw new IllegalStateException(
@@ -64,6 +74,20 @@ public class ProductionConfigValidator {
         if (dbUsername == null || dbUsername.isBlank()) {
             throw new IllegalStateException(
                     "Production misconfiguration: DB_USERNAME / spring.datasource.username is required");
+        }
+        if ("postgres".equalsIgnoreCase(dbUsername.trim())) {
+            throw new IllegalStateException(
+                    "Production misconfiguration: DB_USERNAME must be a least-privilege application role");
+        }
+        if ((initialAdminEmail != null && !initialAdminEmail.isBlank())
+                || (initialAdminPassword != null && !initialAdminPassword.isBlank())) {
+            if (ProductionSecretRules.isExampleEmail(initialAdminEmail)
+                    || initialAdminPassword == null
+                    || initialAdminPassword.trim().length() < 16
+                    || ProductionSecretRules.isPlaceholder(initialAdminPassword)) {
+                throw new IllegalStateException(
+                        "Production misconfiguration: initial administrator credentials must be explicit, non-example values with a password of at least 16 characters");
+            }
         }
         if (seedDemoUsers) {
             throw new IllegalStateException(
@@ -85,9 +109,9 @@ public class ProductionConfigValidator {
             throw new IllegalStateException(
                     "Production misconfiguration: APP_CORS_ALLOWED_ORIGINS must list at least one explicit origin");
         }
-        if (origins.size() == 1 && "*".equals(origins.get(0))) {
+        if (origins.contains("*")) {
             throw new IllegalStateException(
-                    "Production misconfiguration: CORS must not use sole wildcard origin '*'");
+                    "Production misconfiguration: CORS must use explicit origins and must not contain wildcard '*'");
         }
     }
 }

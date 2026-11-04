@@ -118,9 +118,9 @@ Do **not** hardcode DB passwords or JWT secrets in properties files. Use environ
 ```bash
 export SPRING_PROFILES_ACTIVE=prod
 export DB_URL=jdbc:postgresql://localhost:5432/trust_agro_db
-export DB_USERNAME=trustagro
-export DB_PASSWORD='your-strong-password'
-export APP_JWT_SECRET='your-long-random-secret-at-least-32-chars'
+export DB_USERNAME='<least-privilege-app-role>'
+export DB_PASSWORD='<load-generated-secret-from-secret-manager>'
+export APP_JWT_SECRET='<load-generated-secret-from-secret-manager>'
 export APP_CORS_ALLOWED_ORIGINS=https://app.example.com
 ```
 

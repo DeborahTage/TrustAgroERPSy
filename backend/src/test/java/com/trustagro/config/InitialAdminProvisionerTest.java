@@ -36,7 +36,7 @@ class InitialAdminProvisionerTest {
         when(userRepository.existsByRole(Role.ADMIN)).thenReturn(true);
 
         InitialAdminProvisioner provisioner = new InitialAdminProvisioner(
-                userRepository, passwordEncoder, "admin@example.com", "SecurePassword123!", "Admin", "+251911223344"
+                userRepository, passwordEncoder, "admin@example.com", "SecurePassword123!", "Admin", "+251911223344", "test"
         );
 
         provisioner.run();
@@ -50,7 +50,7 @@ class InitialAdminProvisionerTest {
         when(userRepository.existsByEmail("admin@example.com")).thenReturn(false);
 
         InitialAdminProvisioner provisioner = new InitialAdminProvisioner(
-                userRepository, passwordEncoder, "admin@example.com", "SecurePassword123!", "Admin User", "+251911223344"
+                userRepository, passwordEncoder, "admin@example.com", "SecurePassword123!", "Admin User", "+251911223344", "test"
         );
 
         provisioner.run();
@@ -70,7 +70,7 @@ class InitialAdminProvisionerTest {
         when(userRepository.existsByRole(Role.ADMIN)).thenReturn(false);
 
         InitialAdminProvisioner provisioner = new InitialAdminProvisioner(
-                userRepository, passwordEncoder, "", "", "Admin User", "+251911223344"
+                userRepository, passwordEncoder, "", "", "Admin User", "+251911223344", "test"
         );
 
         provisioner.run();
@@ -83,13 +83,25 @@ class InitialAdminProvisionerTest {
         when(userRepository.existsByRole(Role.ADMIN)).thenReturn(false);
 
         InitialAdminProvisioner provisioner = new InitialAdminProvisioner(
-                userRepository, passwordEncoder, "admin@example.com", "short", "Admin User", "+251911223344"
+                userRepository, passwordEncoder, "admin@example.com", "short", "Admin User", "+251911223344", "test"
         );
 
         assertThatThrownBy(provisioner::run)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("INITIAL_ADMIN_PASSWORD must be at least 8 characters");
 
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void productionFailsClosedWhenNoAdminOrOneTimeCredentialsExist() {
+        when(userRepository.existsByRole(Role.ADMIN)).thenReturn(false);
+        InitialAdminProvisioner provisioner = new InitialAdminProvisioner(
+                userRepository, passwordEncoder, "", "", "Admin User", "", "prod");
+
+        assertThatThrownBy(provisioner::run)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("No administrator exists");
         verify(userRepository, never()).save(any());
     }
 }
