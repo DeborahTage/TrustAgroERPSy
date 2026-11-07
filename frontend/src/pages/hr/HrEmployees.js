@@ -13,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS } from '../../lib/permissions';
 import { formatCurrency, formatDate } from '../../utils';
-import { Plus } from 'lucide-react';
+import { Plus, Printer, Download } from 'lucide-react';
+import { exportToCsv } from '../../lib/exportTable';
+import { renderEmployeeDirectoryHtml, printHtml } from '../../lib/trustDocumentTemplates';
 import { toast } from 'react-toastify';
 
 const EMPLOYMENT_STATUSES = ['ACTIVE', 'ON_LEAVE', 'SUSPENDED', 'TERMINATED', 'RESIGNED', 'INACTIVE'];
@@ -147,9 +149,31 @@ const HrEmployees = () => {
       error={error}
       onRetry={load}
       onRefresh={load}
-      actions={hasPermission(PERMISSIONS.CREATE_HR) && (
-        <Button size="sm" onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-1" /> New Employee</Button>
-      )}
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => printHtml(renderEmployeeDirectoryHtml(filtered), 'Trust Agro Employee Directory')}>
+            <Printer className="h-4 w-4 mr-1.5" /> Print Directory
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => {
+            const exportCols = [
+              { header: 'No', accessorKey: (r) => r.id },
+              { header: 'Employee #', accessorKey: 'employeeNumber' },
+              { header: 'Full Name', accessorKey: 'fullName' },
+              { header: 'Position', accessorKey: 'positionName' },
+              { header: 'Phone', accessorKey: 'phone' },
+              { header: 'Department', accessorKey: 'departmentName' },
+              { header: 'Status', accessorKey: 'employmentStatus' },
+            ];
+            exportToCsv(filtered, exportCols, 'trust_agro_employee_directory');
+            toast.success('Employee directory exported');
+          }}>
+            <Download className="h-4 w-4 mr-1.5" /> Export CSV
+          </Button>
+          {hasPermission(PERMISSIONS.CREATE_HR) && (
+            <Button size="sm" onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-1" /> New Employee</Button>
+          )}
+        </div>
+      }
     >
       <div className="flex flex-wrap gap-3 mb-4">
         <Input className="max-w-xs" placeholder="Search name, number, phone…" value={search} onChange={(e) => setSearch(e.target.value)} />

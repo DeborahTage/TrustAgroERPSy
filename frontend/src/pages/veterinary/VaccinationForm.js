@@ -146,14 +146,34 @@ const VaccinationForm = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Biological Identity *</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Biological Identity *</Label>
+                      <div className="flex flex-wrap gap-1">
+                        {[
+                          { name: 'Lasota', disease: 'Newcastle Disease' },
+                          { name: 'IB', disease: 'Infectious Bronchitis' },
+                          { name: 'Typhoid', disease: 'Fowl Typhoid' },
+                          { name: 'Gumboro', disease: 'Gumboro (IBD)' },
+                          { name: 'Fowl Pox', disease: 'Fowl Pox' },
+                        ].map((preset) => (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => setForm({ ...form, vaccineName: preset.name, diseaseProtectedAgainst: preset.disease })}
+                            className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted/60 hover:bg-primary/20 text-foreground transition-colors"
+                          >
+                            {preset.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <div className="relative">
                       <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
                         className="h-12 pl-12 bg-background border border-border rounded-xl font-bold text-foreground focus:ring-primary transition-all"
                         value={form.vaccineName}
                         onChange={(e) => setForm({ ...form, vaccineName: e.target.value })}
-                        placeholder="e.g. LaSota B1, Mareks HVT"
+                        placeholder="e.g. Lasota, IB, Typhoid"
                       />
                     </div>
                   </div>

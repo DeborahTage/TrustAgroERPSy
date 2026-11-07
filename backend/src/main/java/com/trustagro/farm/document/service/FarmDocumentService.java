@@ -12,6 +12,8 @@ import com.trustagro.farm.entity.DailyFarmRecord;
 import com.trustagro.farm.entity.Flock;
 import com.trustagro.farm.repository.DailyFarmRecordRepository;
 import com.trustagro.farm.repository.FlockRepository;
+import com.trustagro.farm.sale.entity.ChickenSale;
+import com.trustagro.farm.sale.repository.ChickenSaleRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FarmDocumentService {
 
-    private static final String ORG = "Trust Agro";
+    private static final String ORG = "Trust Agro-consulting & Farming PLC";
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     private final FlockRepository flockRepository;
@@ -33,6 +35,7 @@ public class FarmDocumentService {
     private final InternalStockDeliveryRepository internalDeliveryRepository;
     private final ChickenDeliveryReleaseRepository releaseRepository;
     private final DocumentTemplateRepository templateRepository;
+    private final ChickenSaleRepository chickenSaleRepository;
 
     @PostConstruct
     @Transactional
@@ -42,6 +45,12 @@ public class FarmDocumentService {
         seed("INTERNAL_DELIVERY", "Internal Stock Delivery Note", "FARM");
         seed("PAYMENT_VERIFICATION", "Payment Verification Form", "FARM");
         seed("CHICKEN_DISPATCH", "Chicken Dispatch Note", "FARM");
+        seed("PULLET_SALE_CONTRACT", "Pullet Sale Contract (የዶሮ ሸያጭ ውል)", "FARM");
+        seed("DOC_SALE_CONTRACT", "Day-Old Chick Sale Contract (የእንቁላል ጣይ ጫጩት ውል New)", "FARM");
+        seed("BROILER_REPLACEMENT_CONTRACT", "Broiler Replacement Agreement (የሞቱ ምትክ)", "FARM");
+        seed("PROFORMA_INVOICE", "Proforma Invoice", "FARM");
+        seed("PULLET_FEED_SCHEDULE", "Pullet Feeding Schedule (Weeks 8-24)", "FARM");
+        seed("FEED_PROTOCOL_GUIDE", "Feed Preparation Protocol Guide", "FARM");
     }
 
     private void seed(String code, String name, String module) {
@@ -65,6 +74,12 @@ public class FarmDocumentService {
             case "INTERNAL_DELIVERY" -> internalDelivery(id);
             case "PAYMENT_VERIFICATION" -> paymentVerification(id);
             case "CHICKEN_DISPATCH" -> chickenDispatch(id);
+            case "PULLET_SALE_CONTRACT" -> pulletSaleContract(id);
+            case "DOC_SALE_CONTRACT" -> docSaleContract(id);
+            case "BROILER_REPLACEMENT_CONTRACT" -> broilerReplacementContract(id);
+            case "PROFORMA_INVOICE" -> proformaInvoice(id);
+            case "PULLET_FEED_SCHEDULE" -> pulletFeedSchedule(id);
+            case "FEED_PROTOCOL_GUIDE" -> feedProtocolGuide(id);
             default -> throw new BusinessException("Unknown farm document type: " + type);
         };
     }
@@ -151,6 +166,95 @@ public class FarmDocumentService {
                 row("Dispatched by", r.getDispatchedBy() != null ? r.getDispatchedBy().getFullName() : ""),
                 row("Status", r.getStatus().name())
         ), List.of("Dispatched by", "Driver / Receiver", "Marketing"));
+    }
+
+    private String pulletSaleContract(Long id) {
+        ChickenSale s = chickenSaleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Chicken sale not found"));
+        return html("የዶሮ ሸያጭ ውል (Pullet Sale Contract)", List.of(
+                row("ውል ቁጥር (Contract No)", s.getSaleNumber()),
+                row("ቀን (Date)", formatDate(s.getSaleDate())),
+                row("ሻጭ (Seller)", ORG + " / Abunu Tekle & Friends"),
+                row("ገዥ (Buyer)", s.getCustomer() != null ? s.getCustomer().getClientName() : ""),
+                row("የደንበኛ ስልክ (Phone)", s.getCustomer() != null ? nullToEmpty(s.getCustomer().getPhone()) : ""),
+                row("የዶሮ ዝርያ (Breed)", s.getFlock() != null ? nullToEmpty(s.getFlock().getBreed()) : "Bovans Brown"),
+                row("እድሜ (Age)", "9-Week Pullet"),
+                row("ጠቅላላ ዋጋ (Total Amount)", String.valueOf(s.getTotalAmount()) + " ETB"),
+                row("ቅድመ ክፍያ (Advance Terms)", "80% via CBE Transfer"),
+                row("ነፃ ጥቅል (Free Package)", "Debeaking, Vaccination, Consultancy, Chemical Spray"),
+                row("ሁኔታ (Status)", s.getStatus().name())
+        ), List.of("ሻጭ (Seller)", "ገዥ (Buyer)", "ምስክር 1", "ምስክር 2"));
+    }
+
+    private String docSaleContract(Long id) {
+        ChickenSale s = chickenSaleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Chicken sale not found"));
+        return html("የእንቁላል ጣይ ጫጩት ውል New (Day-Old Chick Contract)", List.of(
+                row("ውል ቁጥር (Contract No)", s.getSaleNumber()),
+                row("ቀን (Date)", formatDate(s.getSaleDate())),
+                row("ሻጭ (Seller)", "Abunu Tekle & Friends Poultry Farm"),
+                row("የባንክ ሂሳብ (CBE Account)", "1000799913376 (Commercial Bank of Ethiopia)"),
+                row("ገዥ (Buyer)", s.getCustomer() != null ? s.getCustomer().getClientName() : ""),
+                row("ስልክ (Phone)", s.getCustomer() != null ? nullToEmpty(s.getCustomer().getPhone()) : ""),
+                row("የጫጩት አይነት", "የእንቁላል ጣይ የአንድ ቀን ጫጩት (Bovans Brown DOC)"),
+                row("ድምር (Subtotal)", String.valueOf(s.getSubtotal()) + " ETB"),
+                row("ተ.እ.ታ (VAT 15%)", String.valueOf(s.getTaxAmount()) + " ETB"),
+                row("ጠቅላላ ዋጋ (Grand Total)", String.valueOf(s.getTotalAmount()) + " ETB"),
+                row("የሙያ ድጋፍ", "Until birds finish production")
+        ), List.of("ሻጭ (Seller)", "ገዥ (Buyer)"));
+    }
+
+    private String broilerReplacementContract(Long id) {
+        ChickenSale s = chickenSaleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Chicken sale not found"));
+        return html("የሞቱ ምትክ (Broiler Replacement Agreement)", List.of(
+                row("ስምምነት ቁጥር", s.getSaleNumber()),
+                row("ቀን (Date)", formatDate(s.getSaleDate())),
+                row("ሻጭ (Seller)", "TRUST Agro-Consulting PLC"),
+                row("ገዥ (Buyer)", s.getCustomer() != null ? s.getCustomer().getClientName() : ""),
+                row("የዶሮ አይነት", "Broiler (male meat chicken, 4 weeks)"),
+                row("የ1500+ ነፃ ጥቅል", "Free debeaking, vaccination, consultancy, transport, chemical spray"),
+                row("የታማኝነት ቅናሽ (Loyalty)", "10% discount on next Bovans Brown pullet purchase"),
+                row("ተፈጻሚነት", "Until product is received")
+        ), List.of("ሻጭ (Seller)", "ገዥ (Buyer)", "ምስክር"));
+    }
+
+    private String proformaInvoice(Long id) {
+        ChickenSale s = chickenSaleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Chicken sale not found"));
+        return html("PROFORMA INVOICE", List.of(
+                row("Proforma No", s.getSaleNumber()),
+                row("Date", formatDate(s.getSaleDate())),
+                row("Customer", s.getCustomer() != null ? s.getCustomer().getClientName() : ""),
+                row("Customer Phone", s.getCustomer() != null ? nullToEmpty(s.getCustomer().getPhone()) : ""),
+                row("Product Specification", "Bovans Brown, 100% Female, Fully Vaccinated"),
+                row("Subtotal", String.valueOf(s.getSubtotal()) + " ETB"),
+                row("VAT (15%)", String.valueOf(s.getTaxAmount()) + " ETB"),
+                row("Grand Total", String.valueOf(s.getTotalAmount()) + " ETB"),
+                row("Payment Terms", "80% advance via CBE transfer"),
+                row("Validity", "7 Days"),
+                row("CBE Accounts", "1000738658373 (Dr Tekle) / 1000451324814 (Trust Agro) / 1000799913376 (Abunu Tekle)")
+        ), List.of("Sales Officer", "Finance / Accountant", "General Manager"));
+    }
+
+    private String pulletFeedSchedule(Long id) {
+        return html("Pullet Feeding Schedule (Weeks 8-24)", List.of(
+                row("Guideline Target", "Bovans Brown Pullet Management"),
+                row("Weeks 8-15 (Developer)", "45g - 74g/bird daily intake | Target weight 620g - 1,280g"),
+                row("Weeks 16-18 (Pre-Lay)", "78g - 86g/bird daily intake | Target weight 1,310g - 1,510g"),
+                row("Weeks 19-24 (Layer Phase 1)", "92g - 115g/bird daily intake | Target weight 1,530g - 1,860g"),
+                row("Lighting Program", "06:00-18:00 (Wk 8-15) stepping up to 04:00-20:00 (Wk 19-24)")
+        ), List.of("Farm Manager", "Technical Director"));
+    }
+
+    private String feedProtocolGuide(Long id) {
+        return html("Feed Preparation Protocol Guide", List.of(
+                row("1. Bokashi Protocol", "2L EM + 2L Molasses + 16L Water + 40kg Bran (21-day airtight fermentation)"),
+                row("Bokashi Feeding Ratio", "4% Bokashi + 96% Standard Feed daily"),
+                row("2. Acetic Acid Protocol", "1ml per 1L drinking water (2x/week in hot dry season)"),
+                row("3. EM Water Sanitization", "1L EM per 300L well water"),
+                row("Approved Fresh Greens", "Alfalfa, Espaniya, Kale")
+        ), List.of("Nutrition Specialist", "Lead Consultant"));
     }
 
     private String html(String title, List<String> rows, List<String> signatures) {

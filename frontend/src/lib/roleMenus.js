@@ -126,6 +126,8 @@ const farmManagerMenus = [
       { path: '/farm/internal-deliveries', label: 'Internal Deliveries', icon: Truck, permission: PERMISSIONS.VIEW_FARMS },
       { path: '/materials/requests', label: 'Material Requests', icon: ClipboardList, permission: PERMISSIONS.VIEW_MATERIAL_REQUESTS },
       { path: '/feed/silos', label: 'Feed Usage', icon: Package },
+      { path: '/farm/feed-schedules', label: 'Feed Schedules', icon: Calendar },
+      { path: '/farm/feed-protocols', label: 'Feed Protocols', icon: BookOpen },
       { path: '/procurement/requisitions', label: 'Requisitions', icon: ClipboardList, permission: PERMISSIONS.VIEW_PROCUREMENT },
       { path: '/reports', label: 'Reports', icon: BarChart3, permission: PERMISSIONS.VIEW_REPORTS },
       { path: '/settings', labelKey: 'settings', icon: Settings, alwaysVisible: true },

@@ -6,8 +6,9 @@ import DataTable from '../../components/shared/DataTable';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
-import { FileText, TrendingDown, Activity, Plus } from 'lucide-react';
+import { FileText, TrendingDown, Activity, Plus, Printer } from 'lucide-react';
 import { formatDate } from '../../utils';
+import { renderPulletDailyRecordHtml, printHtml } from '../../lib/trustDocumentTemplates';
 
 const DailyFarmRecordList = () => {
   const { t } = useLanguage();
@@ -89,11 +90,24 @@ const DailyFarmRecordList = () => {
       exportElementId="daily-records-table"
       exportTitle="Daily Farm Records"
       empty={!records.length ? { title: 'No daily records', description: 'Record today\'s farm operations to track production and mortality.' } : null}
-      actions={canPerformAction('create', 'dailyRecords') && (
-        <Button onClick={() => navigate('/daily-records/new')} className="h-11 bg-primary hover:bg-primary/90 rounded-xl">
-          <Plus className="mr-2 h-4 w-4" /> New Record
-        </Button>
-      )}
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const flock = records[0] ? { farmName: records[0].farmName, batchCode: records[0].batchCode } : {};
+              printHtml(renderPulletDailyRecordHtml(flock, records), 'Pullet Daily Records Sheet');
+            }}
+          >
+            <Printer className="mr-2 h-4 w-4" /> Print Daily Records Sheet
+          </Button>
+          {canPerformAction('create', 'dailyRecords') && (
+            <Button onClick={() => navigate('/daily-records/new')} className="bg-primary hover:bg-primary/90">
+              <Plus className="mr-2 h-4 w-4" /> New Record
+            </Button>
+          )}
+        </div>
+      }
     >
       <div id="daily-records-table">
         <DataTable columns={columns} data={records} searchable pagination pageSize={15} />

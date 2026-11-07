@@ -53,6 +53,8 @@ import StoreFulfillmentQueue from './pages/materials/StoreFulfillmentQueue';
 import MaterialRequestReports from './pages/materials/MaterialRequestReports';
 import SiloDashboard from './pages/feed/SiloDashboard';
 import FeedRecipeForm from './pages/feed/FeedRecipeForm';
+import PulletFeedSchedule from './pages/farm/PulletFeedSchedule';
+import FeedProtocols from './pages/farm/FeedProtocols';
 import InventoryItemList from './pages/inventory/InventoryItemList';
 import InventoryItemForm from './pages/inventory/InventoryItemForm';
 import StockInForm from './pages/inventory/StockInForm';
@@ -194,6 +196,10 @@ function App() {
 
                 <Route path="feed/silos" element={<ModuleRoute module="farms"><SiloDashboard /></ModuleRoute>} />
                 <Route path="feed/recipes" element={<ModuleRoute module="farms"><FeedRecipeForm /></ModuleRoute>} />
+                <Route path="farm/feed-schedules" element={<ModuleRoute module="farms"><PulletFeedSchedule /></ModuleRoute>} />
+                <Route path="feed/schedules" element={<ModuleRoute module="farms"><PulletFeedSchedule /></ModuleRoute>} />
+                <Route path="farm/feed-protocols" element={<ModuleRoute module="farms"><FeedProtocols /></ModuleRoute>} />
+                <Route path="feed/protocols" element={<ModuleRoute module="farms"><FeedProtocols /></ModuleRoute>} />
 
                 <Route path="daily-records" element={<ModuleRoute module="dailyRecords"><DailyFarmRecordList /></ModuleRoute>} />
                 <Route path="daily-records/new" element={<ActionRoute action="create" resource="dailyRecords"><DailyFarmRecordForm /></ActionRoute>} />

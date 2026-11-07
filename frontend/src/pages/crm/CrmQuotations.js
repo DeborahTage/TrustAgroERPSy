@@ -13,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS } from '../../lib/permissions';
 import { formatCurrency, formatDate } from '../../utils';
-import { Plus } from 'lucide-react';
+import { Plus, Printer, Download } from 'lucide-react';
+import { renderQuotationCoverHtml, printHtml } from '../../lib/trustDocumentTemplates';
+import { exportToCsv } from '../../lib/exportTable';
 import { toast } from 'react-toastify';
 
 const emptyForm = {
@@ -112,6 +114,32 @@ const CrmQuotations = () => {
         const q = row.original;
         return (
           <div className="flex flex-wrap gap-1 justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              title="Print Official Quotation Cover (የዋጋ ማቅረቢያ)"
+              onClick={() => {
+                printHtml(
+                  renderQuotationCoverHtml({
+                    quotation_no: q.quotationNumber,
+                    client_name: q.clientName,
+                    date: q.issueDate ? formatDate(q.issueDate) : undefined,
+                    items: q.items?.length ? q.items.map(it => ({
+                      description: it.description,
+                      unit: it.unit || 'PCS',
+                      quantity: it.quantity,
+                      unit_price: it.unitPrice,
+                      total_price: it.lineTotal || (it.quantity * it.unitPrice),
+                    })) : [
+                      { description: 'Commercial Quotation Items', unit: 'LOT', quantity: 1, unit_price: Number(q.totalAmount) || 0, total_price: Number(q.totalAmount) || 0 }
+                    ],
+                  }),
+                  `Quotation - ${q.quotationNumber}`
+                );
+              }}
+            >
+              <Printer className="h-3.5 w-3.5 mr-1" /> የዋጋ ማቅረቢያ
+            </Button>
             <Button size="sm" variant="outline" onClick={() => navigate(`/crm/quotations/${q.id}`)}>Open</Button>
             {hasPermission(PERMISSIONS.CRM_QUOTATION) && q.status === 'DRAFT' && (
               <Button size="sm" variant="outline" onClick={() => act(() => crmApi.submitQuotation(q.id), 'Submitted')}>Submit</Button>
@@ -140,9 +168,30 @@ const CrmQuotations = () => {
       error={error}
       onRetry={load}
       onRefresh={load}
-      actions={hasPermission(PERMISSIONS.CRM_QUOTATION) && (
-        <Button size="sm" onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-1" /> New Quotation</Button>
-      )}
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const exportCols = [
+                { header: 'Quote #', accessorKey: 'quotationNumber' },
+                { header: 'Customer', accessorKey: 'clientName' },
+                { header: 'Total Amount', accessorKey: 'totalAmount' },
+                { header: 'Expiry Date', accessorKey: 'expiryDate' },
+                { header: 'Status', accessorKey: 'status' },
+              ];
+              exportToCsv(filtered, exportCols, 'quotations');
+              toast.success('Quotations exported');
+            }}
+          >
+            <Download className="h-4 w-4 mr-1.5" /> Export CSV
+          </Button>
+          {hasPermission(PERMISSIONS.CRM_QUOTATION) && (
+            <Button size="sm" onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-1" /> New Quotation</Button>
+          )}
+        </div>
+      }
     >
       <div className="mb-4 flex flex-wrap gap-3">
         <Input className="max-w-xs" placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} />

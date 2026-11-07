@@ -12,7 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS } from '../../lib/permissions';
 import { formatDate } from '../../utils';
-import { Plus } from 'lucide-react';
+import { Plus, Printer, Download } from 'lucide-react';
+import { renderEmployeeAttendanceHtml, printHtml } from '../../lib/trustDocumentTemplates';
+import { exportToCsv } from '../../lib/exportTable';
 import { toast } from 'react-toastify';
 
 const ATTENDANCE_STATUSES = ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'ON_LEAVE', 'HOLIDAY', 'REST_DAY'];
@@ -148,11 +150,37 @@ const HrAttendance = () => {
       error={error}
       onRetry={load}
       onRefresh={load}
-      actions={canWrite && (
-        <Button size="sm" onClick={() => { setEditId(null); setForm(emptyForm); setOpen(true); }}>
-          <Plus className="h-4 w-4 mr-1" /> Record Attendance
-        </Button>
-      )}
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => {
+            const emp = employees.find(e => String(e.id) === employeeFilter) || { fullName: 'All Staff Members', positionName: 'Trust Agro Staff' };
+            printHtml(renderEmployeeAttendanceHtml(emp, from ? new Date(from).toLocaleString('default', { month: 'long', year: 'numeric' }) : '', filtered), 'Employee Attendance Sheet');
+          }}>
+            <Printer className="h-4 w-4 mr-1.5" /> Print Timesheet
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => {
+            const cols = [
+              { header: 'Date', accessorKey: 'attendanceDate' },
+              { header: 'Employee #', accessorKey: 'employeeNumber' },
+              { header: 'Employee Name', accessorKey: 'employeeName' },
+              { header: 'Department', accessorKey: 'departmentName' },
+              { header: 'Check In', accessorKey: 'checkIn' },
+              { header: 'Check Out', accessorKey: 'checkOut' },
+              { header: 'Hours Worked', accessorKey: 'hoursWorked' },
+              { header: 'Status', accessorKey: 'status' },
+            ];
+            exportToCsv(filtered, cols, 'attendance_records');
+            toast.success('Attendance records exported');
+          }}>
+            <Download className="h-4 w-4 mr-1.5" /> Export CSV
+          </Button>
+          {canWrite && (
+            <Button size="sm" onClick={() => { setEditId(null); setForm(emptyForm); setOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Record Attendance
+            </Button>
+          )}
+        </div>
+      }
     >
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="space-y-1">

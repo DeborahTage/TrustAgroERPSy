@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Droplet, Zap } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Droplet, Zap, Printer, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -7,6 +7,9 @@ import EnterprisePage from '../../components/layout/EnterprisePage';
 import { vetApi } from '../../api';
 import { formatDate } from '../../utils';
 import { cn } from '../../lib/utils';
+import { renderVaccinationProgramHtml, printHtml } from '../../lib/trustDocumentTemplates';
+import { exportToCsv } from '../../lib/exportTable';
+import { toast } from 'react-toastify';
 
 const VaccinationCalendar = () => {
   const [vaccinations, setVaccinations] = useState([]);
@@ -100,10 +103,29 @@ const VaccinationCalendar = () => {
       onRefresh={fetchVaccinations}
       stats={stats}
       actions={
-        <div className="flex items-center gap-2 border border-border rounded-xl px-2 h-10 bg-card">
-          <Button variant="ghost" size="icon" onClick={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
-          <span className="px-3 font-semibold text-sm min-w-[140px] text-center text-foreground">{monthLabel}</span>
-          <Button variant="ghost" size="icon" onClick={nextMonth}><ChevronRight className="h-4 w-4" /></Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => printHtml(renderVaccinationProgramHtml(vaccinations), 'Veterinary Vaccination Program')}>
+            <Printer className="h-4 w-4 mr-1.5" /> Print Official Program
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => {
+            const cols = [
+              { header: 'ID', accessorKey: 'id' },
+              { header: 'Scheduled Date', accessorKey: 'scheduledDate' },
+              { header: 'Vaccine Name', accessorKey: 'vaccineName' },
+              { header: 'Disease', accessorKey: 'diseaseProtectedAgainst' },
+              { header: 'Status', accessorKey: 'status' },
+              { header: 'Administered By', accessorKey: 'administeredBy' },
+            ];
+            exportToCsv(vaccinations, cols, 'vaccination_schedule');
+            toast.success('Vaccination records exported');
+          }}>
+            <Download className="h-4 w-4 mr-1.5" /> Export CSV
+          </Button>
+          <div className="flex items-center gap-2 border border-border rounded-xl px-2 h-10 bg-card">
+            <Button variant="ghost" size="icon" onClick={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
+            <span className="px-3 font-semibold text-sm min-w-[140px] text-center text-foreground">{monthLabel}</span>
+            <Button variant="ghost" size="icon" onClick={nextMonth}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
         </div>
       }
     >

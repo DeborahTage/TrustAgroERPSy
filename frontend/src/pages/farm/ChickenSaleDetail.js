@@ -11,6 +11,14 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS } from '../../lib/permissions';
 import { formatCurrency, formatDate } from '../../utils';
+import { Printer } from 'lucide-react';
+import {
+  renderPulletSaleContractHtml,
+  renderDocSaleContractHtml,
+  renderBroilerReplacementContractHtml,
+  renderProformaInvoiceHtml,
+  printHtml,
+} from '../../lib/trustDocumentTemplates';
 import { toast } from 'react-toastify';
 
 const ChickenSaleDetail = () => {
@@ -93,6 +101,97 @@ const ChickenSaleDetail = () => {
     actions.push(<Button key="complete" disabled={busy} onClick={() => run(() => chickenSaleApi.complete(id), 'Sale completed')}>Complete</Button>);
   }
 
+  const printPulletContract = () => {
+    if (!sale) return;
+    const totalQty = (sale.items || []).reduce((acc, it) => acc + (it.quantity || 0), 0) || 1000;
+    const avgPrice = sale.totalAmount && totalQty ? Math.round(sale.totalAmount / totalQty) : 650;
+    printHtml(
+      renderPulletSaleContractHtml({
+        contract_date: formatDate(sale.saleDate),
+        buyer: {
+          name: sale.customerName,
+          address: sale.customerAddress || 'Addis Ababa',
+          phone: sale.customerPhone || '-',
+        },
+        birds: {
+          age: '9-Week',
+          breed: 'Bovans Brown',
+          quantity: totalQty,
+          unit_price: avgPrice,
+        },
+      }),
+      `Pullet Contract - ${sale.saleNumber}`
+    );
+  };
+
+  const printDocContract = () => {
+    if (!sale) return;
+    const totalQty = (sale.items || []).reduce((acc, it) => acc + (it.quantity || 0), 0) || 2000;
+    const avgPrice = sale.subtotal && totalQty ? Math.round(sale.subtotal / totalQty) : 120;
+    printHtml(
+      renderDocSaleContractHtml({
+        contract_date: formatDate(sale.saleDate),
+        buyer: {
+          name: sale.customerName,
+          phone: sale.customerPhone || '-',
+        },
+        quantity: totalQty,
+        unit_price: avgPrice,
+        sub_total: sale.subtotal || (totalQty * avgPrice),
+        vat: sale.taxAmount || ((sale.subtotal || (totalQty * avgPrice)) * 0.15),
+        grand_total: sale.totalAmount || ((sale.subtotal || (totalQty * avgPrice)) * 1.15),
+      }),
+      `DOC Contract - ${sale.saleNumber}`
+    );
+  };
+
+  const printBroilerReplacement = () => {
+    if (!sale) return;
+    const totalQty = (sale.items || []).reduce((acc, it) => acc + (it.quantity || 0), 0) || 120;
+    printHtml(
+      renderBroilerReplacementContractHtml({
+        contract_date: formatDate(sale.saleDate),
+        buyer: {
+          name: sale.customerName,
+          phone: sale.customerPhone || '-',
+        },
+        replacement_count: totalQty,
+      }),
+      `Broiler Replacement - ${sale.saleNumber}`
+    );
+  };
+
+  const printProforma = () => {
+    if (!sale) return;
+    printHtml(
+      renderProformaInvoiceHtml({
+        proforma_no: sale.saleNumber,
+        date: formatDate(sale.saleDate),
+        customer_name: sale.customerName,
+        customer_phone: sale.customerPhone || '-',
+        items: (sale.items || []).length > 0 ? (sale.items || []).map((it) => ({
+          description: `Bovans Brown Pullets (${it.pricingMethod || 'Live Weight'})`,
+          unit: 'PCS',
+          quantity: it.quantity || 1,
+          unit_price: it.unitPrice || it.pricePerKg || 0,
+          total_price: it.lineSubtotal || ((it.quantity || 1) * (it.unitPrice || 0)),
+        })) : [
+          {
+            description: '9-Week Bovans Brown Pullets',
+            unit: 'PCS',
+            quantity: 1000,
+            unit_price: 650,
+            total_price: 650000,
+          }
+        ],
+        sub_total: sale.subtotal || sale.totalAmount || 650000,
+        vat: sale.taxAmount || 0,
+        grand_total: sale.totalAmount || 650000,
+      }),
+      `Proforma - ${sale.saleNumber}`
+    );
+  };
+
   return (
     <EnterprisePage
       title={sale ? sale.saleNumber : 'Chicken Sale'}
@@ -102,7 +201,23 @@ const ChickenSaleDetail = () => {
       error={error}
       onRetry={load}
       onRefresh={load}
-      actions={<div className="flex flex-wrap gap-2">{actions}</div>}
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={printPulletContract}>
+            <Printer className="h-3.5 w-3.5 mr-1" /> የዶሮ ሸያጭ ውል
+          </Button>
+          <Button variant="outline" size="sm" onClick={printDocContract}>
+            <Printer className="h-3.5 w-3.5 mr-1" /> የእንቁላል ጣይ ጫጩት ውል
+          </Button>
+          <Button variant="outline" size="sm" onClick={printBroilerReplacement}>
+            <Printer className="h-3.5 w-3.5 mr-1" /> የሞቱ ምትክ
+          </Button>
+          <Button variant="outline" size="sm" onClick={printProforma}>
+            <Printer className="h-3.5 w-3.5 mr-1" /> Proforma
+          </Button>
+          {actions}
+        </div>
+      }
     >
       {sale && (
         <div className="space-y-6">

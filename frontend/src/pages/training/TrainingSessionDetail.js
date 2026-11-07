@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS } from '../../lib/permissions';
 import { formatDate } from '../../utils';
+import { Printer, Download } from 'lucide-react';
+import { renderTrainingAttendanceHtml, printHtml } from '../../lib/trustDocumentTemplates';
+import { exportToCsv } from '../../lib/exportTable';
 import { toast } from 'react-toastify';
 
 const TrainingSessionDetail = () => {
@@ -67,9 +70,28 @@ const TrainingSessionDetail = () => {
       onRetry={() => load(sessionDate)}
       onRefresh={() => load(sessionDate)}
       actions={
-        <Button size="sm" variant="outline" onClick={() => navigate(`/training/programs/${session?.programId}`)}>
-          Program
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => printHtml(renderTrainingAttendanceHtml(session, roster?.participants || []), `Attendance - ${session?.sessionCode}`)}>
+            <Printer className="h-4 w-4 mr-1.5" /> Print Attendance Sheet
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => {
+            const cols = [
+              { header: 'No', accessorKey: (r, i) => i + 1 },
+              { header: 'Registration #', accessorKey: 'registrationNumber' },
+              { header: 'Participant Name', accessorKey: 'participantName' },
+              { header: 'Attendance Status', accessorKey: 'attendanceStatus' },
+              { header: 'Payment Status', accessorKey: 'paymentStatus' },
+              { header: 'Recorded By', accessorKey: 'recordedBy' },
+            ];
+            exportToCsv(roster?.participants || [], cols, `attendance_${session?.sessionCode || 'session'}`);
+            toast.success('Attendance roster exported');
+          }}>
+            <Download className="h-4 w-4 mr-1.5" /> Export CSV
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => navigate(`/training/programs/${session?.programId}`)}>
+            Program
+          </Button>
+        </div>
       }
     >
       {session && (
