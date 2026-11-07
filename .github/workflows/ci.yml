@@ -102,12 +102,20 @@ jobs:
 
       - name: Validate Docker Compose configuration
         env:
+          DB_BOOTSTRAP_USERNAME: ci_bootstrap_user
+          DB_BOOTSTRAP_PASSWORD: ci_bootstrap_password
+          DB_USERNAME: ci_app_user
           DB_PASSWORD: ci-compose-validation-placeholder
           APP_JWT_SECRET: ci-compose-validation-jwt-placeholder-not-a-secret
+          APP_CORS_ALLOWED_ORIGINS: http://localhost:3000
         run: docker compose config --quiet
 
       - name: Build Docker images
         env:
+          DB_BOOTSTRAP_USERNAME: ci_bootstrap_user
+          DB_BOOTSTRAP_PASSWORD: ci_bootstrap_password
+          DB_USERNAME: ci_app_user
           DB_PASSWORD: ci-compose-validation-placeholder
           APP_JWT_SECRET: ci-compose-validation-jwt-placeholder-not-a-secret
+          APP_CORS_ALLOWED_ORIGINS: http://localhost:3000
         run: docker compose build

@@ -132,6 +132,25 @@ class AuthSecurityTest {
         authService.changePassword("alice@trustagro.com", request);
 
         assertEquals(1L, user.getTokenVersion());
+        assertFalse(user.getMustChangePassword());
         verify(userRepository).save(user);
+    }
+
+    @Test
+    void loginReturnsMustChangePasswordFlag() {
+        User user = new User();
+        user.setId(19L);
+        user.setEmail("alice@trustagro.com");
+        user.setFullName("Alice Trust");
+        user.setRole(Role.FARM_MANAGER);
+        user.setStatus(UserStatus.ACTIVE);
+        user.setMustChangePassword(true);
+        when(userRepository.findByEmail("alice@trustagro.com")).thenReturn(Optional.of(user));
+        when(jwtService.generateToken(any(), any(), any(), any(), anyLong())).thenReturn("mock-token");
+
+        com.trustagro.auth.dto.LoginResponse resp = authService.login(req);
+
+        assertNotNull(resp);
+        assertTrue(resp.getMustChangePassword());
     }
 }

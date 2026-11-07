@@ -93,6 +93,7 @@ const FarmForm = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="BROILER">{t('options.BROILER')}</SelectItem>
+                  <SelectItem value="LAYER">Layer</SelectItem>
                   <SelectItem value="MIXED">{t('options.MIXED')}</SelectItem>
                 </SelectContent>
               </Select>
@@ -118,13 +119,13 @@ const FarmForm = () => {
                   {managers.map((m) => {
                     const isCurrent = id && String(m.assignedFarmId) === String(id);
                     const isAssignedOther = m.assignedFarmId && !isCurrent;
-                    let label = m.fullName;
+                    let label = `${m.fullName} [${m.phone || m.email}]`;
                     if (isCurrent) {
-                      label += ' (Current Manager)';
+                      label += ' - Current Site Manager';
                     } else if (isAssignedOther) {
-                      label += ` (Assigned to ${m.assignedFarmName || 'Another Farm'})`;
+                      label += ` - Assigned to ${m.assignedFarmName || 'Another Farm'}`;
                     } else {
-                      label += ' (Available)';
+                      label += ' - Available';
                     }
                     return (
                       <SelectItem

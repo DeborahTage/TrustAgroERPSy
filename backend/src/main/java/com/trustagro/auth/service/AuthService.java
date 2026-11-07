@@ -95,7 +95,7 @@ public class AuthService {
                 user.getTokenVersion() != null ? user.getTokenVersion() : 0L);
         auditService.log("LOGIN_SUCCESS", MODULE, "User", user.getId(), null, user.getEmail());
         return new LoginResponse(token, user.getId(), user.getFullName(), user.getEmail(),
-                canonicalRole, permissions, farmIds);
+                canonicalRole, permissions, farmIds, user.getMustChangePassword());
     }
 
     @Transactional
@@ -112,6 +112,7 @@ public class AuthService {
             throw new BusinessException("New password must differ from the current password");
         }
         user.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        user.setMustChangePassword(false);
         long currentVersion = user.getTokenVersion() != null ? user.getTokenVersion() : 0L;
         user.setTokenVersion(currentVersion + 1L);
         userRepository.save(user);

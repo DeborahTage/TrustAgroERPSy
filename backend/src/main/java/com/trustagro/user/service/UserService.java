@@ -108,6 +108,7 @@ public class UserService {
         r.setIsSiteFarmManager(user.isSiteFarmManager());
         r.setPermissions(RolePermissionCatalog.permissionsFor(canonical));
         r.setFarmIds(user.getFarmIds() != null ? user.getFarmIds() : List.of());
+        r.setMustChangePassword(user.getMustChangePassword());
         return r;
     }
 }

@@ -115,7 +115,7 @@ class PostgresAppRoleDeploymentTest {
 
         Integer historyCount = appJdbcTemplate.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE success = true", Integer.class);
-        assertThat(historyCount).isEqualTo(7);
+        assertThat(historyCount).isEqualTo(8);
 
         Integer v1Count = appJdbcTemplate.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE version = '1' AND success = true", Integer.class);

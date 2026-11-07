@@ -25,4 +25,5 @@ public class UserResponse {
     private LocalDateTime updatedAt;
     private List<String> permissions;
     private List<Long> farmIds;
+    private Boolean mustChangePassword;
 }

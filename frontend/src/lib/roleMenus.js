@@ -49,7 +49,7 @@ const adminMenus = [
     label: 'ADMIN',
     items: [
       { path: '/users', labelKey: 'users', icon: Users, permission: PERMISSIONS.VIEW_USERS },
-      { path: '/farms/managers', label: 'Site Farm Managers', icon: Users, permission: PERMISSIONS.VIEW_USERS },
+      { path: '/farms/managers', label: 'Site Farm Managers', icon: Users, permission: PERMISSIONS.VIEW_FARMS },
       { path: '/governance', label: 'Governance', icon: Shield, permission: PERMISSIONS.GOVERNANCE_READ },
       { path: '/farm/chicken-sales', label: 'Chicken Sales', icon: ShoppingCart, permission: PERMISSIONS.VIEW_CHICKEN_SALES },
       { path: '/farm/payment-verification', label: 'Payment Verification', icon: Receipt, permission: PERMISSIONS.VERIFY_CHICKEN_SALES },

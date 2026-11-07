@@ -47,6 +47,9 @@ public class User {
     @Column(name = "token_version", nullable = false)
     private Long tokenVersion = 0L;
 
+    @Column(name = "must_change_password", nullable = false)
+    private Boolean mustChangePassword = false;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -68,6 +71,8 @@ public class User {
     public void setStatus(UserStatus status) { this.status = status; }
     public Long getTokenVersion() { return tokenVersion; }
     public void setTokenVersion(Long tokenVersion) { this.tokenVersion = tokenVersion; }
+    public Boolean getMustChangePassword() { return mustChangePassword != null && mustChangePassword; }
+    public void setMustChangePassword(Boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 

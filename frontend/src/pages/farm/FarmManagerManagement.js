@@ -306,7 +306,7 @@ const FarmManagerManagement = () => {
   return (
     <EnterprisePage
       title="Farm Manager Management"
-      subtitle="Supervise site farm managers, assign single-site operational scopes, and enforce organizational hierarchy"
+      subtitle="Supervise site farm managers across Biyo, Shera, Dukem, and Baugaya, assign single-site operational scopes, and enforce organizational hierarchy (General Manager → Operations Manager → Site Farm Managers → Farm Workers)"
       breadcrumbs={['Farm', 'Site Farm Managers']}
       stats={stats}
       actions={

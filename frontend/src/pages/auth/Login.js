@@ -2,10 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { authApi } from '../../api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
+import { Eye, EyeOff, Loader2, KeyRound, ShieldAlert } from 'lucide-react';
 import trustLogo from '../../assets/trust-logo.jpg';
 import loginSlide1 from '../../assets/login-slide-1.webp';
 import loginSlide2 from '../../assets/login-slide-2.jpg';
@@ -21,6 +30,11 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [requireNewPassword, setRequireNewPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changeError, setChangeError] = useState('');
+  const [changing, setChanging] = useState(false);
   const backgroundSlides = [loginSlide1, loginSlide2, loginSlide3];
 
   useEffect(() => {
@@ -35,12 +49,47 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      await login(form.email, form.password);
-      navigate('/dashboard');
+      const userData = await login(form.email, form.password);
+      if (userData?.mustChangePassword) {
+        setRequireNewPassword(true);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.message || t('login.loginError'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasswordChangeSubmit = async (e) => {
+    e.preventDefault();
+    setChangeError('');
+    if (!newPassword || newPassword.length < 8) {
+      setChangeError('New password must be at least 8 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setChangeError('Passwords do not match.');
+      return;
+    }
+    if (newPassword === form.password) {
+      setChangeError('New password must differ from the temporary password.');
+      return;
+    }
+
+    setChanging(true);
+    try {
+      await authApi.changePassword({
+        currentPassword: form.password,
+        newPassword: newPassword,
+      });
+      setRequireNewPassword(false);
+      navigate('/dashboard');
+    } catch (err) {
+      setChangeError(err.response?.data?.message || 'Failed to update password. Please try again.');
+    } finally {
+      setChanging(false);
     }
   };
 
@@ -140,6 +189,68 @@ const Login = () => {
           </div>
         </div>
       </div>
+
+      {/* MANDATORY FIRST-LOGIN PASSWORD CHANGE MODAL */}
+      <Dialog open={requireNewPassword} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-[440px]" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <ShieldAlert className="h-5 w-5 text-amber-600" /> First-Time Login Notice
+            </DialogTitle>
+            <DialogDescription className="text-slate-600 dark:text-slate-300">
+              Welcome to Trust Agro ERP! Your temporary password must be changed to a secure personal password before continuing.
+            </DialogDescription>
+          </DialogHeader>
+
+          {changeError && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-xs">
+              {changeError}
+            </div>
+          )}
+
+          <form onSubmit={handlePasswordChangeSubmit} className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="new-password">New Password * (min 8 characters)</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                minLength={8}
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="confirm-password">Confirm New Password *</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter new password"
+                minLength={8}
+                required
+              />
+            </div>
+
+            <DialogFooter className="pt-3 border-t">
+              <Button type="submit" disabled={changing} className="w-full bg-primary hover:bg-primary/90 flex items-center justify-center gap-2">
+                {changing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="h-4 w-4" /> Save & Access ERP
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
