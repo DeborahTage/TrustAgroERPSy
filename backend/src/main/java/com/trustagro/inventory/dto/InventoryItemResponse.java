@@ -55,13 +55,25 @@ public class InventoryItemResponse {
     public void setCategory(ItemCategory category) { this.category = category; }
     public void setCurrentStock(Double currentStock) { this.currentStock = currentStock; }
     public ItemUnit getUnit() { return unit; }
-    public void setUnit(ItemUnit unit) { this.unit = unit; }
+    public void setUnit(ItemUnit unit) {
+        this.unit = unit;
+        if (unit != null) {
+            this.unitString = unit.name();
+        }
+    }
     
     // Explicit for frontend compatibility if mapped from String
     public void setName(String name) { this.name = name; this.itemName = name; }
     public String getName() { return this.name != null ? this.name : this.itemName; }
-    public void setUnit(String unitString) { this.unitString = unitString; }
-    public String getUnitString() { return this.unitString; }
+    public void setUnit(String unitString) {
+        this.unitString = unitString;
+        if (unitString != null && !unitString.isBlank()) {
+            try {
+                this.unit = ItemUnit.valueOf(unitString.trim().toUpperCase());
+            } catch (Exception ignored) {}
+        }
+    }
+    public String getUnitString() { return this.unitString != null ? this.unitString : (this.unit != null ? this.unit.name() : null); }
     
     public void setRetailPrice(java.math.BigDecimal retailPrice) { this.retailPrice = retailPrice; }
     public void setWholesalePrice(java.math.BigDecimal wholesalePrice) { this.wholesalePrice = wholesalePrice; }

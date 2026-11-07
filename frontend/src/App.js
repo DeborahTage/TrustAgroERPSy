@@ -15,6 +15,7 @@ import Dashboard from './pages/dashboard/Dashboard';
 import UserList from './pages/users/UserList';
 import UserForm from './pages/users/UserForm';
 import FarmList from './pages/farm/FarmList';
+import FarmManagerManagement from './pages/farm/FarmManagerManagement';
 import FarmForm from './pages/farm/FarmForm';
 import FlockList from './pages/farm/FlockList';
 import FlockForm from './pages/farm/FlockForm';
@@ -165,6 +166,7 @@ function App() {
                 <Route path="users/:id/edit" element={<PermissionRoute permission={PERMISSIONS.EDIT_USERS}><UserForm /></PermissionRoute>} />
 
                 <Route path="farms" element={<ModuleRoute module="farms"><FarmList /></ModuleRoute>} />
+                <Route path="farms/managers" element={<PermissionRoute permission={PERMISSIONS.VIEW_FARMS}><FarmManagerManagement /></PermissionRoute>} />
                 <Route path="farms/new" element={<ActionRoute action="create" resource="farms"><FarmForm /></ActionRoute>} />
                 <Route path="farms/:id/edit" element={<ActionRoute action="edit" resource="farms"><FarmForm /></ActionRoute>} />
                 <Route path="farms/barn-dashboard" element={<PermissionRoute permission={PERMISSIONS.VIEW_FARMS}><BarnDashboard /></PermissionRoute>} />

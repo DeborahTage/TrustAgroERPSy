@@ -1,5 +1,6 @@
 package com.trustagro.finance.dto;
 
+import com.trustagro.finance.entity.BusinessUnit;
 import com.trustagro.finance.entity.TransactionType;
 import lombok.Data;
 
@@ -15,7 +16,10 @@ public class TransactionResponse {
     private BigDecimal amount;
     private String debitAccountCode;
     private String creditAccountCode;
+    private String sourceModule;
     private String referenceType;
+    private Long referenceId;
+    private BusinessUnit businessUnit;
     private String description;
     private LocalDate transactionDate;
     private LocalDateTime createdAt;
@@ -26,7 +30,10 @@ public class TransactionResponse {
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public void setDebitAccountCode(String debitAccountCode) { this.debitAccountCode = debitAccountCode; }
     public void setCreditAccountCode(String creditAccountCode) { this.creditAccountCode = creditAccountCode; }
+    public void setSourceModule(String sourceModule) { this.sourceModule = sourceModule; }
     public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
+    public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
+    public void setBusinessUnit(BusinessUnit businessUnit) { this.businessUnit = businessUnit; }
     public void setDescription(String description) { this.description = description; }
     public void setTransactionDate(LocalDate transactionDate) { this.transactionDate = transactionDate; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -45,8 +45,12 @@ public class FinanceController {
 
     @GetMapping("/transactions")
     @PreAuthorize("hasAuthority('finance:read')")
-    public ResponseEntity<ApiResponse<List<FinanceTransaction>>> getAll() {
-        return ResponseEntity.ok(ApiResponse.success(financeService.getAllTransactions()));
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getAll() {
+        return ResponseEntity.ok(ApiResponse.success(
+                financeService.getAllTransactions().stream()
+                        .map(this::toResponse)
+                        .toList()
+        ));
     }
 
     @PostMapping("/transactions")
@@ -56,18 +60,35 @@ public class FinanceController {
                 BusinessUnit.GENERAL,
                 req.getDebitAccountCode(), req.getCreditAccountCode(), req.getDescription(),
                 "MANUAL", req.getReferenceType(), null);
+        TransactionResponse response = toResponse(tx);
+        if (response != null) {
+            if (response.getDebitAccountCode() == null && req.getDebitAccountCode() != null) {
+                response.setDebitAccountCode(req.getDebitAccountCode().trim());
+            }
+            if (response.getCreditAccountCode() == null && req.getCreditAccountCode() != null) {
+                response.setCreditAccountCode(req.getCreditAccountCode().trim());
+            }
+        }
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    private TransactionResponse toResponse(FinanceTransaction tx) {
+        if (tx == null) return null;
         TransactionResponse response = new TransactionResponse();
         response.setId(tx.getId());
         response.setTransactionType(tx.getTransactionType());
         response.setCategory(tx.getCategory());
         response.setAmount(tx.getAmount());
-        response.setDebitAccountCode(req.getDebitAccountCode().trim());
-        response.setCreditAccountCode(req.getCreditAccountCode().trim());
+        response.setDebitAccountCode(tx.getDebitAccount() != null ? tx.getDebitAccount().getAccountCode() : null);
+        response.setCreditAccountCode(tx.getCreditAccount() != null ? tx.getCreditAccount().getAccountCode() : null);
+        response.setSourceModule(tx.getSourceModule());
         response.setReferenceType(tx.getReferenceType());
+        response.setReferenceId(tx.getReferenceId());
+        response.setBusinessUnit(tx.getBusinessUnit());
         response.setDescription(tx.getDescription());
         response.setTransactionDate(tx.getTransactionDate());
         response.setCreatedAt(tx.getCreatedAt());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return response;
     }
 
     @GetMapping("/accounts")

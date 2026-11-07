@@ -737,8 +737,6 @@ public class MaterialRequestService {
             User me = farmAccessService.currentUser();
             farmAccessService.assertCanAccessFarm(me, farm.getId());
             mr.setFarm(farm);
-        } else if (type == MaterialRequestType.INTERNAL_ISSUE_REQUEST) {
-            throw new BusinessException("Farm is required for internal issue requests");
         } else {
             mr.setFarm(null);
         }

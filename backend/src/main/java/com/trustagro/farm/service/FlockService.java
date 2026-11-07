@@ -14,6 +14,7 @@ import com.trustagro.user.repository.UserRepository;
 import com.trustagro.veterinary.repository.PrescriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class FlockService {
 
     private final FlockRepository flockRepository;
@@ -46,6 +48,7 @@ public class FlockService {
         return toResponse(flock);
     }
 
+    @Transactional
     public FlockResponse create(FlockRequest req) {
         farmAccessService.assertCanAccessFarm(req.getFarmId());
         if (req.getInitialBirdCount() == null || req.getInitialBirdCount() <= 0) {
@@ -75,6 +78,7 @@ public class FlockService {
         return toResponse(savedFlock);
     }
 
+    @Transactional
     public FlockResponse update(Long id, FlockRequest req) {
         Flock flock = findById(id);
         farmAccessService.assertCanAccessFarm(flock.getFarm().getId());
@@ -87,6 +91,7 @@ public class FlockService {
         return toResponse(flockRepository.save(flock));
     }
 
+    @Transactional
     public FlockResponse close(Long id) {
         Flock flock = findById(id);
         farmAccessService.assertCanAccessFarm(flock.getFarm().getId());

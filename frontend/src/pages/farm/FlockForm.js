@@ -7,7 +7,6 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { useLanguage } from '../../context/LanguageContext';
-import { useMasterData } from '../../context/MasterDataContext';
 import { toast } from 'react-toastify';
 import { Hash, Calendar } from 'lucide-react';
 
@@ -17,13 +16,12 @@ const FlockForm = () => {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
   const [form, setForm] = useState({
-    batchCode: '', farmId: '', birdType: '', breed: '', initialBirdCount: '', startDate: '', expectedEndDate: '',
+    batchCode: '', farmId: '', breed: '', initialBirdCount: '', startDate: '', expectedEndDate: '',
   });
   const [farms, setFarms] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
-  const { options: breedOptions } = useMasterData('BREED');
 
   useEffect(() => {
     farmApi.getAll().then((r) => setFarms(r.data.data?.filter((f) => f.status === 'ACTIVE') || []));
@@ -35,7 +33,6 @@ const FlockForm = () => {
           setForm({
             batchCode: f.batchCode,
             farmId: String(f.farmId),
-            birdType: f.birdType || '',
             breed: f.breed || '',
             initialBirdCount: f.initialBirdCount || '',
             startDate: f.startDate || '',
@@ -95,18 +92,6 @@ const FlockForm = () => {
                   <SelectItem value="none">{t('forms.selectFarm')}</SelectItem>
                   {farms.map((f) => (
                     <SelectItem key={f.id} value={String(f.id)}>{f.farmName}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="birdType">{t('flockForm.birdType')}</Label>
-              <Select value={form.birdType || 'none'} onValueChange={(v) => setForm({ ...form, birdType: v === 'none' ? '' : v })}>
-                <SelectTrigger><SelectValue placeholder="Bird type" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Select type</SelectItem>
-                  {breedOptions.map((b) => (
-                    <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

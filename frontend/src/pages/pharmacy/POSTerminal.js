@@ -23,7 +23,7 @@ import { toast } from 'react-toastify';
 import { cn } from '../../lib/utils';
 import EnterprisePage from '../../components/layout/EnterprisePage';
 
-const CATEGORY_TABS = ['ALL', 'DRUG', 'VACCINE', 'VITAMIN', 'EQUIPMENT', 'FEED', 'FARM_MATERIAL'];
+const CATEGORY_TABS = ['ALL', 'DRUG', 'VACCINE', 'VITAMIN', 'EQUIPMENT', 'FEED', 'FARM_MATERIAL', 'CLEANING_MATERIAL'];
 
 const getCatIcon = (cat) => {
     switch (cat) {

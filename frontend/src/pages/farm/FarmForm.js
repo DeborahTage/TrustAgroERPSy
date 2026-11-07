@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { farmApi, userApi } from '../../api';
+import { farmApi, farmManagerApi } from '../../api';
 import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -22,7 +22,9 @@ const FarmForm = () => {
   const [fetching, setFetching] = useState(isEdit);
 
   useEffect(() => {
-    userApi.getAll().then((r) => setManagers(r.data.data?.filter((u) => u.role === 'FARM_MANAGER') || []));
+    farmManagerApi.getEligible(isEdit ? id : undefined)
+      .then((r) => setManagers(r.data.data || []))
+      .catch(() => setManagers([]));
     if (isEdit) {
       setFetching(true);
       farmApi.getById(id)
@@ -113,9 +115,27 @@ const FarmForm = () => {
                 <SelectTrigger><SelectValue placeholder={t('forms.select')} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">{t('forms.select')}</SelectItem>
-                  {managers.map((m) => (
-                    <SelectItem key={m.id} value={String(m.id)}>{m.fullName}</SelectItem>
-                  ))}
+                  {managers.map((m) => {
+                    const isCurrent = id && String(m.assignedFarmId) === String(id);
+                    const isAssignedOther = m.assignedFarmId && !isCurrent;
+                    let label = m.fullName;
+                    if (isCurrent) {
+                      label += ' (Current Manager)';
+                    } else if (isAssignedOther) {
+                      label += ` (Assigned to ${m.assignedFarmName || 'Another Farm'})`;
+                    } else {
+                      label += ' (Available)';
+                    }
+                    return (
+                      <SelectItem
+                        key={m.id}
+                        value={String(m.id)}
+                        disabled={Boolean(isAssignedOther)}
+                      >
+                        {label}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

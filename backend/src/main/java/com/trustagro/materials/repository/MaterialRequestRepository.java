@@ -51,7 +51,7 @@ public interface MaterialRequestRepository extends JpaRepository<MaterialRequest
               AND (:requesterId IS NULL OR mr.requester.id = :requesterId)
               AND (:from IS NULL OR mr.requestDate >= :from)
               AND (:to IS NULL OR mr.requestDate <= :to)
-              AND (:department IS NULL OR lower(mr.department) = lower(:department))
+              AND (:department IS NULL OR lower(mr.department) = :department)
             ORDER BY mr.createdAt DESC
             """)
     List<MaterialRequest> filter(

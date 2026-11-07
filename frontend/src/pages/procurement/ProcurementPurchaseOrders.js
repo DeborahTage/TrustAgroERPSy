@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS } from '../../lib/permissions';
 import { formatCurrency, formatDate } from '../../utils';
+import { MASTER_CATALOG_ITEMS } from '../../utils/masterCatalog';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -44,7 +45,8 @@ const ProcurementPurchaseOrders = () => {
       ]);
       setRows(poRes.data?.data || []);
       setSuppliers(Array.isArray(supRes.data) ? supRes.data : supRes.data?.data || []);
-      setItems(itemRes.data?.data || []);
+      const itemData = Array.isArray(itemRes.data) ? itemRes.data : (itemRes.data?.data || []);
+      setItems(itemData.length > 0 ? itemData : MASTER_CATALOG_ITEMS);
     } catch {
       setError('Failed to load purchase orders.');
     } finally {
@@ -182,8 +184,16 @@ const ProcurementPurchaseOrders = () => {
                   <div className="col-span-5 space-y-1">
                     <Label className="text-xs">Item</Label>
                     <Select value={line.inventoryItemId} onValueChange={(v) => {
+                      const sel = items.find(i => String(i.id) === String(v));
+                      const price = sel?.retailPrice != null
+                        ? String(sel.retailPrice)
+                        : (sel?.sellingPrice != null ? String(sel.sellingPrice) : (sel?.avgUnitCost != null ? String(sel.avgUnitCost) : ''));
                       const lines = [...form.lines];
-                      lines[idx] = { ...lines[idx], inventoryItemId: v };
+                      lines[idx] = {
+                        ...lines[idx],
+                        inventoryItemId: v,
+                        unitPrice: price || lines[idx].unitPrice || '',
+                      };
                       setForm({ ...form, lines });
                     }}>
                       <SelectTrigger><SelectValue placeholder="Select item" /></SelectTrigger>

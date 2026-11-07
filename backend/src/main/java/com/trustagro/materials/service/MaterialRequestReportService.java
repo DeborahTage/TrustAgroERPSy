@@ -21,7 +21,10 @@ public class MaterialRequestReportService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> summary(LocalDate from, LocalDate to, MaterialRequestType type,
                                              MaterialRequestStatus status, Long farmId, String department) {
-        return requestRepository.filter(status, type, farmId, null, from, to, department).stream()
+        String dept = (department != null && !department.isBlank())
+                ? department.trim().toLowerCase(java.util.Locale.ROOT)
+                : null;
+        return requestRepository.filter(status, type, farmId, null, from, to, dept).stream()
                 .map(this::row)
                 .collect(Collectors.toList());
     }

@@ -11,12 +11,17 @@ import com.trustagro.user.entity.User;
 import com.trustagro.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class FarmService {
 
     private final FarmRepository farmRepository;
@@ -74,19 +79,69 @@ public class FarmService {
         return toResponse(findById(id));
     }
 
+    @Transactional
     public FarmResponse create(FarmRequest req) {
         Farm farm = new Farm();
         mapRequest(req, farm);
-        return toResponse(farmRepository.save(farm));
+        Farm saved = farmRepository.save(farm);
+
+        // Associate manager with created farm and restrict access to this farm
+        if (saved.getAssignedFarmManager() != null) {
+            User manager = saved.getAssignedFarmManager();
+            if (manager.getDesignation() == null) {
+                manager.setDesignation(com.trustagro.user.entity.OrganizationalDesignation.SITE_FARM_MANAGER);
+            }
+            manager.setFarmIds(new ArrayList<>(List.of(saved.getId())));
+            userRepository.save(manager);
+        }
+
+        // Preserve Group Farm Manager's access to all supervised farms
+        try {
+            User creator = farmAccessService.currentUser();
+            if (creator.isGroupFarmManager() || (creator.getRole() == com.trustagro.user.entity.Role.FARM_MANAGER && creator.getDesignation() != com.trustagro.user.entity.OrganizationalDesignation.SITE_FARM_MANAGER)) {
+                List<Long> creatorFarms = creator.getFarmIds() != null ? new ArrayList<>(creator.getFarmIds()) : new ArrayList<>();
+                if (!creatorFarms.contains(saved.getId())) {
+                    creatorFarms.add(saved.getId());
+                    creator.setFarmIds(creatorFarms);
+                    userRepository.save(creator);
+                }
+            }
+        } catch (Exception ignored) {
+            // Unauthenticated or system runner
+        }
+
+        return toResponse(saved);
     }
 
+    @Transactional
     public FarmResponse update(Long id, FarmRequest req) {
         farmAccessService.assertCanAccessFarm(id);
         Farm farm = findById(id);
+        User previousManager = farm.getAssignedFarmManager();
         mapRequest(req, farm);
-        return toResponse(farmRepository.save(farm));
+        Farm saved = farmRepository.save(farm);
+
+        User newManager = saved.getAssignedFarmManager();
+        if (!Objects.equals(previousManager, newManager)) {
+            if (previousManager != null) {
+                List<Long> oldFarms = previousManager.getFarmIds() != null ? new ArrayList<>(previousManager.getFarmIds()) : new ArrayList<>();
+                oldFarms.remove(id);
+                previousManager.setFarmIds(oldFarms);
+                userRepository.save(previousManager);
+            }
+            if (newManager != null) {
+                if (newManager.getDesignation() == null) {
+                    newManager.setDesignation(com.trustagro.user.entity.OrganizationalDesignation.SITE_FARM_MANAGER);
+                }
+                newManager.setFarmIds(new ArrayList<>(List.of(id)));
+                userRepository.save(newManager);
+            }
+        }
+
+        return toResponse(saved);
     }
 
+    @Transactional
     public FarmResponse updateStatus(Long id, FarmStatus status) {
         farmAccessService.assertCanAccessFarm(id);
         Farm farm = findById(id);
@@ -102,7 +157,14 @@ public class FarmService {
         if (req.getAssignedFarmManagerId() != null) {
             User manager = userRepository.findById(req.getAssignedFarmManagerId())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            // Prevent duplicate/conflicting farm assignment
+            Optional<Farm> currentAssigned = farmRepository.findByAssignedFarmManagerId(manager.getId());
+            if (currentAssigned.isPresent() && !currentAssigned.get().getId().equals(farm.getId())) {
+                throw new BusinessException("Manager " + manager.getFullName() + " is already assigned to farm " + currentAssigned.get().getFarmName());
+            }
             farm.setAssignedFarmManager(manager);
+        } else {
+            farm.setAssignedFarmManager(null);
         }
     }
 

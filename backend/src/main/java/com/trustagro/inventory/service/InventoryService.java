@@ -39,7 +39,8 @@ public class InventoryService {
             ItemCategory.VITAMIN,
             ItemCategory.EQUIPMENT,
             ItemCategory.FEED,
-            ItemCategory.FARM_MATERIAL
+            ItemCategory.FARM_MATERIAL,
+            ItemCategory.CLEANING_MATERIAL
     );
 
     private final InventoryItemRepository itemRepository;

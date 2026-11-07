@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useAuth } from '../../context/AuthContext';
 import { PERMISSIONS } from '../../lib/permissions';
 import { formatDate } from '../../utils';
+import { MASTER_CATALOG_ITEMS } from '../../utils/masterCatalog';
 
 const STATUS_STYLES = {
   DRAFT: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
@@ -44,16 +45,26 @@ const InternalDeliveryPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const [delRes, itemRes, userRes] = await Promise.all([
+      const [delRes, itemRes, userRes] = await Promise.allSettled([
         internalDeliveryApi.list(),
         inventoryApi.getItems(),
         userApi.getAll().catch(() => ({ data: { data: [] } })),
       ]);
-      setRows(delRes.data?.data || []);
-      setItems(itemRes.data?.data || []);
-      setUsers(userRes.data?.data || userRes.data || []);
+      const rowsData = delRes.status === 'fulfilled' ? (delRes.value.data?.data || delRes.value.data || []) : [];
+      setRows(rowsData);
+
+      let itemData = [];
+      if (itemRes.status === 'fulfilled') {
+        const raw = itemRes.value.data;
+        itemData = Array.isArray(raw) ? raw : (raw?.data || []);
+      }
+      setItems(itemData.length > 0 ? itemData : MASTER_CATALOG_ITEMS);
+
+      const userData = userRes.status === 'fulfilled' ? (userRes.value.data?.data || userRes.value.data || []) : [];
+      setUsers(Array.isArray(userData) ? userData : []);
     } catch {
       setError('Failed to load internal deliveries.');
+      setItems(MASTER_CATALOG_ITEMS);
     } finally {
       setLoading(false);
     }
@@ -75,26 +86,78 @@ const InternalDeliveryPage = () => {
 
   const create = async () => {
     setError(null);
+    if (!form.inventoryItemId || Number(form.inventoryItemId) <= 0) {
+      setError('Please select an inventory item to deliver.');
+      return;
+    }
+    if (!form.quantity || Number(form.quantity) <= 0) {
+      setError('Please enter a valid delivery quantity greater than 0.');
+      return;
+    }
     try {
       await internalDeliveryApi.create({
         ...form,
         inventoryItemId: Number(form.inventoryItemId),
         quantity: Number(form.quantity),
-        delivererId: Number(form.delivererId),
-        receiverId: Number(form.receiverId),
+        delivererId: form.delivererId && form.delivererId !== 'NONE' ? Number(form.delivererId) : null,
+        receiverId: form.receiverId && form.receiverId !== 'NONE' ? Number(form.receiverId) : null,
       });
       await load();
+      setForm((f) => ({ ...f, inventoryItemId: '', quantity: '' }));
     } catch (e) {
-      setError(e?.response?.data?.message || 'Create failed');
+      const errorData = e?.response?.data;
+      if (errorData?.data && typeof errorData.data === 'object') {
+        const details = Object.entries(errorData.data)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join(', ');
+        setError(`Validation failed: ${details}`);
+      } else {
+        setError(errorData?.message || 'Create failed');
+      }
     }
   };
 
   const openDoc = async (id) => {
-    const res = await farmDocumentApi.html('INTERNAL_DELIVERY', id);
-    const w = window.open('', '_blank');
-    if (w) {
-      w.document.write(typeof res.data === 'string' ? res.data : (res.data?.data || ''));
-      w.document.close();
+    try {
+      const res = await farmDocumentApi.html('INTERNAL_DELIVERY', id);
+      const htmlContent = typeof res.data === 'string' ? res.data : (res.data?.data || '');
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+          try {
+            printWindow.print();
+          } catch (err) {
+            console.error('Print trigger failed:', err);
+          }
+        }, 300);
+      } else {
+        // Fallback for pop-up blocked environments
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(htmlContent);
+        iframe.contentWindow.document.close();
+        iframe.contentWindow.focus();
+        setTimeout(() => {
+          try {
+            iframe.contentWindow.print();
+          } finally {
+            document.body.removeChild(iframe);
+          }
+        }, 500);
+      }
+    } catch (err) {
+      setError('Failed to load print document: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -147,24 +210,42 @@ const InternalDeliveryPage = () => {
     >
       {hasPermission(PERMISSIONS.CREATE_FARMS) && (
         <div className="mb-6 grid gap-2 md:grid-cols-4 border border-border/70 p-4 rounded-xl bg-card">
-          <Select value={String(form.inventoryItemId)} onValueChange={(v) => setForm((f) => ({ ...f, inventoryItemId: v }))}>
-            <SelectTrigger><SelectValue placeholder="Item" /></SelectTrigger>
+          <Select
+            value={form.inventoryItemId ? String(form.inventoryItemId) : 'NONE'}
+            onValueChange={(v) => {
+              const sel = items.find((i) => String(i.id) === String(v));
+              setForm((f) => ({
+                ...f,
+                inventoryItemId: v === 'NONE' ? '' : v,
+                unit: sel?.unit || sel?.unitString || f.unit || 'PIECE',
+              }));
+            }}
+          >
+            <SelectTrigger><SelectValue placeholder="Select Item" /></SelectTrigger>
             <SelectContent>
-              {items.map((i) => <SelectItem key={i.id} value={String(i.id)}>{i.itemName || i.name}</SelectItem>)}
+              <SelectItem value="NONE">Select Item...</SelectItem>
+              {items.map((i) => (
+                <SelectItem key={i.id} value={String(i.id)}>
+                  {i.itemName || i.name} ({i.unit || 'PCS'})
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Input type="number" placeholder="Quantity" value={form.quantity} onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))} />
+          <Input type="number" min="1" placeholder="Quantity" value={form.quantity} onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))} />
+          <Input placeholder="Unit" value={form.unit} onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))} />
           <Input placeholder="From" value={form.sourceLocation} onChange={(e) => setForm((f) => ({ ...f, sourceLocation: e.target.value }))} />
           <Input placeholder="To" value={form.destinationLocation} onChange={(e) => setForm((f) => ({ ...f, destinationLocation: e.target.value }))} />
-          <Select value={String(form.delivererId)} onValueChange={(v) => setForm((f) => ({ ...f, delivererId: v }))}>
-            <SelectTrigger><SelectValue placeholder="Deliverer" /></SelectTrigger>
+          <Select value={form.delivererId ? String(form.delivererId) : 'NONE'} onValueChange={(v) => setForm((f) => ({ ...f, delivererId: v === 'NONE' ? '' : v }))}>
+            <SelectTrigger><SelectValue placeholder="Deliverer (Optional)" /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="NONE">Deliverer (Unassigned)</SelectItem>
               {users.map((u) => <SelectItem key={u.id} value={String(u.id)}>{u.fullName || u.email}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={String(form.receiverId)} onValueChange={(v) => setForm((f) => ({ ...f, receiverId: v }))}>
-            <SelectTrigger><SelectValue placeholder="Receiver" /></SelectTrigger>
+          <Select value={form.receiverId ? String(form.receiverId) : 'NONE'} onValueChange={(v) => setForm((f) => ({ ...f, receiverId: v === 'NONE' ? '' : v }))}>
+            <SelectTrigger><SelectValue placeholder="Receiver (Optional)" /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="NONE">Receiver (Unassigned)</SelectItem>
               {users.map((u) => <SelectItem key={u.id} value={String(u.id)}>{u.fullName || u.email}</SelectItem>)}
             </SelectContent>
           </Select>

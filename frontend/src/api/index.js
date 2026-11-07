@@ -28,6 +28,14 @@ export const farmApi = {
   getBarns: () => api.get('/api/farms/barns'),
 };
 
+export const farmManagerApi = {
+  getAll: () => api.get('/api/farm-managers'),
+  create: (data) => api.post('/api/farm-managers', data),
+  update: (id, data) => api.put(`/api/farm-managers/${id}`, data),
+  updateStatus: (id, status) => api.patch(`/api/farm-managers/${id}/status`, { status }),
+  getEligible: (farmId) => api.get('/api/farm-managers/eligible', { params: farmId ? { farmId } : {} }),
+};
+
 export const flockApi = {
   getAll: () => api.get('/api/flocks'),
   getById: (id) => api.get(`/api/flocks/${id}`),

@@ -5,6 +5,7 @@ export const PATH_MODULE_MAP = {
   '/dashboard': 'dashboard',
   '/users': 'users',
   '/farms': 'farms',
+  '/farms/managers': 'farms',
   '/flocks': 'flocks',
   '/daily-records': 'dailyRecords',
   '/inventory': 'inventory',

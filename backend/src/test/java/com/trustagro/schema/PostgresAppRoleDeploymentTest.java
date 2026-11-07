@@ -104,7 +104,7 @@ class PostgresAppRoleDeploymentTest {
 
     @Test
     @Order(2)
-    void applicationRoleCanExecuteFlywayMigrationsV1ThroughV3() {
+    void applicationRoleCanExecuteFlywayMigrationsV1ThroughV4() {
         Flyway flyway = Flyway.configure()
                 .dataSource(appDbUrl, APP_USERNAME, APP_PASSWORD)
                 .locations("classpath:db/migration")
@@ -115,7 +115,7 @@ class PostgresAppRoleDeploymentTest {
 
         Integer historyCount = appJdbcTemplate.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE success = true", Integer.class);
-        assertThat(historyCount).isEqualTo(3);
+        assertThat(historyCount).isEqualTo(6);
 
         Integer v1Count = appJdbcTemplate.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE version = '1' AND success = true", Integer.class);
@@ -128,6 +128,14 @@ class PostgresAppRoleDeploymentTest {
         Integer v3Count = appJdbcTemplate.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE version = '3' AND success = true", Integer.class);
         assertThat(v3Count).isEqualTo(1);
+
+        Integer v4Count = appJdbcTemplate.queryForObject(
+                "SELECT count(*) FROM flyway_schema_history WHERE version = '4' AND success = true", Integer.class);
+        assertThat(v4Count).isEqualTo(1);
+
+        Integer v5Count = appJdbcTemplate.queryForObject(
+                "SELECT count(*) FROM flyway_schema_history WHERE version = '5' AND success = true", Integer.class);
+        assertThat(v5Count).isEqualTo(1);
 
         // Verify token_version column exists on users table (V3)
         Integer tokenVersionColCount = appJdbcTemplate.queryForObject(

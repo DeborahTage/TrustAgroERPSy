@@ -12,6 +12,7 @@ import { Package, Truck, Calendar, Tag, DollarSign, Activity, Save, Info, FileSt
 import { cn } from '../../lib/utils';
 import api from '../../api/axios';
 import EnterpriseFormPage from '../../components/layout/EnterpriseFormPage';
+import { MASTER_CATALOG_ITEMS } from '../../utils/masterCatalog';
 
 const StockInForm = () => {
   const { canPerformAction } = useAuth();
@@ -34,7 +35,12 @@ const StockInForm = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    inventoryApi.getItems().then(r => setItems(Array.isArray(r.data) ? r.data : r.data.data || [])).catch(() => {});
+    inventoryApi.getItems()
+      .then(r => {
+        const list = Array.isArray(r.data) ? r.data : (r.data?.data || []);
+        setItems(list.length > 0 ? list : MASTER_CATALOG_ITEMS);
+      })
+      .catch(() => setItems(MASTER_CATALOG_ITEMS));
     api.get('/api/inventory/suppliers').then(r => setSuppliers(Array.isArray(r.data) ? r.data : r.data.data || [])).catch(() => {});
   }, []);
 
@@ -109,7 +115,21 @@ const StockInForm = () => {
 
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inventory Item *</Label>
-                  <Select value={String(form.itemId)} onValueChange={v => setForm({ ...form, itemId: v })} disabled={!form.category}>
+                  <Select
+                    value={String(form.itemId)}
+                    onValueChange={v => {
+                      const sel = items.find(i => String(i.id) === String(v));
+                      const cost = sel?.avgUnitCost != null
+                        ? String(sel.avgUnitCost)
+                        : (sel?.retailPrice != null ? String(sel.retailPrice) : (sel?.sellingPrice != null ? String(sel.sellingPrice) : ''));
+                      setForm(prev => ({
+                        ...prev,
+                        itemId: v,
+                        unitCost: cost || prev.unitCost,
+                      }));
+                    }}
+                    disabled={!form.category}
+                  >
                     <SelectTrigger className={cn(
                       "h-14 bg-card border border-border rounded-xl focus:ring-emerald-500 transition-all font-bold text-foreground",
                       !form.category && "opacity-50 cursor-not-allowed"

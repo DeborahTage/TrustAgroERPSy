@@ -66,7 +66,7 @@ class FarmAccessEnforcementTest {
         TestingAuthenticationToken auth = new TestingAuthenticationToken(user.getEmail(), "x");
         auth.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(auth);
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        lenient().when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
     }
 
     @Test
@@ -161,6 +161,66 @@ class FarmAccessEnforcementTest {
         // Global update succeeds for any farm
         FarmResponse updated = farmService.updateStatus(2L, FarmStatus.INACTIVE);
         assertEquals(FarmStatus.INACTIVE, updated.getStatus());
+    }
+
+    @Test
+    void createFarmWithAssignedManagerAssociatesManagerAndPreservesGroupManagerAccess() {
+        User groupMgr = user(10L, "group@trustagro.test", Role.FARM_MANAGER, new java.util.ArrayList<>(List.of(1L)));
+        groupMgr.setDesignation(com.trustagro.user.entity.OrganizationalDesignation.GROUP_FARM_MANAGER);
+        authenticateAs(groupMgr);
+
+        User siteMgr = user(20L, "site@trustagro.test", Role.FARM_MANAGER, new java.util.ArrayList<>());
+        siteMgr.setDesignation(com.trustagro.user.entity.OrganizationalDesignation.SITE_FARM_MANAGER);
+        when(userRepository.findById(20L)).thenReturn(Optional.of(siteMgr));
+        when(farmRepository.findByAssignedFarmManagerId(20L)).thenReturn(Optional.empty());
+
+        Farm newFarm = new Farm();
+        setId(newFarm, 5L);
+        newFarm.setFarmName("Baugaya Farm");
+        newFarm.setStatus(FarmStatus.ACTIVE);
+        when(farmRepository.save(any(Farm.class))).thenAnswer(inv -> {
+            Farm f = inv.getArgument(0);
+            setId(f, 5L);
+            return f;
+        });
+
+        FarmRequest req = new FarmRequest();
+        req.setFarmName("Baugaya Farm");
+        req.setLocation("Baugaya");
+        req.setFarmType(com.trustagro.farm.entity.FarmType.BROILER);
+        req.setCapacity(4000);
+        req.setAssignedFarmManagerId(20L);
+
+        FarmResponse res = farmService.create(req);
+        assertNotNull(res);
+        assertEquals(5L, res.getId());
+
+        // Site Manager is associated and access restricted to farm 5
+        assertEquals(List.of(5L), siteMgr.getFarmIds());
+        verify(userRepository).save(siteMgr);
+
+        // Group Manager automatically retains access to the new farm 5 in addition to farm 1
+        assertTrue(groupMgr.getFarmIds().contains(5L));
+        verify(userRepository).save(groupMgr);
+    }
+
+    @Test
+    void createFarmThrowsConflictIfManagerAlreadyAssignedToAnotherFarm() {
+        User groupMgr = user(10L, "group@trustagro.test", Role.FARM_MANAGER, new java.util.ArrayList<>(List.of(1L)));
+        authenticateAs(groupMgr);
+
+        User alreadyAssignedMgr = user(20L, "busy@trustagro.test", Role.FARM_MANAGER, List.of(1L));
+        alreadyAssignedMgr.setFullName("Busy Manager");
+        when(userRepository.findById(20L)).thenReturn(Optional.of(alreadyAssignedMgr));
+        when(farmRepository.findByAssignedFarmManagerId(20L)).thenReturn(Optional.of(farm1));
+
+        FarmRequest req = new FarmRequest();
+        req.setFarmName("New Farm");
+        req.setFarmType(com.trustagro.farm.entity.FarmType.BROILER);
+        req.setAssignedFarmManagerId(20L);
+
+        assertThrows(BusinessException.class, () -> farmService.create(req));
+        verify(farmRepository, never()).save(any());
     }
 
     private User user(Long id, String email, Role role, List<Long> farmIds) {

@@ -19,6 +19,11 @@ public interface FinanceTransactionRepository extends JpaRepository<FinanceTrans
 
     @Query("SELECT DISTINCT t FROM FinanceTransaction t "
             + "LEFT JOIN FETCH t.debitAccount LEFT JOIN FETCH t.creditAccount "
+            + "ORDER BY t.createdAt DESC")
+    List<FinanceTransaction> findAllWithAccounts();
+
+    @Query("SELECT DISTINCT t FROM FinanceTransaction t "
+            + "LEFT JOIN FETCH t.debitAccount LEFT JOIN FETCH t.creditAccount "
             + "WHERE t.transactionDate BETWEEN :from AND :to")
     List<FinanceTransaction> findByTransactionDateBetweenWithAccounts(
             @Param("from") LocalDate from, @Param("to") LocalDate to);

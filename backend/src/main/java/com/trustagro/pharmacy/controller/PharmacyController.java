@@ -135,7 +135,7 @@ public class PharmacyController {
     }
 
     @PostMapping("/customers")
-    @PreAuthorize("hasAnyAuthority('pharmacy:sale','pharmacy:dispense')")
+    @PreAuthorize("hasAnyAuthority('pharmacy:sale','pharmacy:dispense') or hasRole('ADMIN') or hasRole('GENERAL_MANAGER')")
     public ResponseEntity<PharmacyCustomer> createCustomer(@RequestBody PharmacyCustomer customer) {
         return ResponseEntity.ok(pharmacyService.saveCustomer(customer));
     }

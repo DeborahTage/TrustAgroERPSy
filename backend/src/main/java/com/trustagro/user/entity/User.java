@@ -36,6 +36,14 @@ public class User {
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "designation")
+    private OrganizationalDesignation designation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reports_to_id")
+    private User reportsTo;
+
     @Column(name = "token_version", nullable = false)
     private Long tokenVersion = 0L;
 
@@ -65,6 +73,19 @@ public class User {
 
     public List<Long> getFarmIds() { return farmIds; }
     public void setFarmIds(List<Long> farmIds) { this.farmIds = farmIds; }
+
+    public OrganizationalDesignation getDesignation() { return designation; }
+    public void setDesignation(OrganizationalDesignation designation) { this.designation = designation; }
+    public User getReportsTo() { return reportsTo; }
+    public void setReportsTo(User reportsTo) { this.reportsTo = reportsTo; }
+
+    public boolean isGroupFarmManager() {
+        return role == Role.FARM_MANAGER && designation != OrganizationalDesignation.SITE_FARM_MANAGER;
+    }
+
+    public boolean isSiteFarmManager() {
+        return role == Role.FARM_MANAGER && designation == OrganizationalDesignation.SITE_FARM_MANAGER;
+    }
 
     /**
      * Farm IDs this user has access to. Empty list = access to all farms.

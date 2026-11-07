@@ -99,6 +99,13 @@ public class UserService {
         r.setStatus(user.getStatus());
         r.setCreatedAt(user.getCreatedAt());
         r.setUpdatedAt(user.getUpdatedAt());
+        r.setDesignation(user.getDesignation());
+        if (user.getReportsTo() != null) {
+            r.setReportsToId(user.getReportsTo().getId());
+            r.setReportsToName(user.getReportsTo().getFullName());
+        }
+        r.setIsGroupFarmManager(user.isGroupFarmManager());
+        r.setIsSiteFarmManager(user.isSiteFarmManager());
         r.setPermissions(RolePermissionCatalog.permissionsFor(canonical));
         r.setFarmIds(user.getFarmIds() != null ? user.getFarmIds() : List.of());
         return r;

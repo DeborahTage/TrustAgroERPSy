@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
+import { MASTER_CATALOG_ITEMS } from '../../utils/masterCatalog';
 
 export default function POSSale() {
     const [cart, setCart] = useState([]);
@@ -12,17 +13,38 @@ export default function POSSale() {
         axios.get('/api/inventory/pharmacy-items')
             .then(res => {
                 const data = res.data;
-                setSellableItems(Array.isArray(data) ? data : []);
+                const items = Array.isArray(data) ? data : (data?.data || []);
+                setSellableItems(items.length > 0 ? items : MASTER_CATALOG_ITEMS);
             })
             .catch(e => {
                 console.error('Failed to load pharmacy items:', e);
-                setSellableItems([]);
+                setSellableItems(MASTER_CATALOG_ITEMS);
             });
     }, []);
 
     const addToCart = (item) => {
-        // Basic POS cart add
-        setCart([...cart, { ...item, cartQty: 1, lineTotal: (item.avgUnitCost || 100) * 1.5 }]);
+        const defaultPrice = Number(item.retailPrice || item.sellingPrice || item.avgUnitCost || 0);
+        const existing = cart.find(c => c.id === item.id);
+        if (existing) {
+            setCart(cart.map(c => c.id === item.id ? { ...c, cartQty: c.cartQty + 1 } : c));
+        } else {
+            setCart([...cart, {
+                ...item,
+                cartQty: 1,
+                unitPrice: defaultPrice,
+                unit: item.unit || item.unitString || 'PIECE'
+            }]);
+        }
+    };
+
+    const updateCartPrice = (id, newPrice) => {
+        const val = parseFloat(newPrice) || 0;
+        setCart(cart.map(c => c.id === id ? { ...c, unitPrice: val } : c));
+    };
+
+    const updateCartQty = (id, newQty) => {
+        const val = Math.max(1, parseInt(newQty, 10) || 1);
+        setCart(cart.map(c => c.id === id ? { ...c, cartQty: val } : c));
     };
 
     const handleCheckout = async () => {
@@ -31,7 +53,7 @@ export default function POSSale() {
                 items: cart.map(c => ({
                     itemId: c.id,
                     qty: c.cartQty,
-                    unitPrice: c.lineTotal
+                    unitPrice: c.unitPrice
                 })),
                 customerName: customer.name,
                 customerPhone: customer.phone,
@@ -47,7 +69,7 @@ export default function POSSale() {
         }
     };
 
-    const total = cart.reduce((sum, item) => sum + item.lineTotal * item.cartQty, 0);
+    const total = cart.reduce((sum, item) => sum + item.unitPrice * item.cartQty, 0);
 
     return (
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -82,9 +104,34 @@ export default function POSSale() {
 
                 <div className="min-h-32 divide-y divide-border">
                     {cart.map((item, i) => (
-                        <div key={i} className="flex justify-between py-2.5">
-                            <span className="font-medium text-foreground">{item.itemName} <span className="text-xs text-muted-foreground">x{item.cartQty}</span></span>
-                            <span className="font-semibold text-foreground">{item.lineTotal.toFixed(2)} Birr</span>
+                        <div key={i} className="flex justify-between items-center py-2.5 gap-2">
+                            <div className="flex-1 min-w-0">
+                                <div className="font-medium text-foreground truncate">{item.itemName}</div>
+                                <div className="text-xs text-muted-foreground">{item.unit || 'PCS'}</div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={item.cartQty}
+                                    onChange={e => updateCartQty(item.id, e.target.value)}
+                                    className="w-14 bg-background border border-border p-1 rounded text-center text-sm font-bold text-foreground"
+                                    title="Quantity"
+                                />
+                                <span className="text-xs text-muted-foreground">×</span>
+                                <input
+                                    type="number"
+                                    step="any"
+                                    value={item.unitPrice}
+                                    onChange={e => updateCartPrice(item.id, e.target.value)}
+                                    className="w-20 bg-background border border-border p-1 rounded text-right text-sm font-bold text-emerald-600 dark:text-emerald-400"
+                                    title="Unit price in ETB (editable)"
+                                />
+                                <span className="text-[11px] text-muted-foreground font-semibold">ETB</span>
+                            </div>
+                            <span className="font-semibold text-foreground text-sm min-w-20 text-right">
+                                {(item.unitPrice * item.cartQty).toFixed(2)}
+                            </span>
                         </div>
                     ))}
                     {cart.length === 0 && <p className="text-muted-foreground py-6 text-center">Cart is empty</p>}

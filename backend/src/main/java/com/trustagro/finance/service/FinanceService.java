@@ -455,7 +455,7 @@ public class FinanceService {
     }
 
     public List<FinanceTransaction> getAllTransactions() {
-        return transactionRepository.findAll();
+        return transactionRepository.findAllWithAccounts();
     }
 
     public List<ChartOfAccount> getAllAccounts() {

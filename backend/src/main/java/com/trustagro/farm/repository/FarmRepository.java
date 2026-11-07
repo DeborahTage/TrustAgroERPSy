@@ -11,4 +11,6 @@ public interface FarmRepository extends JpaRepository<Farm, Long> {
     long countByStatus(FarmStatus status);
     List<Farm> findByIdIn(List<Long> ids);
     java.util.Optional<Farm> findByFarmNameIgnoreCase(String farmName);
+    java.util.Optional<Farm> findByAssignedFarmManagerId(Long managerId);
+    List<Farm> findByAssignedFarmManagerIdIn(List<Long> managerIds);
 }

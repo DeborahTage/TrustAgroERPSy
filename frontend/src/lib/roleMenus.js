@@ -49,6 +49,7 @@ const adminMenus = [
     label: 'ADMIN',
     items: [
       { path: '/users', labelKey: 'users', icon: Users, permission: PERMISSIONS.VIEW_USERS },
+      { path: '/farms/managers', label: 'Site Farm Managers', icon: Users, permission: PERMISSIONS.VIEW_USERS },
       { path: '/governance', label: 'Governance', icon: Shield, permission: PERMISSIONS.GOVERNANCE_READ },
       { path: '/farm/chicken-sales', label: 'Chicken Sales', icon: ShoppingCart, permission: PERMISSIONS.VIEW_CHICKEN_SALES },
       { path: '/farm/payment-verification', label: 'Payment Verification', icon: Receipt, permission: PERMISSIONS.VERIFY_CHICKEN_SALES },
@@ -116,6 +117,7 @@ const farmManagerMenus = [
     label: 'FARM OPERATIONS',
     items: [
       { path: '/farms', labelKey: 'farms', icon: Building2 },
+      { path: '/farms/managers', label: 'Site Managers', icon: Users, permission: PERMISSIONS.VIEW_FARMS },
       { path: '/farms/barn-dashboard', label: 'Barns', icon: Warehouse },
       { path: '/flocks', labelKey: 'flocks', icon: Layers },
       { path: '/daily-records', labelKey: 'dailyRecords', icon: FileText },
